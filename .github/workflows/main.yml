@@ -17,10 +17,10 @@ jobs:
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
-      - name: Archive ./src/ to Z LAG OS.apbx with password
+      - name: Archive ./src/ to ZLAGOS.apbx with password
         run: |
-          7z a -p"malte" -t7z Z LAG OS.7z ./src/*
-          mv Z LAG OS.7z Z LAG OS.apbx
+          7z a -p"malte" -t7z ZLAGOS.7z ./src/*
+          mv ZLAGOS.7z ZLAGOS.apbx
           
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
