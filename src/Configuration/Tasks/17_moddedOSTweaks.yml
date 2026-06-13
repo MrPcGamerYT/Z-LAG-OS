@@ -376,12 +376,6 @@ actions:
   # Dark Mode for System
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'SystemUsesLightTheme', type: REG_DWORD, data: '0'}
   
-  # Remove Shortcut Arrow
-  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons', value: '29', type: REG_SZ, data: '%SystemRoot%\System32\shell32.dll,-50'}
-  
-  # Remove "- Shortcut" text from new shortcuts
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'link', type: REG_BINARY, data: '00000000'}
-  
   # Disable Screen Saver
   - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'ScreenSaveActive', type: REG_SZ, data: '0'}
   
