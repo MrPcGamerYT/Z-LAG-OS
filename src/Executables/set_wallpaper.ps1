@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-    Z LAG OS Wallpaper & Lock Screen Setter – Safe, Permanent & MDM Enforced
+    Z LAG OS Unbreakable Wallpaper & Lock Screen Engine
 .DESCRIPTION
-    - Sets desktop wallpaper via C# SystemParametersInfo and MDM CSP
-    - Sets lock screen via WinRT API and MDM CSP
-    - Disables Windows Spotlight permanently
-    - Creates a SYSTEM-level startup task for absolute persistence
+    - Strips away the Acrylic Blur framework to prevent solid color crashes.
+    - Bypasses activation locks using Enterprise MDM CSP.
+    - Replaces all native system image assets and legacy OOBE graphics.
+    - Forces the system engine to display the raw image with zero processing.
 .NOTES
     Must be run as Administrator.
 #>
@@ -13,8 +13,10 @@
 #Requires -RunAsAdministrator
 
 # ------------------------------------------------------------
-# 1. Locate and Copy Source Images
+# 1. Locate, Secure, and Overwrite Every Image Path in Windows
 # ------------------------------------------------------------
+Write-Host "[INIT] Arming Z LAG OS Unbreakable Wallpaper Engine..." -ForegroundColor Cyan
+
 $desktopSource = Join-Path $PSScriptRoot "Z_LAG_Wallpaper\Desktop.png"
 $lockSource    = Join-Path $PSScriptRoot "Z_LAG_Wallpaper\Lock.png"
 $singleSource  = Join-Path $PSScriptRoot "Z-LAG_Wallpaper.png"
@@ -35,21 +37,56 @@ if (-not (Test-Path $lockSource) -and (Test-Path $desktopSource)) {
 
 $destFolder   = "C:\Windows\Web\Wallpaper\Z-LAG_WALLPAPER"
 $screenFolder = "C:\Windows\Web\Screen"
-@($destFolder, $screenFolder) | ForEach-Object {
+$legacyOobe   = "C:\Windows\System32\oobe\info\backgrounds"
+
+# Ensure all system target directories exist
+@($destFolder, $screenFolder, $legacyOobe) | ForEach-Object {
     if (-not (Test-Path $_)) { New-Item $_ -ItemType Directory -Force | Out-Null }
 }
 
 $destDesktop = Join-Path $destFolder "Z-LAG_Desktop.png"
 $destLock    = Join-Path $screenFolder "Z-LAG_Lock.png"
+$legacyFile  = Join-Path $legacyOobe "backgroundDefault.jpg"
 
 Copy-Item $desktopSource $destDesktop -Force
 Copy-Item $lockSource $destLock -Force
-Write-Host "Images secured in system directories." -ForegroundColor Green
+Copy-Item $lockSource $legacyFile -Force
+
+# Hijack all default system image assets so Windows has no alternate file to load
+if (Test-Path $screenFolder) {
+    $DefaultImages = Get-ChildItem -Path $screenFolder -Filter "img*"
+    foreach ($Img in $DefaultImages) {
+        $TargetFile = $Img.FullName
+        takeown /f $TargetFile /a | Out-Null
+        icacls $TargetFile /grant administrators:F | Out-Null
+        Copy-Item $destLock $TargetFile -Force | Out-Null
+    }
+}
+
+Write-Host "[+] All system image fallbacks replaced successfully." -ForegroundColor Green
 
 # ------------------------------------------------------------
-# 2. DESKTOP WALLPAPER – SystemParametersInfo & User Hives
+# 2. THE ANTI-COLOR FIX: Kill Logon Blur & Force Image Engine
 # ------------------------------------------------------------
-Write-Host "`n[DESKTOP] Injecting desktop wallpaper..." -ForegroundColor Cyan
+Write-Host "`n[GRAPHICS] Disabling logon blur mechanisms to block solid color fallbacks..." -ForegroundColor Cyan
+
+$sysPolicyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+if (-not (Test-Path $sysPolicyPath)) { New-Item $sysPolicyPath -Force | Out-Null }
+
+# Disable Acrylic blur effect on Logon screen (Forces the raw image to load instantly)
+Set-ItemProperty -Path $sysPolicyPath -Name "DisableAcrylicOnBackgroundOnLogon" -Value 1 -Type DWord -Force
+
+# Tell Windows explicitly to use background images, never flat accent colors
+Set-ItemProperty -Path $sysPolicyPath -Name "DisableLogonBackgroundImage" -Value 0 -Type DWord -Force
+
+# Change default system canvas color to pure black as an extreme emergency backup
+Set-ItemProperty -Path "HKU:\.DEFAULT\Control Panel\Colors" -Name "Background" -Value "0 0 0" -Force
+Set-ItemProperty -Path "HKU:\.DEFAULT\Control Panel\Desktop" -Name "WallPaper" -Value "" -Force
+
+# ------------------------------------------------------------
+# 3. DESKTOP WALLPAPER – SystemParametersInfo & User Hives
+# ------------------------------------------------------------
+Write-Host "`n[DESKTOP] Forcing desktop wallpaper environment..." -ForegroundColor Cyan
 
 Get-ChildItem "Registry::HKU" | ForEach-Object {
     $userKey = $_.Name
@@ -77,49 +114,27 @@ if (-not ([System.Management.Automation.PSTypeName]'DesktopWallpaper').Type) { A
 [DesktopWallpaper]::SetWallpaper($destDesktop)
 
 # ------------------------------------------------------------
-# 3. ENTERPRISE MDM CSP (The Ultimate Override)
+# 4. ENTERPRISE MDM CSP (Bypasses Activation Retrictions)
 # ------------------------------------------------------------
-Write-Host "`n[MDM CSP] Locking images at the Enterprise level..." -ForegroundColor Cyan
-
 $cspReg = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP"
 if (-not (Test-Path $cspReg)) { New-Item -Path $cspReg -Force | Out-Null }
-
-# Force Lock Screen & Desktop via MDM
-New-ItemProperty -Path $cspReg -Name "LockScreenImagePath" -Value $destLock -PropertyType STRING -Force | Out-Null
-New-ItemProperty -Path $cspReg -Name "LockScreenImageStatus" -Value 1 -PropertyType DWORD -Force | Out-Null
-New-ItemProperty -Path $cspReg -Name "DesktopImagePath" -Value $destDesktop -PropertyType STRING -Force | Out-Null
-New-ItemProperty -Path $cspReg -Name "DesktopImageStatus" -Value 1 -PropertyType DWORD -Force | Out-Null
+Set-ItemProperty -Path $cspReg -Name "LockScreenImagePath" -Value $destLock -Type String -Force
+Set-ItemProperty -Path $cspReg -Name "LockScreenImageStatus" -Value 1 -Type DWord -Force
+Set-ItemProperty -Path $cspReg -Name "LockScreenImageUrl" -Value $destLock -Type String -Force
+Set-ItemProperty -Path $cspReg -Name "DesktopImagePath" -Value $destDesktop -Type String -Force
+Set-ItemProperty -Path $cspReg -Name "DesktopImageStatus" -Value 1 -Type DWord -Force
 
 # ------------------------------------------------------------
-# 4. LOCK SCREEN – WinRT API & Standard Registry Fallbacks
+# 5. LOCK SCREEN – Policy Enforcement
 # ------------------------------------------------------------
-Write-Host "`n[LOCK SCREEN] Executing WinRT and standard policies..." -ForegroundColor Cyan
-
-Add-Type -AssemblyName System.Runtime.WindowsRuntime
-$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' })[0]
-function AwaitWinRT($task, $type) {
-    $asTask = $asTaskGeneric.MakeGenericMethod($type)
-    $netTask = $asTask.Invoke($null, @($task))
-    $netTask.Wait(-1) | Out-Null
-    return $netTask.Result
-}
-
-try {
-    [Windows.System.UserProfile.LockScreen,Windows.System.UserProfile,ContentType=WindowsRuntime] | Out-Null
-    [Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime] | Out-Null
-    $file = AwaitWinRT ([Windows.Storage.StorageFile]::GetFileFromPathAsync($destLock)) ([Windows.Storage.StorageFile])
-    $result = AwaitWinRT ([Windows.System.UserProfile.LockScreen]::SetImageFileAsync($file)) ([Windows.System.UserProfile.SetImageResult])
-} catch {}
-
 $policyReg = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization"
 if (-not (Test-Path $policyReg)) { New-Item -Path $policyReg -Force | Out-Null }
 Set-ItemProperty -Path $policyReg -Name LockScreenImage -Value $destLock -Type String -Force
 Set-ItemProperty -Path $policyReg -Name NoChangingLockScreen -Value 1 -Type DWord -Force
 
 # ------------------------------------------------------------
-# 5. SPOTLIGHT KILLER
+# 6. SPOTLIGHT KILLER
 # ------------------------------------------------------------
-Write-Host "`n[SPOTLIGHT] Neutralizing Windows Spotlight..." -ForegroundColor DarkGray
 @(
     "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent",
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\CloudContent"
@@ -130,23 +145,32 @@ Write-Host "`n[SPOTLIGHT] Neutralizing Windows Spotlight..." -ForegroundColor Da
 }
 
 # ------------------------------------------------------------
-# 6. SYSTEM-LEVEL PERSISTENCE (Scheduled Task)
+# 7. SYSTEM-LEVEL PERSISTENCE & HARDWARE CACHE PURGE
 # ------------------------------------------------------------
-Write-Host "`n[PERSISTENCE] Securing boot routine..." -ForegroundColor DarkGray
+Write-Host "`n[PERSISTENCE] Injecting continuous engine enforcement..." -ForegroundColor DarkGray
 $taskName = "Z-LAG-LockScreen-Enforce"
-if (-not (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue)) {
-    # The payload re-asserts the CSP and Policy registry keys silently on boot
-    $payload = "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP' -Name LockScreenImageStatus -Value 1 -Force; Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization' -Name LockScreenImage -Value '$destLock' -Force"
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -Command `"$payload`""
-    $trigger   = New-ScheduledTaskTrigger -AtStartup
-    $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Force | Out-Null
+
+if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false | Out-Null
 }
 
+# Payload purges the cache, fixes policies, and ensures logon blur remains disabled at boot
+$cachePurge = "Remove-Item -Path 'C:\ProgramData\Microsoft\Windows\SystemData\*\ReadOnly\LockScreen_*\*.*' -Force -Recurse -ErrorAction SilentlyContinue"
+$regEnforce = "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP' -Name LockScreenImageStatus -Value 1 -Force; Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization' -Name LockScreenImage -Value '$destLock' -Force; Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\System' -Name 'DisableLogonBackgroundImage' -Value 0 -Force; Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\System' -Name 'DisableAcrylicOnBackgroundOnLogon' -Value 1 -Force"
+$combinedPayload = "$cachePurge; $regEnforce"
+
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -Command `"$combinedPayload`""
+$trigger   = New-ScheduledTaskTrigger -AtStartup
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Force | Out-Null
+
 # ------------------------------------------------------------
-# 7. EXPLORER RESTART
+# 8. REBOOT EXPLORER SHELL
 # ------------------------------------------------------------
 Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
 
-Write-Host "`n✅ Z-LAG OS DEPLOYMENT COMPLETE." -ForegroundColor Green
-Write-Host "   Press Win+L to verify lock screen." -ForegroundColor Yellow
+Write-Host "`n█████████████████████████████████████████████" -ForegroundColor Cyan
+Write-Host "✅ UNBREAKABLE Z-LAG OS ENGINE IS LIVE!" -ForegroundColor Green
+Write-Host "   Logon color fallbacks have been structurally disabled." -ForegroundColor Yellow
+Write-Host "█████████████████████████████████████████████`n" -ForegroundColor Cyan
