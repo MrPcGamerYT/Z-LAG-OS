@@ -1,0 +1,73 @@
+title: Registry optimizations
+actions:
+  # Cloud & consumer features
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent', value: 'DisableWindowsConsumerFeatures', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SilentInstalledAppsEnabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SystemPaneSuggestionsEnabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection', value: 'AllowTelemetry', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection', value: 'AllowTelemetry', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications', value: 'GlobalUserDisabled', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy', value: 'LetAppsRunInBackground', type: REG_DWORD, data: 2}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control', value: 'SvcHostSplitThresholdInKB', type: REG_DWORD, data: 38000000}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'EnableSmartScreen', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer', value: 'SmartScreenEnabled', type: REG_SZ, data: 'Off'}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'FeatureSettingsOverride', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'FeatureSettingsOverrideMask', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers', value: 'HwSchMode', type: REG_DWORD, data: 2}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\DirectX', value: 'MaxFrameRate', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl', value: 'Win32PrioritySeparation', type: REG_DWORD, data: 38}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'IOPageLockLimit', type: REG_DWORD, data: 16777216}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games', value: 'GPU Priority', type: REG_DWORD, data: 8}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games', value: 'Priority', type: REG_DWORD, data: 6}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games', value: 'Scheduling Category', type: REG_SZ, data: 'High'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile', value: 'NetworkThrottlingIndex', type: REG_DWORD, data: 4294967295}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile', value: 'SystemResponsiveness', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'MenuShowDelay', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects', value: 'VisualFXSetting', type: REG_DWORD, data: 2}
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_FSEBehaviorMode', type: REG_DWORD, data: 2}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop\WindowMetrics', value: 'MinAnimate', type: REG_SZ, data: '0'}
+
+  # Set UserPreferencesMask via script (FIXED INDENTATION)
+  - !powerShell:
+      exeDir: true
+      command: '.\set_userprefs.ps1'
+  
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ListviewAlphaSelect', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ListviewShadow', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarAnimations', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Control Panel\Mouse', value: 'MouseSpeed', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Mouse', value: 'MouseThreshold1', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Mouse', value: 'MouseThreshold2', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'legalnoticetitle', type: REG_SZ, data: 'Z LAG OS'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'legalnoticetext', type: REG_SZ, data: 'Status: OPTIMIZED - Z LAG OS Engine Active'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'EnableLUA', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'ConsentPromptBehaviorAdmin', type: REG_DWORD, data: 5}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'PromptOnSecureDesktop', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'ConsentPromptBehaviorUser', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard', value: 'EnableVirtualizationBasedSecurity', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard', value: 'RequirePlatformSecurityFeatures', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Lsa', value: 'DisableVSM', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power', value: 'CoreParkingDisabled', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Processor', value: 'CpuCoreParkingDisabled', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'DisableCompression', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers', value: 'HwSchPriority', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers', value: 'GpuPreference', type: REG_DWORD, data: 2}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'GlobalTCPNoDelay', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\Control Panel\Keyboard', value: 'KeyboardDelay', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Keyboard', value: 'KeyboardSpeed', type: REG_SZ, data: '31'}
+  - !registryValue: {path: 'HKCU\Control Panel\Mouse', value: 'MouseHoverTime', type: REG_SZ, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting', value: 'Disabled', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_HonorUserFSEBehaviorMode', type: REG_DWORD, data: 1}
+  
+  # Show file extensions in File Explorer
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'HideFileExt', type: REG_DWORD, data: 0}
+
+  # High priority for emulators
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\HD-Player.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Bluestacks.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\HD-Service.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\HD-Agent.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\BstkSVC.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  
+  # Registry deletions via PowerShell
+  - !powerShell: {command: 'Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "*" -ErrorAction SilentlyContinue'}

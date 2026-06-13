@@ -1,0 +1,7 @@
+title: Aggressive Windows Defender removal
+actions:
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender', value: 'DisableAntiSpyware', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection', value: 'DisableRealtimeMonitoring', type: REG_DWORD, data: '1'}
+  - !powerShell: {command: 'Stop-Service WinDefend -Force -ErrorAction SilentlyContinue; Set-Service WinDefend -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service WdNisSvc -Force -ErrorAction SilentlyContinue; Set-Service WdNisSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service SecurityHealthService -Force -ErrorAction SilentlyContinue; Set-Service SecurityHealthService -StartupType Disabled -ErrorAction SilentlyContinue'}

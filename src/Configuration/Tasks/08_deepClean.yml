@@ -1,0 +1,36 @@
+title: Deep system clean (temp files, event logs, OneDrive)
+actions:
+  - !taskKill: {name: 'OneDrive'}
+  - !taskKill: {name: 'Cortana'}
+  - !taskKill: {name: 'SearchUI'}
+  - !taskKill: {name: 'GameBar'}
+  - !taskKill: {name: 'XboxApp'}
+  - !taskKill: {name: 'YourPhone'}
+
+  # Uninstall OneDrive
+  - !cmd: {command: 'if exist "%SystemRoot%\SysWOW64\OneDriveSetup.exe" start /wait %SystemRoot%\SysWOW64\OneDriveSetup.exe /uninstall'}
+  - !cmd: {command: 'if exist "%SystemRoot%\System32\OneDriveSetup.exe" start /wait %SystemRoot%\System32\OneDriveSetup.exe /uninstall'}
+  - !powerShell: {command: 'Remove-Item -Recurse -Force "$env:USERPROFILE\OneDrive" -ErrorAction SilentlyContinue'}
+
+  # Recycle bin and DISM component cleanup
+  - !powerShell: {command: 'Clear-RecycleBin -Force -ErrorAction SilentlyContinue'}
+  - !cmd: {command: 'dism /online /cleanup-image /startcomponentcleanup /quiet'}
+
+  # Clear event logs (safe version)
+  - !powerShell:
+      command: |
+        $logs = wevtutil el
+        foreach ($log in $logs) {
+          wevtutil cl "$log" 2>$null
+        }
+
+  # UI performance tweaks
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'DragFullWindows', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'FontSmoothing', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'EnableTransparency', type: REG_DWORD, data: '0'}
+
+    # Clean temp files and prefetch
+  - !cmd: {command: 'del /f /s /q "%TEMP%\*" 2>nul'}
+  - !cmd: {command: 'del /f /s /q "C:\Windows\Temp\*" 2>nul'}
+  - !cmd: {command: 'del /f /s /q "C:\Windows\Prefetch\*" 2>nul'}

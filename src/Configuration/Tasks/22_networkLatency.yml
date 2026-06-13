@@ -1,0 +1,15 @@
+title: Extreme Network Latency Reduction (Competitive Gaming)
+actions:
+  - !powerShell:
+      exeDir: true
+      command: '.\disable_network_offload.ps1'
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpAckFrequency', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpDelAckTicks', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpTimedWaitDelay', type: REG_DWORD, data: 30}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'KeepAliveTime', type: REG_DWORD, data: 30000}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'KeepAliveInterval', type: REG_DWORD, data: 1000}
+  - !cmd: {command: 'reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Psched" /v "NonBestEffortLimit" /t REG_DWORD /d 0 /f'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile', value: 'NetworkThrottlingIndex', type: REG_DWORD, data: 4294967295}
+  - !cmd: {command: 'netsh int tcp set global autotuninglevel=normal'}
+  - !cmd: {command: 'ipconfig /flushdns'}
+  - !cmd: {command: 'netsh int ip reset'}

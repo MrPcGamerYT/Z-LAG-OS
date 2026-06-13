@@ -1,0 +1,163 @@
+title: APPX
+description: Removal of APPX packages (Keeps NVIDIA, AMD, Intel, Critical System Apps)
+privilege: TrustedInstaller
+actions:
+
+  - !writeStatus: {status: "Removing Appx Packages - Keeping GPU drivers and critical system apps"}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: |
+        .\appx_remover.ps1 -Packages @(
+          'Microsoft.Windows.SecureAssessmentBrowser',
+          'Microsoft.Windows.PeopleExperienceHost',
+          'Microsoft.WindowsCamera',
+          'MicrosoftWindows.Client.WebExperience',
+          'Microsoft.WidgetsPlatformRuntime',
+          'Microsoft.WindowsAlarms',
+          'Microsoft.WindowsMaps',
+          'Microsoft.MicrosoftStickyNotes',
+          'microsoft.windowscommunicationsapps',
+          'Microsoft.People',
+          'Microsoft.BingNews',
+          'Microsoft.BingSearch',
+          'Microsoft.BingWeather',
+          'Microsoft.MicrosoftSolitaireCollection',
+          'Microsoft.WindowsFeedbackHub',
+          'Microsoft.GetHelp',
+          'Microsoft.Getstarted',
+          'Microsoft.Todos',
+          'Microsoft.PowerAutomateDesktop',
+          'Microsoft.549981C3F5F10',
+          'MicrosoftCorporationII.QuickAssist',
+          'MicrosoftCorporationII.MicrosoftFamily',
+          'Microsoft.ZuneMusic',
+          'Microsoft.ZuneVideo',
+          'Microsoft.WindowsSoundRecorder',
+          'Clipchamp.Clipchamp',
+          'Microsoft.Whiteboard',
+          'Microsoft.MicrosoftTeamsforSurfaceHub',
+          'MicrosoftCorporationII.MailforSurfaceHub',
+          'Microsoft.MicrosoftPowerBIForWindows',
+          'Microsoft.SkypeApp',
+          'Microsoft.MicrosoftOfficeHub',
+          'Microsoft.Office.Excel',
+          'Microsoft.Office.PowerPoint',
+          'Microsoft.Office.Word',
+          'Microsoft.Office.OneNote',
+          'Microsoft.OutlookForWindows',
+          'SpotifyAB.SpotifyMusic',
+          'OutlookPWA',
+          'Microsoft.Microsoft3DViewer',
+          'Microsoft.Advertising',
+          'MixedReality.Portal',
+          'Microsoft.MSPaint',
+          'Microsoft.StartExperiencesApp',
+          'Microsoft.Copilot',
+          'MicrosoftTeams',
+          'MSTeams',
+          'Disney.37853FC22B2CE',
+          'Netflix',
+          'Microsoft.XboxApp',
+          'Microsoft.XboxGamingOverlay',
+          'Microsoft.XboxIdentityProvider',
+          'Microsoft.XboxSpeechToTextOverlay',
+          'Microsoft.Xbox.TCUI',
+          'Microsoft.XboxGameCallableUI',
+          'Microsoft.GamingApp',
+          'Microsoft.YourPhone',
+          'MicrosoftWindows.CrossDevice',
+          'Microsoft.WindowsCalculator',
+          'Microsoft.Windows.Photos',
+          'Microsoft.WindowsStore',
+          'Microsoft.ScreenSketch',
+          'Microsoft.StorePurchaseApp'
+        )
+
+  - !writeStatus: {status: "Removing Photos", option: "remove-appx-photos"}
+  - !powerShell:
+      option: "remove-appx-photos"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages "Microsoft.Windows.Photos"'
+
+  - !writeStatus: {status: "Removing Dev Home", option: "remove-appx-devhome"}
+  - !powerShell:
+      option: "remove-appx-devhome"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages "Microsoft.Windows.DevHome"'
+
+  - !writeStatus: {status: "Removing Xbox Apps", option: "remove-appx-xbox"}
+  - !powerShell:
+      option: "remove-appx-xbox"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages @("Microsoft.Xbox", "Microsoft.XboxApp", "Microsoft.GamingApp", "Microsoft.Edge.GameAssist") -ExcludePackages "Microsoft.XboxGameCallableUI"'
+
+  # Xbox Registry Tweaks
+  - !registryValue: {path: 'HKCR\ms-gamebar', value: '', type: REG_SZ, data: 'URL:ms-gamebar', option: "remove-appx-xbox"}
+  - !registryValue: {path: 'HKCR\ms-gamebar', value: 'URL Protocol', type: REG_SZ, data: '', option: "remove-appx-xbox"}
+  - !registryKey: {path: 'HKCR\ms-gamebar\shell\open\command', operation: add, option: "remove-appx-xbox"}
+  - !registryValue: {path: 'HKCR\ms-gamebar', value: '', type: REG_SZ, data: '%SystemRoot%\System32\systray.exe', option: "remove-appx-xbox"}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\GameBar', value: 'ShowStartupPanel', type: REG_DWORD, data: 0, option: "remove-appx-xbox"}
+
+  - !writeStatus: {status: "Removing Your Phone", option: "remove-appx-yourphone"}
+  - !powerShell:
+      option: "remove-appx-yourphone"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages @("Microsoft.YourPhone", "MicrosoftWindows.CrossDevice")'
+
+  # Restore VCLibs dependencies
+  - !writeStatus: {status: "Restoring VCLibs dependencies"}
+
+  # x64 Framework Provisioning
+  - !download:
+      url: 'https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx'
+      destination: 'Microsoft.VCLibs.x64.14.00.Desktop.appx'
+      cpuArch: X64
+  - !powerShell:
+      wait: true
+      exeDir: true
+      cpuArch: X64
+      command: 'Add-AppxProvisionedPackage -Online -PackagePath ".\Microsoft.VCLibs.x64.14.00.Desktop.appx" -SkipLicense'
+
+  - !download:
+      url: 'https://aka.ms/Microsoft.VCLibs.x86.14.00.Desktop.appx'
+      destination: 'Microsoft.VCLibs.x86.14.00.Desktop.appx'
+      cpuArch: X64
+  - !powerShell:
+      wait: true
+      exeDir: true
+      cpuArch: X64
+      command: 'Add-AppxProvisionedPackage -Online -PackagePath ".\Microsoft.VCLibs.x86.14.00.Desktop.appx" -SkipLicense'
+
+  # ARM64 Framework Provisioning
+  - !download:
+      url: 'https://aka.ms/Microsoft.VCLibs.arm64.14.00.Desktop.appx'
+      destination: 'Microsoft.VCLibs.arm64.14.00.Desktop.appx'
+      cpuArch: Arm64
+  - !powerShell:
+      wait: true
+      exeDir: true
+      cpuArch: Arm64
+      command: 'Add-AppxProvisionedPackage -Online -PackagePath ".\Microsoft.VCLibs.arm64.14.00.Desktop.appx" -SkipLicense'
+
+  - !download:
+      url: 'https://aka.ms/Microsoft.VCLibs.arm.14.00.Desktop.appx'
+      destination: 'Microsoft.VCLibs.arm.14.00.Desktop.appx'
+      cpuArch: Arm64
+  - !powerShell:
+      wait: true
+      exeDir: true
+      cpuArch: Arm64
+      command: 'Add-AppxProvisionedPackage -Online -PackagePath ".\Microsoft.VCLibs.arm.14.00.Desktop.appx" -SkipLicense'
+
+  # Clear AppX caches
+  - !writeStatus: {status: 'Clearing AppX caches'}
+  - !appx: {operation: clearCache, name: '*MicrosoftWindows.Client.CBS*'}
+  - !appx: {operation: clearCache, name: '*Microsoft.Windows.Search*'}
+  - !appx: {operation: clearCache, name: '*Microsoft.Windows.SecHealthUI*'}
+
+  - !writeStatus: {status: '✅ All bloatware removed successfully! GPU drivers and critical apps kept intact!'}

@@ -1,0 +1,7 @@
+title: Create and activate Ultimate Performance power plan
+actions:
+  - !writeStatus: {status: "Running power plan setup script..."}
+  - !powerShell:
+    exeDir: true
+    wait: true
+    command: '.\set_power_plan.ps1'

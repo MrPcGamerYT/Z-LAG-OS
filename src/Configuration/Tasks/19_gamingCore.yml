@@ -1,0 +1,42 @@
+title: ZLAG Gaming Core Engine
+description: Ultra low latency + max FPS tweaks
+actions:
+
+  - !writeStatus: {status: "Activating ZLAG Gaming Engine"}
+
+  # HPET and timing optimizations
+  - !cmd: {command: 'bcdedit /deletevalue useplatformclock'}
+  - !cmd: {command: 'bcdedit /set disabledynamictick yes'}
+  - !cmd: {command: 'bcdedit /set useplatformtick yes'}
+
+  # Timer Resolution Boost (0.5ms) – external script
+  - !powerShell:
+      exeDir: true
+      command: '.\set_timer_resolution.ps1'
+
+  # Network Latency FIX (per interface) – external script
+  - !powerShell:
+      exeDir: true
+      command: '.\set_tcp_nodelay_per_interface.ps1'
+
+  # GPU PRIORITY BOOST
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games', value: 'Affinity', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games', value: 'Background Only', type: REG_SZ, data: 'False'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games', value: 'Clock Rate', type: REG_DWORD, data: 10000}
+
+  # Disable Fullscreen Optimizations
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_DXGIHonorFSEWindowsCompatible', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_HonorUserFSEBehaviorMode', type: REG_DWORD, data: 1}
+
+  # Input Lag Reduction
+  - !registryValue: {path: 'HKCU\Control Panel\Mouse', value: 'MouseHoverTime', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Keyboard', value: 'KeyboardDelay', type: REG_SZ, data: '0'}
+
+  # Disable Power Throttling
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling', value: 'PowerThrottlingOff', type: REG_DWORD, data: 1}
+
+  # Restart Explorer to apply tweaks
+  - !powerShell:
+      command: |
+        Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+        Start-Process explorer

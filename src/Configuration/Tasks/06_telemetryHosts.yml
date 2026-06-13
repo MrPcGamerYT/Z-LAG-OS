@@ -1,0 +1,9 @@
+title: Block Microsoft telemetry via hosts file
+actions:
+  - !powerShell:
+      exeDir: true
+      command: '.\add_telemetry_hosts.ps1'
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows', value: 'CEIPEnable', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'NoConnectedUser', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\OneDrive', value: 'DisableFileSyncNGSC', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent', value: 'DisableWindowsSpotlightFeatures', type: REG_DWORD, data: 1}

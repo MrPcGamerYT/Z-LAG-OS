@@ -1,0 +1,33 @@
+title: Aggressive Service Purge (Limit Push)
+actions:
+  - !powerShell: {command: 'Stop-Service SysMain -Force -ErrorAction SilentlyContinue; Set-Service SysMain -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service DiagTrack -Force -ErrorAction SilentlyContinue; Set-Service DiagTrack -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service WerSvc -Force -ErrorAction SilentlyContinue; Set-Service WerSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service RemoteRegistry -Force -ErrorAction SilentlyContinue; Set-Service RemoteRegistry -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service WSearch -Force -ErrorAction SilentlyContinue; Set-Service WSearch -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service WbioSrvc -Force -ErrorAction SilentlyContinue; Set-Service WbioSrvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service MapsBroker -Force -ErrorAction SilentlyContinue; Set-Service MapsBroker -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service Fax -Force -ErrorAction SilentlyContinue; Set-Service Fax -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service XblAuthManager -Force -ErrorAction SilentlyContinue; Set-Service XblAuthManager -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service XblGameSave -Force -ErrorAction SilentlyContinue; Set-Service XblGameSave -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service XboxNetApiSvc -Force -ErrorAction SilentlyContinue; Set-Service XboxNetApiSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service XboxGipSvc -Force -ErrorAction SilentlyContinue; Set-Service XboxGipSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service XblAuthManager -Force -ErrorAction SilentlyContinue; Set-Service XblAuthManager -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service RetailDemo -Force -ErrorAction SilentlyContinue; Set-Service RetailDemo -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service BDESVC -Force -ErrorAction SilentlyContinue; Set-Service BDESVC -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service CDPSvc -Force -ErrorAction SilentlyContinue; Set-Service CDPSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service PhoneSvc -Force -ErrorAction SilentlyContinue; Set-Service PhoneSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service TrkWks -Force -ErrorAction SilentlyContinue; Set-Service TrkWks -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service TabletInputService -Force -ErrorAction SilentlyContinue; Set-Service TabletInputService -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service StiSvc -Force -ErrorAction SilentlyContinue; Set-Service StiSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service wisvc -Force -ErrorAction SilentlyContinue; Set-Service wisvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service SensorDataService -Force -ErrorAction SilentlyContinue; Set-Service SensorDataService -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service SensorService -Force -ErrorAction SilentlyContinue; Set-Service SensorService -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service SensrSvc -Force -ErrorAction SilentlyContinue; Set-Service SensrSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service BcastDVRUserService -Force -ErrorAction SilentlyContinue; Set-Service BcastDVRUserService -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service OneSyncSvc -Force -ErrorAction SilentlyContinue; Set-Service OneSyncSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service UserDataSvc -Force -ErrorAction SilentlyContinue; Set-Service UserDataSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service UnistoreSvc -Force -ErrorAction SilentlyContinue; Set-Service UnistoreSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service PimIndexMaintenanceSvc -Force -ErrorAction SilentlyContinue; Set-Service PimIndexMaintenanceSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service MessagingService -Force -ErrorAction SilentlyContinue; Set-Service MessagingService -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service wlidsvc -Force -ErrorAction SilentlyContinue; Set-Service wlidsvc -StartupType Disabled -ErrorAction SilentlyContinue'}

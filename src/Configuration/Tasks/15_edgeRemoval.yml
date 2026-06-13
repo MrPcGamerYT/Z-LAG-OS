@@ -1,0 +1,6 @@
+title: Remove Microsoft Edge (Complete)
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Running comprehensive Edge removal script..."}
+  - !cmd: {command: 'edge_remover.bat', exeDir: true}
+  - !writeStatus: {status: "✅ Microsoft Edge fully removed via batch script."}

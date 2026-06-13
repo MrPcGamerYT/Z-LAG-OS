@@ -1,0 +1,99 @@
+title: Z LAG OS - Ultimate Optimization (Zero Lag Edition)
+
+actions:
+  - !status: {status: 'Creating restore point & power plan'}
+  - !task: {path: 'Tasks\\01_powerPlan.yml'}
+
+  - !status: {status: 'Applying registry optimizations'}
+  - !task: {path: 'Tasks\\02_registry.yml'}
+
+  - !status: {status: 'Removing bloatware apps'}
+  - !task: {path: 'Tasks\\03_appx.yml'}
+
+  - !status: {status: 'Disabling resource-hogging services'}
+  - !task: {path: 'Tasks\\04_services.yml'}
+
+  - !status: {status: 'Disabling telemetry scheduled tasks'}
+  - !task: {path: 'Tasks\\05_scheduledTasks.yml'}
+
+  - !status: {status: 'Blocking Microsoft telemetry hosts'}
+  - !task: {path: 'Tasks\\06_telemetryHosts.yml'}
+
+  - !status: {status: 'Blocking Windows Update'}
+  - !task: {path: 'Tasks\\07_blockUpdates.yml'}
+
+  - !status: {status: 'Removing Windows built-in features'}
+  - !task: {path: 'Tasks\\09_removeFeatures.yml'}
+
+  - !status: {status: 'Disabling notifications'}
+  - !task: {path: 'Tasks\\10_notifications.yml'}
+
+  - !status: {status: 'Changing computer name'}
+  - !task: {path: 'Tasks\\11_computerName.yml'}
+
+  - !status: {status: 'Blocking Microsoft account sign-in'}
+  - !task: {path: 'Tasks\\12_removeMSAccount.yml'}
+
+  - !status: {status: 'Setting Z LAG wallpaper'}
+  - !task: {path: 'Tasks\\13_wallpaper.yml'}
+
+  - !status: {status: 'Enabling dark theme'}
+  - !task: {path: 'Tasks\\14_darkTheme.yml'}
+
+  - !status: {status: 'Removing Microsoft Edge'}
+  - !task: {path: 'Tasks\\15_edgeRemoval.yml'}
+
+  # Windows 11 only tasks
+  - !status: {status: 'Windows 11 specific optimizations', builds: ['>=22000']}
+  - !task: {path: 'Tasks\\16_win11specific.yml', builds: ['>=22000']}
+
+  - !status: {status: 'Applying modded OS tweaks'}
+  - !task: {path: 'Tasks\\17_moddedOSTweaks.yml'}
+
+  # ===== ADVANCED PERFORMANCE TWEAKS (BEYOND ATLAS) =====
+  - !status: {status: 'Applying advanced performance tweaks'}
+  - !task: {path: 'Tasks\\20_advancedPerf.yml'}
+  
+  - !status: {status: 'Setting CPU priority for popular games'}
+  - !task: {path: 'Tasks\\21_cpuPriority.yml'}
+
+  # Extreme network latency reduction (competitive gaming)
+  - !status: {status: 'Applying extreme network latency reduction'}
+  - !task: {path: 'Tasks\\22_networkLatency.yml'}
+
+  # ===== ZLAG GAMING CORE ENGINE (ULTRA LOW LATENCY) =====
+  - !status: {status: 'Activating ZLAG Gaming Core Engine'}
+  - !task: {path: 'Tasks\\19_gamingCore.yml'}
+
+  # ===== CLEAN START MENU (ONLY APP LIST - NO PINNED APPS) =====
+  - !status: {status: 'Cleaning Start Menu - removing pinned apps'}
+  - !task: {path: 'Tasks\\26_cleanStartMenu.yml'}
+
+  # ===== SMALL AUTO-HIDE TASKBAR =====
+  - !status: {status: 'Configuring small auto-hide taskbar'}
+  - !task: {path: 'Tasks\\27_smallTaskbar.yml'}
+
+  # ===== LIMIT PUSH - SERVICE PURGE =====
+  - !status: {status: 'Purging unnecessary services'}
+  - !task: {path: 'Tasks\\23_servicePurge.yml'}
+
+  # ===== LIMIT PUSH - FEATURE STRIPPER =====
+  - !status: {status: 'Stripping unnecessary Windows features'}
+  - !task: {path: 'Tasks\\24_featureStripper.yml'}
+
+  # ===== LIMIT PUSH - TASK PURGER =====
+  - !status: {status: 'Purging telemetry scheduled tasks'}
+  - !task: {path: 'Tasks\\25_taskPurger.yml'}
+
+  # ===== CLEAN RIGHT-CLICK CONTEXT MENU =====
+  - !status: {status: 'Cleaning right-click context menu'}
+  - !task: {path: 'Tasks\\28_contextMenuCleaner.yml'}
+
+  # ===== OPTIONAL DEFENDER REMOVAL =====
+  - !status: {status: 'Disabling Windows Defender...', option: 'defender-disable'}
+  - !task: {path: 'Tasks\\18_defenderAggressive.yml', option: 'defender-disable'}
+  # ======= Depp Clean ========
+  - !status: {status: 'Deep system clean (temp files, event logs, OneDrive)'}
+  - !task: {path: 'Tasks\\08_deepClean.yml'}
+
+  - !status: {status: '✅ All optimizations applied. System will reboot automatically...'}

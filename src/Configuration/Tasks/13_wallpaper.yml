@@ -1,0 +1,6 @@
+title: Set Z LAG wallpaper
+actions:
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\set_wallpaper.ps1'

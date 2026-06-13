@@ -1,0 +1,26 @@
+title: "Small Auto-Hide Taskbar"
+actions:
+  - !writeStatus: {status: "Configuring small auto-hide taskbar..."}
+  
+  # FIX: Changed outer quotes to single quotes so backslashes don't break the scanner
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3', value: 'Settings', type: REG_BINARY, data: '30000000feffffff03000000030000003e00000028000000000000001004000080070000380400006000000001000000'}
+
+  # Enable small taskbar icons
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarSmallIcons', type: REG_DWORD, data: '1'}
+  
+  # Hide task view button
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowTaskViewButton', type: REG_DWORD, data: '0'}
+  
+  # Hide search box
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Search', value: 'SearchboxTaskbarMode', type: REG_DWORD, data: '0'}
+  
+  # Disable news and interests widget
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Feeds', value: 'ShellFeedsTaskbarViewMode', type: REG_DWORD, data: '2'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds', value: 'EnableFeeds', type: REG_DWORD, data: '0'}
+  
+  # Disable taskbar badges
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarBadges', type: REG_DWORD, data: '0'}
+  
+  # Restart Explorer to apply changes
+  - !taskKill: {name: 'explorer'}
+  - !cmd: {command: 'start explorer.exe'}

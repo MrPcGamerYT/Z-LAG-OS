@@ -1,0 +1,6 @@
+title: Block Microsoft account sign-in
+actions:
+  - !powerShell: {command: 'Stop-Service wlidsvc -Force -ErrorAction SilentlyContinue; Set-Service wlidsvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'BlockMicrosoftAccounts', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy', value: 'LetAppsGetAccountInfo', type: REG_DWORD, data: '2'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'NoConnectedUser', type: REG_DWORD, data: '3'}

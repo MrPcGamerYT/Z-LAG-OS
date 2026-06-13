@@ -1,0 +1,426 @@
+title: "Custom modded OS tweaks - Performance & Optimization (Massive Edition v2.0)"
+actions:
+  - !writeStatus: {status: "Applying massive modded OS performance tweaks..."}
+
+  # ================================================================
+  # SECTION 1: LOCK SCREEN & PERSONALIZATION
+  # ================================================================
+  
+  # Lock Screen Disable
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization', value: 'NoLockScreen', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization', value: 'NoChangingLockScreen', type: REG_DWORD, data: '1'}
+  
+  # Disable Lock Screen Tips & Hints
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'DisableLogonBackgroundImage', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'DisableLockScreenAppNotifications', type: REG_DWORD, data: '1'}
+  
+  # Disable Aero Shake (minimize all windows)
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'DisallowShaking', type: REG_DWORD, data: '1'}
+
+  # ================================================================
+  # SECTION 2: CONTEXT MENU (Classic Windows 10 Style)
+  # ================================================================
+  
+  # Restore Classic Windows 10 Context Menu
+  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32', type: REG_SZ, data: ''}
+
+  # ================================================================
+  # SECTION 3: EXPLORER PERFORMANCE & APPEARANCE
+  # ================================================================
+  
+  # Open Explorer to This PC instead of Quick Access
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'LaunchTo', type: REG_DWORD, data: '1'}
+  
+  # Disable Notification Center / Action Center
+  - !registryValue: {path: 'HKCU\Software\Policies\Microsoft\Windows\Explorer', value: 'DisableNotificationCenter', type: REG_DWORD, data: '1'}
+  
+  # Disable News and Interests on Taskbar
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Feeds', value: 'ShellFeedsTaskbarViewMode', type: REG_DWORD, data: '2'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds', value: 'EnableFeeds', type: REG_DWORD, data: '0'}
+  
+  # Hide Task View Button
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowTaskViewButton', type: REG_DWORD, data: '0'}
+  
+  # Hide Chat Button (Teams)
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarMn', type: REG_DWORD, data: '0'}
+  
+  # Hide Widgets Button
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarDa', type: REG_DWORD, data: '0'}
+  
+  # Disable Search Highlights
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\SearchSettings', value: 'IsDynamicSearchBoxEnabled', type: REG_DWORD, data: '0'}
+  
+  # Disable People Band on Taskbar
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People', value: 'PeopleBand', type: REG_DWORD, data: '0'}
+  
+  # Show file extensions
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'HideFileExt', type: REG_DWORD, data: '0'}
+  
+  # Disable Folder Thumbnails (faster browsing)
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'IconsOnly', type: REG_DWORD, data: '1'}
+
+  # ================================================================
+  # SECTION 4: QUICK ACCESS REMOVER (COMPLETE)
+  # ================================================================
+  
+  # Disable Quick Access completely
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'ShowRecent', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'ShowFrequent', type: REG_DWORD, data: '0'}
+  
+  # Disable Quick Access in File Explorer navigation pane
+  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'Attributes', type: REG_DWORD, data: '2951733500'}
+  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'FolderValueFlags', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'PinToNameSpaceTree', type: REG_DWORD, data: '1'}
+  
+  # Remove Quick Access from navigation pane (alternative method)
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\PropertyBag', value: 'ThisPCPolicy', type: REG_SZ, data: 'Hide'}
+  
+  # Remove Quick Access pinned items from registry
+  - !powerShell: {command: 'Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\QuickAccess" -Recurse -Force -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\QuickAccess\History" -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Disable Quick Access auto-discovery
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'DisallowCloudSearch', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0'}
+  
+  # Remove frequent folders from Quick Access
+  - !powerShell: {command: 'Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths" -Recurse -Force -ErrorAction SilentlyContinue'}
+
+  # ================================================================
+  # SECTION 5: REMOVE BLOAT FROM THIS PC
+  # ================================================================
+  
+  # Remove 3D Objects from This PC
+  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Remove Desktop Icon from This PC (if exists)
+  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Remove Documents Icon from This PC
+  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{d3162b92-9365-467a-956b-92703aca08af}'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Remove Downloads Icon from This PC
+  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{088e3905-0323-4b02-9826-5d99428e115f}'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Remove Music Icon from This PC
+  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{3dfdf296-dbec-4fb4-81d1-6a3438bcf4de}'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Remove Pictures Icon from This PC
+  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{24ad3ad4-a569-4530-98e1-ab02f9417aa8}'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Remove Videos Icon from This PC
+  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{f86fa3ab-70d2-4fc7-9c99-fcbf05467f3a}'' -Recurse -Force -ErrorAction SilentlyContinue'}
+
+  # ================================================================
+  # SECTION 6: CONTEXT MENU REMOVALS
+  # ================================================================
+  
+  # Block and Strip "Sharing" Context Menu Handler
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}', type: REG_SZ, data: ''}
+  - !powerShell: {command: 'Remove-Item -Path ''Registry::HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\Sharing'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  
+  # Block and Strip "Send To" Context Menu Handlers & Files
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{e2bf9676-5f8f-435c-97eb-11607a5bedf7}', type: REG_SZ, data: ''}
+  - !powerShell: {command: 'Remove-Item -Path ''Registry::HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\Send To'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Remove-Item -Path ''Registry::HKEY_CLASSES_ROOT\AllFilesystemObjects\shellex\ContextMenuHandlers\SendTo'' -Recurse -Force -ErrorAction SilentlyContinue'}
+  - !cmd: {command: 'del /f /q "%APPDATA%\Microsoft\Windows\SendTo\*"'}
+  
+  # Block modern Share UI
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{596AB062-B4D2-4215-9F74-E9109B0A8153}', type: REG_SZ, data: ''}
+  
+  # Remove "Give Access to" context menu
+  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}', operation: delete}
+  
+  # Remove "Cast to Device" from context menu
+  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{7AD84985-87B4-4a16-BE58-8B72A5B390F7}', operation: delete}
+  
+  # Remove "Edit with Photos" from context menu
+  - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\edit', operation: delete}
+  
+  # Remove "Print" from image context menu
+  - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\print', operation: delete}
+  
+  # Remove "Rotate Left/Right" from image context menu
+  - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\rotateleft', operation: delete}
+  - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\rotateright', operation: delete}
+  
+  # Remove "Include in Library" from context menu
+  - !registryValue: {path: 'HKCR\Folder\shellex\ContextMenuHandlers\Library Location', operation: delete}
+  
+  # Remove "Pin to Start" from context menu
+  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{a2a9545d-a0c2-42b4-9708-a0b2badd77c8}', operation: delete}
+  
+  # Remove "Pin to Taskbar" from context menu
+  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{90aa3a4e-1cba-4233-b8bb-535773d48449}', operation: delete}
+  
+  # Remove "Restore previous versions" from context menu
+  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}', operation: delete}
+  
+  # Remove "Scan with Windows Defender" from context menu
+  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\EPP', operation: delete}
+  
+  # Remove "Open with Code" from context menu (if exists)
+  - !registryValue: {path: 'HKCR\*\shell\Open with VS Code', operation: delete}
+  
+  # Remove "Compatibility Troubleshooter" from context menu
+  - !registryValue: {path: 'HKCR\lnkfile\shellex\ContextMenuHandlers\Compatibility', operation: delete}
+
+  # ================================================================
+  # SECTION 7: START MENU TWEAKS
+  # ================================================================
+  
+  # Remove Pinned Apps from Start Menu
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'NoPinnedAppsInStartMenu', type: REG_DWORD, data: '1'}
+  
+  # Show All Apps in Start Menu by default
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'ShowStartMenuAllApps', type: REG_DWORD, data: '1'}
+  
+  # Disable Suggested Apps in Start Menu
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'NoSuggestedApps', type: REG_DWORD, data: '1'}
+  
+  # Clear Recent Programs list
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'ClearRecentPrograms', type: REG_DWORD, data: '1'}
+
+  # ================================================================
+  # SECTION 8: SYSTEM RESTORE & PROTECTION
+  # ================================================================
+  
+  # Disable System Restore
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows NT\SystemRestore', value: 'DisableSR', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore', value: 'DisableSR', type: REG_DWORD, data: '1'}
+  
+  # Disable Windows Error Reporting
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting', value: 'Disabled', type: REG_DWORD, data: '1'}
+  
+  # Disable Customer Experience Improvement Program
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows', value: 'CEIPEnable', type: REG_DWORD, data: '0'}
+
+  # ================================================================
+  # SECTION 9: PERFORMANCE TWEAKS (UserPreferencesMask removed)
+  # ================================================================
+  
+  # Disable window animation
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'WindowArrangementActive', type: REG_SZ, data: '0'}
+  
+  # Disable smooth scrolling
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'SmoothScroll', type: REG_DWORD, data: '0'}
+  
+  # Disable menu animation (instant menus)
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'MenuShowDelay', type: REG_DWORD, data: '0'}
+  
+  # Disable taskbar animations
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarAnimations', type: REG_DWORD, data: '0'}
+  
+  # Disable visual effects for better performance
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects', value: 'VisualFXSetting', type: REG_DWORD, data: '2'}
+  
+  # Disable transparency effects
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'EnableTransparency', type: REG_DWORD, data: '0'}
+  
+  # Set processor scheduling to Programs (for better responsiveness)
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl', value: 'Win32PrioritySeparation', type: REG_DWORD, data: '26'}
+  
+  # Disable NTFS last access time updates
+  - !cmd: {command: 'fsutil behavior set disablelastaccess 1'}
+  
+  # Disable NTFS 8.3 filename creation
+  - !cmd: {command: 'fsutil behavior set disable8dot3 1'}
+  
+  # Increase system responsiveness
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile', value: 'SystemResponsiveness', type: REG_DWORD, data: '0'}
+  
+  # Disable background apps
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications', value: 'GlobalUserDisabled', type: REG_DWORD, data: '1'}
+  
+  # Disable startup delay
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize', value: 'StartupDelayInMSec', type: REG_DWORD, data: '0'}
+
+  # ================================================================
+  # SECTION 10: GAMING TWEAKS
+  # ================================================================
+  
+  # Disable GameDVR and Game Bar
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_Enabled', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_FSEBehaviorMode', type: REG_DWORD, data: '2'}
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_HonorUserFSEBehaviorMode', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR', value: 'AllowGameDVR', type: REG_DWORD, data: '0'}
+  
+  # Disable Xbox Game Bar
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR', value: 'AppCaptureEnabled', type: REG_DWORD, data: '0'}
+  
+  # Enable High Performance GPU preference
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers', value: 'GpuPreference', type: REG_DWORD, data: '1'}
+  
+  # Enable Hardware Accelerated GPU Scheduling
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers', value: 'HwSchMode', type: REG_DWORD, data: '2'}
+  
+  # Disable Fullscreen Optimizations
+  - !registryValue: {path: 'HKCU\System\GameConfigStore', value: 'GameDVR_DXGIHonorFSEWindowsCompatible', type: REG_DWORD, data: '1'}
+  
+  # Set high performance power plan
+  - !cmd: {command: 'powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'}
+  
+  # Disable Game Mode (can interfere with performance)
+  - !registryValue: {path: 'HKCU\Software\Microsoft\GameBar', value: 'AllowAutoGameMode', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\GameBar', value: 'AutoGameModeEnabled', type: REG_DWORD, data: '0'}
+
+  # ================================================================
+  # SECTION 11: NETWORK TWEAKS
+  # ================================================================
+  
+  # Disable Nagle's Algorithm for better latency
+  - !powerShell: {command: 'Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object { Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue }'}
+  
+  # Increase TCP auto-tuning
+  - !cmd: {command: 'netsh int tcp set global autotuninglevel=normal'}
+  
+  # Disable TCP Receive Side Scaling (RSS) for low-latency
+  - !cmd: {command: 'netsh int tcp set global rss=disabled'}
+  
+  # Flush DNS cache
+  - !cmd: {command: 'ipconfig /flushdns'}
+  
+  # Optimize network throttling
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile', value: 'NetworkThrottlingIndex', type: REG_DWORD, data: '4294967295'}
+  
+  # Disable Teredo (IPv6 transition)
+  - !cmd: {command: 'netsh interface teredo set state disabled'}
+  
+  # Increase maximum network connections
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'MaxUserPort', type: REG_DWORD, data: '65534'}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpTimedWaitDelay', type: REG_DWORD, data: '30'}
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpNumConnections', type: REG_DWORD, data: '16777214'}
+
+  # ================================================================
+  # SECTION 12: PRIVACY TWEAKS
+  # ================================================================
+  
+  # Disable Telemetry
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection', value: 'AllowTelemetry', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection', value: 'AllowTelemetry', type: REG_DWORD, data: '0'}
+  
+  # Disable Wi-Fi Sense
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting', value: 'value', type: REG_DWORD, data: '0'}
+  
+  # Disable Location Tracking
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location', value: 'Value', type: REG_SZ, data: 'Deny'}
+  
+  # Disable Advertising ID
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo', value: 'Enabled', type: REG_DWORD, data: '0'}
+  
+  # Disable Tailored Experiences
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Privacy', value: 'TailoredExperiencesWithDiagnosticDataEnabled', type: REG_DWORD, data: '0'}
+  
+  # Disable Find My Device
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Settings\FindMyDevice', value: 'LocationSyncEnabled', type: REG_DWORD, data: '0'}
+  
+  # Disable Cortana
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search', value: 'AllowCortana', type: REG_DWORD, data: '0'}
+  
+  # Disable Web Search in Start Menu
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search', value: 'DisableWebSearch', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search', value: 'ConnectedSearchUseWeb', type: REG_DWORD, data: '0'}
+  
+  # Disable Activity History
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'EnableActivityFeed', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'PublishUserActivities', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'UploadUserActivities', type: REG_DWORD, data: '0'}
+
+  # ================================================================
+  # SECTION 13: POWER & SLEEP TWEAKS
+  # ================================================================
+  
+  # Disable Hibernate (saves disk space)
+  - !cmd: {command: 'powercfg -h off'}
+  
+  # Disable Sleep After Time
+  - !cmd: {command: 'powercfg -change -standby-timeout-ac 0'}
+  - !cmd: {command: 'powercfg -change -standby-timeout-dc 0'}
+  
+  # Disable Monitor Turn Off After Time
+  - !cmd: {command: 'powercfg -change -monitor-timeout-ac 0'}
+  - !cmd: {command: 'powercfg -change -monitor-timeout-dc 0'}
+  
+  # Disable USB Selective Suspend
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\USB\DisableSelectiveSuspend', value: 'On', type: REG_DWORD, data: '0'}
+
+  # ================================================================
+  # SECTION 14: LOGON & BOOT TWEAKS
+  # ================================================================
+  
+  # Disable Last Access Timestamp for files
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\FileSystem', value: 'NtfsDisableLastAccessUpdate', type: REG_DWORD, data: '1'}
+  
+  # Disable 8.3 Filename Creation
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\FileSystem', value: 'NtfsDisable8dot3NameCreation', type: REG_DWORD, data: '1'}
+  
+  # Increase File System Cache Size
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'LargeSystemCache', type: REG_DWORD, data: '1'}
+  
+  # Disable Paging Executive
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'DisablePagingExecutive', type: REG_DWORD, data: '1'}
+  
+  # Set IO Priority to High
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl', value: 'IoPriority', type: REG_DWORD, data: '3'}
+  
+  # Set CPU Priority to High
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl', value: 'PagefilePriority', type: REG_DWORD, data: '0'}
+
+  # ================================================================
+  # SECTION 15: MODDED OS VISUAL ENHANCEMENTS
+  # ================================================================
+  
+  # Dark Mode for Apps
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'AppsUseLightTheme', type: REG_DWORD, data: '0'}
+  
+  # Dark Mode for System
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'SystemUsesLightTheme', type: REG_DWORD, data: '0'}
+  
+  # Remove Shortcut Arrow
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons', value: '29', type: REG_SZ, data: '%SystemRoot%\System32\shell32.dll,-50'}
+  
+  # Remove "- Shortcut" text from new shortcuts
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'link', type: REG_BINARY, data: '00000000'}
+  
+  # Disable Screen Saver
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'ScreenSaveActive', type: REG_SZ, data: '0'}
+  
+  # Disable First Run Animation
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'EnableFirstLogonAnimation', type: REG_DWORD, data: '0'}
+  
+  # Disable Sticky Keys prompt
+  - !registryValue: {path: 'HKCU\Control Panel\Accessibility\StickyKeys', value: 'Flags', type: REG_SZ, data: '506'}
+  
+  # Disable Filter Keys
+  - !registryValue: {path: 'HKCU\Control Panel\Accessibility\Keyboard Response', value: 'Flags', type: REG_SZ, data: '122'}
+  
+  # Disable Toggle Keys
+  - !registryValue: {path: 'HKCU\Control Panel\Accessibility\ToggleKeys', value: 'Flags', type: REG_SZ, data: '58'}
+
+  # ================================================================
+  # SECTION 16: ADVANCED MEMORY OPTIMIZATION
+  # ================================================================
+  
+  # Clear Page File at Shutdown
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'ClearPageFileAtShutdown', type: REG_DWORD, data: '0'}
+  
+  # Set System Cache Mode to Optimize Memory
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'SecondLevelDataCache', type: REG_DWORD, data: '1024'}
+  
+  # Enable Superfetch/Prefetch
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters', value: 'EnableSuperfetch', type: REG_DWORD, data: '0'}
+  
+  # Disable Prefetch
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters', value: 'EnablePrefetcher', type: REG_DWORD, data: '0'}
+
+  # ================================================================
+  # SECTION 17: SERVICE OPTIMIZATIONS
+  # ================================================================
+  
+  # ================================================================
+  # SECTION 18: RESTART EXPLORER (Apply All Changes)
+  # ================================================================
+  
+  # Restart Shell Environment Live
+  - !taskKill: {name: 'explorer'}
+  - !cmd: {command: 'start explorer.exe'}
