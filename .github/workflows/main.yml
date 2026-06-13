@@ -3,7 +3,7 @@ name: Package and Release Z LAG OS.apbx
 on:
   push:
     tags:
-      - '*'  # Trigger on any tag
+      - '*'
   workflow_dispatch:
     inputs:
       version:
@@ -15,11 +15,11 @@ jobs:
   package-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # This gives permission to create releases and push commits
+      contents: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.0   # Updated to support Node.js 24
 
       - name: Get tag version
         id: get_version
@@ -36,7 +36,6 @@ jobs:
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
-          echo "Updated playbook.conf with version $VERSION"
           cat src/playbook.conf
 
       - name: Commit version change to repository
@@ -50,14 +49,15 @@ jobs:
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
-      - name: Archive ./src/ to ZLAGOS.apbx with password
+      - name: Archive ./src/ to Z_LAG_OS.apbx with password
         run: |
           7z a -p"malte" -t7z ZLAGOS.7z ./src/*
-          mv ZLAGOS.7z ZLAGOS.apbx
+          mv ZLAGOS.7z Z_LAG_OS.apbx
 
       - name: Create Release and Upload Asset
-        uses: softprops/action-gh-release@v2
+        uses: ncipollo/release-action@v1   # Already uses Node.js 24
         with:
-          tag_name: ${{ steps.get_version.outputs.version }}
+          tag: ${{ steps.get_version.outputs.version }}
           name: Release ${{ steps.get_version.outputs.version }}
-          files: ZLAGOS.apbx
+          artifacts: "Z_LAG_OS.apbx"
+          token: ${{ secrets.GITHUB_TOKEN }}
