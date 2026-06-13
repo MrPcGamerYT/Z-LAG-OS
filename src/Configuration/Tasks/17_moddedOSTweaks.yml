@@ -86,33 +86,9 @@ actions:
   # Remove frequent folders from Quick Access
   - !powerShell: {command: 'Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\TypedPaths" -Recurse -Force -ErrorAction SilentlyContinue'}
 
-  # ================================================================
-  # SECTION 5: REMOVE BLOAT FROM THIS PC
-  # ================================================================
-  
-  # Remove 3D Objects from This PC
-  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}'' -Recurse -Force -ErrorAction SilentlyContinue'}
-  
-  # Remove Desktop Icon from This PC (if exists)
-  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}'' -Recurse -Force -ErrorAction SilentlyContinue'}
-  
-  # Remove Documents Icon from This PC
-  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{d3162b92-9365-467a-956b-92703aca08af}'' -Recurse -Force -ErrorAction SilentlyContinue'}
-  
-  # Remove Downloads Icon from This PC
-  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{088e3905-0323-4b02-9826-5d99428e115f}'' -Recurse -Force -ErrorAction SilentlyContinue'}
-  
-  # Remove Music Icon from This PC
-  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{3dfdf296-dbec-4fb4-81d1-6a3438bcf4de}'' -Recurse -Force -ErrorAction SilentlyContinue'}
-  
-  # Remove Pictures Icon from This PC
-  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{24ad3ad4-a569-4530-98e1-ab02f9417aa8}'' -Recurse -Force -ErrorAction SilentlyContinue'}
-  
-  # Remove Videos Icon from This PC
-  - !powerShell: {command: 'Remove-Item -Path ''HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{f86fa3ab-70d2-4fc7-9c99-fcbf05467f3a}'' -Recurse -Force -ErrorAction SilentlyContinue'}
 
   # ================================================================
-  # SECTION 6: CONTEXT MENU REMOVALS
+  # SECTION 5: CONTEXT MENU REMOVALS
   # ================================================================
   
   # Block and Strip "Sharing" Context Menu Handler
@@ -166,7 +142,7 @@ actions:
   - !registryValue: {path: 'HKCR\lnkfile\shellex\ContextMenuHandlers\Compatibility', operation: delete}
 
   # ================================================================
-  # SECTION 7: START MENU TWEAKS
+  # SECTION 6: START MENU TWEAKS
   # ================================================================
   
   # Remove Pinned Apps from Start Menu
@@ -182,7 +158,7 @@ actions:
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'ClearRecentPrograms', type: REG_DWORD, data: '1'}
 
   # ================================================================
-  # SECTION 8: SYSTEM RESTORE & PROTECTION
+  # SECTION 7: SYSTEM RESTORE & PROTECTION
   # ================================================================
   
   # Disable System Restore
@@ -196,7 +172,7 @@ actions:
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows', value: 'CEIPEnable', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 9: PERFORMANCE TWEAKS (UserPreferencesMask removed)
+  # SECTION 8: PERFORMANCE TWEAKS (UserPreferencesMask removed)
   # ================================================================
   
   # Disable window animation
@@ -236,7 +212,7 @@ actions:
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize', value: 'StartupDelayInMSec', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 10: GAMING TWEAKS
+  # SECTION 9: GAMING TWEAKS
   # ================================================================
   
   # Disable GameDVR and Game Bar
@@ -265,7 +241,7 @@ actions:
   - !registryValue: {path: 'HKCU\Software\Microsoft\GameBar', value: 'AutoGameModeEnabled', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 11: NETWORK TWEAKS
+  # SECTION 10: NETWORK TWEAKS
   # ================================================================
   
   # Disable Nagle's Algorithm for better latency
@@ -292,7 +268,7 @@ actions:
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpNumConnections', type: REG_DWORD, data: '16777214'}
 
   # ================================================================
-  # SECTION 12: PRIVACY TWEAKS
+  # SECTION 11: PRIVACY TWEAKS
   # ================================================================
   
   # Disable Telemetry
@@ -327,7 +303,7 @@ actions:
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'UploadUserActivities', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 13: POWER & SLEEP TWEAKS
+  # SECTION 12: POWER & SLEEP TWEAKS
   # ================================================================
   
   # Disable Hibernate (saves disk space)
@@ -345,7 +321,7 @@ actions:
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\USB\DisableSelectiveSuspend', value: 'On', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 14: LOGON & BOOT TWEAKS
+  # SECTION 13: LOGON & BOOT TWEAKS
   # ================================================================
   
   # Disable Last Access Timestamp for files
@@ -367,7 +343,7 @@ actions:
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl', value: 'PagefilePriority', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 15: MODDED OS VISUAL ENHANCEMENTS
+  # SECTION 14: MODDED OS VISUAL ENHANCEMENTS
   # ================================================================
   
   # Dark Mode for Apps
@@ -392,7 +368,7 @@ actions:
   - !registryValue: {path: 'HKCU\Control Panel\Accessibility\ToggleKeys', value: 'Flags', type: REG_SZ, data: '58'}
 
   # ================================================================
-  # SECTION 16: ADVANCED MEMORY OPTIMIZATION
+  # SECTION 15: ADVANCED MEMORY OPTIMIZATION
   # ================================================================
   
   # Clear Page File at Shutdown
@@ -408,11 +384,7 @@ actions:
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters', value: 'EnablePrefetcher', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 17: SERVICE OPTIMIZATIONS
-  # ================================================================
-  
-  # ================================================================
-  # SECTION 18: RESTART EXPLORER (Apply All Changes)
+  # SECTION 16: RESTART EXPLORER (Apply All Changes)
   # ================================================================
   
   # Restart Shell Environment Live
