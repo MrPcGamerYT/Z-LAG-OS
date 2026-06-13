@@ -1,4 +1,4 @@
-title: "Custom modded OS tweaks - Performance & Optimization (Massive Edition v2.0)"
+title: "Applying modded OS tweaks"
 actions:
   - !writeStatus: {status: "Applying massive modded OS performance tweaks..."}
 
