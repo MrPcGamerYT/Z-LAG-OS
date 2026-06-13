@@ -1,0 +1,33 @@
+name: Package and Release Z LAG OS.apbx
+
+on:
+  push:
+    tags:
+      - 'Z LAG OS.apbx'  # Trigger on tag 'Z LAG OS.apbx'
+  workflow_dispatch:     # Allow manual trigger
+
+jobs:
+  package-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install p7zip
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Archive ./src/ to Z LAG OS.apbx with password
+        run: |
+          7z a -p"malte" -t7z Z LAG OS.7z ./src/*
+          mv Z LAG OS.7z Z LAG OS.apbx
+          
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: 0.1
+          name: 0.1
+          files: Z LAG OS.apbx
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          run: |
