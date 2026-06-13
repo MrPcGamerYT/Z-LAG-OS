@@ -60,33 +60,22 @@ actions:
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'IconsOnly', type: REG_DWORD, data: '1'}
 
   # ================================================================
-  # SECTION 4: QUICK ACCESS REMOVER (COMPLETE)
+  # SECTION 4: QUICK ACCESS REMOVER (FIXED - NO LONGER BREAKS RENAMING)
   # ================================================================
   
-  # Disable Quick Access completely
+  # Disable Quick Access internal tracking features safely
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'ShowRecent', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'ShowFrequent', type: REG_DWORD, data: '0'}
   
-  # Disable Quick Access in File Explorer navigation pane
-  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'Attributes', type: REG_DWORD, data: '150994944'}
-  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'FolderValueFlags', type: REG_DWORD, data: '0'}
-  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'PinToNameSpaceTree', type: REG_DWORD, data: '1'}
-  
-  # Remove Quick Access from navigation pane (alternative method)
+  # Hide Quick Access from navigation pane using the safe PropertyBag policy modification
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\PropertyBag', value: 'ThisPCPolicy', type: REG_SZ, data: 'Hide'}
   
-  # Remove Quick Access pinned items from registry
-  - !powerShell: {command: 'Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\QuickAccess" -Recurse -Force -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\QuickAccess\History" -Recurse -Force -ErrorAction SilentlyContinue'}
-  
-  # Disable Quick Access auto-discovery
+  # Disable Quick Access cloud discovery pipelines
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'DisallowCloudSearch', type: REG_DWORD, data: '1'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0'}
-  
-
 
   # ================================================================
-  # SECTION 5: CONTEXT MENU REMOVALS
+  # SECTION 5: CONTEXT MENU REMOVALS (FIXED TO AVOID SHELL LAG)
   # ================================================================
   
   # Block and Strip "Sharing" Context Menu Handler
@@ -121,11 +110,11 @@ actions:
   # Remove "Include in Library" from context menu
   - !registryValue: {path: 'HKCR\Folder\shellex\ContextMenuHandlers\Library Location', operation: delete}
   
-  # Remove "Pin to Start" from context menu
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{a2a9545d-a0c2-42b4-9708-a0b2badd77c8}', operation: delete}
+  # Block "Pin to Start" safely via tracking policy instead of direct key deletion
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{a2a9545d-a0c2-42b4-9708-a0b2badd77c8}', type: REG_SZ, data: ''}
   
-  # Remove "Pin to Taskbar" from context menu
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{90aa3a4e-1cba-4233-b8bb-535773d48449}', operation: delete}
+  # Block "Pin to Taskbar" safely via tracking policy instead of direct key deletion
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{90aa3a4e-1cba-4233-b8bb-535773d48449}', type: REG_SZ, data: ''}
   
   # Remove "Restore previous versions" from context menu
   - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}', operation: delete}
@@ -170,7 +159,7 @@ actions:
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows', value: 'CEIPEnable', type: REG_DWORD, data: '0'}
 
   # ================================================================
-  # SECTION 8: PERFORMANCE TWEAKS (UserPreferencesMask removed)
+  # SECTION 8: PERFORMANCE TWEAKS
   # ================================================================
   
   # Disable window animation
@@ -234,7 +223,7 @@ actions:
   # Set high performance power plan
   - !cmd: {command: 'powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'}
   
-  # Disable Game Mode (can interfere with performance)
+  # Disable Game Mode
   - !registryValue: {path: 'HKCU\Software\Microsoft\GameBar', value: 'AllowAutoGameMode', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\GameBar', value: 'AutoGameModeEnabled', type: REG_DWORD, data: '0'}
 
