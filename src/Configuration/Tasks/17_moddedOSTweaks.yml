@@ -1,4 +1,4 @@
-title: "Applying modded OS tweaks"
+title: Applying modded OS tweaks
 actions:
   - !writeStatus: {status: "Applying massive modded OS performance tweaks..."}
 
