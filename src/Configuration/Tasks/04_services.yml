@@ -1,4 +1,4 @@
-title: Disable resource-hogging services
+title: Disabling services
 actions:
   - !powerShell: {command: 'Stop-Service DiagTrack -Force -ErrorAction SilentlyContinue; Set-Service DiagTrack -StartupType Disabled -ErrorAction SilentlyContinue'}
   - !powerShell: {command: 'Stop-Service dmwappushservice -Force -ErrorAction SilentlyContinue; Set-Service dmwappushservice -StartupType Disabled -ErrorAction SilentlyContinue'}
