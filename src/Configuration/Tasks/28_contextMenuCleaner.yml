@@ -1,192 +1,82 @@
-title: "Remove unwanted context menu items (Enhanced - Aggressive)"
+title: "Universal Context Menu Debloat (Safe & Aggressive)"
 privilege: TrustedInstaller
 actions:
-  - !writeStatus: {status: "Removing unwanted context menu entries (aggressive)..."}
+  - !writeStatus: {status: "Initializing safe universal context menu cleanup..."}
 
-  # ---- Enable classic right-click menu on Windows 11 ----
-  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32', value: '', type: REG_SZ, data: ''}
+  # ================================================================
+  # 1. WINDOWS 11 CLASSIC MENU RESTORE
+  # ================================================================
+  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32', type: REG_SZ, data: ''}
 
-  # ========== REMOVE "SET AS DESKTOP BACKGROUND" (image files) ==========
-  - !registryValue: {path: 'HKCR\*\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\giffile\shell\setdesktopwallpaper', operation: delete}
+  # ================================================================
+  # 2. CORE SHELL EXTENSION BLOCKING (THE SAFE METHOD)
+  # Instead of deleting GUIDs from HKCR, we block them OS-wide.
+  # ================================================================
+  
+  # Block "Cast to Device" / "Play To"
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{7AD84985-87B4-4a16-BE58-8B72A5B390F7}', type: REG_SZ, data: ''}
+  
+  # Block Modern & Legacy "Share" UI
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{596AB062-B4D2-4215-9F74-E9109B0A8153}', type: REG_SZ, data: ''}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}', type: REG_SZ, data: ''}
+  
+  # Block "Send To" (Safely hides the menu without breaking file operations)
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{7BA4C740-9E81-11CF-99D3-00AA004AE837}', type: REG_SZ, data: ''}
+  
+  # Block "Pin to Start"
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{a2a9545d-a0c2-42b4-9708-a0b2badd77c8}', type: REG_SZ, data: ''}
+  
+  # Block "Pin to Taskbar"
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{90aa3a4e-1cba-4233-b8bb-535773d48449}', type: REG_SZ, data: ''}
+  
+  # Block "Pin to Quick Access" (Crucial: Blocking this instead of deleting it prevents the New Folder freeze)
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{679f85cb-0220-4080-b29b-5540cc05aab6}', type: REG_SZ, data: ''}
+
+  # Block "Customize this folder" 
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{ef1b7f6b-9022-43de-bc6e-fdbe04c1d589}', type: REG_SZ, data: ''}
+
+  # Block "Include in Library"
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{3D1975AF-48C6-4f8e-A182-BE0E08FA86A9}', type: REG_SZ, data: ''}
+
+  # Block Windows Defender / Security Scan from context menu
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{09A47860-541B-475F-9FA5-D43A2B0D4F5D}', type: REG_SZ, data: ''}
+
+  # Block "Troubleshoot Compatibility"
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked', value: '{1d27f844-3a1f-4410-85ac-146d78461dae}', type: REG_SZ, data: ''}
+
+  # ================================================================
+  # 3. SAFE DIRECT DELETIONS (File-Specific Verbs)
+  # These are safe to delete because they are isolated verbs attached
+  # only to specific file extensions, not core Explorer namespaces.
+  # ================================================================
+
+  # Remove "Set as desktop background"
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\setasbackground', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\setaswallpaper', operation: delete}
 
-  # ========== REMOVE "ROTATE LEFT / ROTATE RIGHT" (image files) ==========
+  # Remove "Rotate left / Rotate right"
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\rotateleft', operation: delete}
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\rotateright', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\rotateleft', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\rotateright', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\rotateleft', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\rotateright', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\rotate', operation: delete}
 
-  # ========== REMOVE "CAST TO DEVICE" (all GUIDs) ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{7AD84985-87B4-4a16-BE58-8B72A5B390F7}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{7AD84985-87B4-4a16-BE58-8B72A5B390F7}', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\{7AD84985-87B4-4a16-BE58-8B72A5B390F7}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{F7F24ED4-5F68-4B78-82DA-3C92C3C26775}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{E3A0C2D7-1BFA-45F9-9B9E-2F4F5C6D8E9A}', operation: delete}
-  - !registryValue: {path: 'HKCR\SystemFileAssociations\*\shellex\ContextMenuHandlers\{7AD84985-87B4-4a16-BE58-8B72A5B390F7}', operation: delete}
-  - !registryValue: {path: 'HKCR\Media\shellex\ContextMenuHandlers\{7AD84985-87B4-4a16-BE58-8B72A5B390F7}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{E1127A54-17A4-4F9D-919E-3C451EF05B0B}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{8C8426FC-77B7-4F15-9CDA-0129E1B79D80}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{43668BF4-1FEE-45E1-B585-DF5F5B64F75B}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{E1127A54-17A4-4F9D-919E-3C451EF05B0B}', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\{E1127A54-17A4-4F9D-919E-3C451EF05B0B}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\PlayTo', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\CastToDevice', operation: delete}
-
-  # ========== REMOVE "SHARE" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\Sharing', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\Sharing', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\Sharing', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\Sharing (Legacy)', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\Sharing (Legacy)', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\ModernSharing', operation: delete}
-
-  # ========== REMOVE "SEND TO" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\Send To', operation: delete}
-  - !registryValue: {path: 'HKCR\AllFilesystemObjects\shellex\ContextMenuHandlers\SendTo', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{7BA4C740-9E81-11CF-99D3-00AA004AE837}', operation: delete}
-
-  # ========== REMOVE "INCLUDE IN LIBRARY" ==========
-  - !registryValue: {path: 'HKCR\Folder\shellex\ContextMenuHandlers\Library Location', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\Library Location', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\Library Location', operation: delete}
-
-  # ========== REMOVE "EDIT WITH PHOTOS" AND "PRINT" ==========
+  # Remove "Edit with Photos" & "Print" for images
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\edit', operation: delete}
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\print', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\edit', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\edit', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\print', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\print', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\print', operation: delete}
 
-  # ========== REMOVE "CUSTOMIZE THIS FOLDER" ==========
-  - !registryValue: {path: 'HKCR\Directory\ShellEx\ContextMenuHandlers\{ef1b7f6b-9022-43de-bc6e-fdbe04c1d589}', operation: delete}
-  - !registryValue: {path: 'HKCR\Folder\ShellEx\ContextMenuHandlers\{ef1b7f6b-9022-43de-bc6e-fdbe04c1d589}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shell\Customize', operation: delete}
-  - !registryValue: {path: 'HKCR\Folder\shell\Customize', operation: delete}
-
-  # ========== REMOVE "PIN TO START" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{a2a9545d-a0c2-42b4-9708-a0b2badd77c8}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{a2a9545d-a0c2-42b4-9708-a0b2badd77c8}', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\{a2a9545d-a0c2-42b4-9708-a0b2badd77c8}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{a2a9545d-a0c2-42b4-9708-a0b2badd77c9}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{a2a9545d-a0c2-42b4-9708-a0b2badd77ca}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\PintoStartScreen', operation: delete}
-
-  # ========== REMOVE "PIN TO TASKBAR" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{90aa3a4e-1cba-4233-b8bb-535773d48449}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{90aa3a4e-1cba-4233-b8bb-535773d48449}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\PinToTaskbar', operation: delete}
-
-  # ========== REMOVE "PIN TO QUICK ACCESS" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{50ad69a4-87c3-4a72-b7c4-80c4c3b8f1f9}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{82044F4A-9E7F-4B4F-BDB1-C43559D3BA64}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{679f85cb-0220-4080-b29b-5540cc05aab6}', operation: delete}
-  - !registryValue: {path: 'HKCR\Folder\shellex\ContextMenuHandlers\{679f85cb-0220-4080-b29b-5540cc05aab6}', operation: delete}
-  - !registryValue: {path: 'HKCR\AllFilesystemObjects\shellex\ContextMenuHandlers\{679f85cb-0220-4080-b29b-5540cc05aab6}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\PinToQuickAccess', operation: delete}
-
-  # ========== REMOVE "UNPIN FROM QUICK ACCESS" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{a0eafe71-d696-428a-ade0-6dab634d3fb0}', operation: delete}
-  - !registryValue: {path: 'HKCR\Folder\shellex\ContextMenuHandlers\{a0eafe71-d696-428a-ade0-6dab634d3fb0}', operation: delete}
-
-  # ========== REMOVE "RESTORE PREVIOUS VERSIONS" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\{596AB062-B4D2-4215-9F74-E9109B0A8153}', operation: delete}
-
-  # ========== REMOVE "GIVE ACCESS TO" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\{f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\SharingWizard', operation: delete}
-
-  # ========== REMOVE "TROUBLESHOOT COMPATIBILITY" ==========
-  - !registryValue: {path: 'HKCR\exefile\shellex\ContextMenuHandlers\{1d27f844-3a1f-4410-85ac-146d78461dae}', operation: delete}
-  - !registryValue: {path: 'HKCR\Application\shellex\ContextMenuHandlers\{1d27f844-3a1f-4410-85ac-146d78461dae}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\Troubleshoot', operation: delete}
-
-  # ========== REMOVE "SCAN WITH WINDOWS DEFENDER" ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{09A47860-541B-475F-9FA5-D43A2B0D4F5D}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{09A47860-541B-475F-9FA5-D43A2B0D4F5D}', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\{09A47860-541B-475F-9FA5-D43A2B0D4F5D}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{8369AB20-56C9-11D0-94E8-00AA0059CE02}', operation: delete}
-
-  # ========== REMOVE "EDIT WITH PAINT 3D" ==========
+  # Remove "Edit with Paint 3D" & "3D Print"
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\3D Edit', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\3D Edit', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\3D Edit', operation: delete}
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\3D Print', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\3D Print', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\3D Print', operation: delete}
 
-  # ========== REMOVE "BURN TO DISC" ==========
+  # Remove "Burn to disc"
   - !registryValue: {path: 'HKCR\ISOFile\shell\burn', operation: delete}
   - !registryValue: {path: 'HKCR\Windows.IsoFile\shell\burn', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\burn', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shell\burn', operation: delete}
 
-  # ========== REMOVE "PLAY" (Audio/Video files) ==========
-  - !registryValue: {path: 'HKCR\AudioCD\shell\play', operation: delete}
-  - !registryValue: {path: 'HKCR\MediaFile\shell\Play', operation: delete}
-  - !registryValue: {path: 'HKCR\WMP11.AssocFile.MP3\shell\Play', operation: delete}
-  - !registryValue: {path: 'HKCR\WMP11.AssocFile.AVI\shell\Play', operation: delete}
-  - !registryValue: {path: 'HKCR\WMP11.AssocFile.WMV\shell\Play', operation: delete}
-  - !registryValue: {path: 'HKCR\WMP11.AssocFile.MP4\shell\Play', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\play', operation: delete}
-
-  # ========== REMOVE "OPEN WITH" variations ==========
-  - !registryValue: {path: 'HKCR\*\shell\openas', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\OpenWith', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\OpenWith', operation: delete}
-
-  # ========== REMOVE ENCRYPT/BITLOCKER ==========
+  # Remove Extra BitLocker Context Menus (Leave base OS encryption intact)
   - !registryValue: {path: 'HKCR\Drive\shell\encrypt-bde', operation: delete}
   - !registryValue: {path: 'HKCR\Drive\shell\manage-bde', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\encrypt', operation: delete}
 
-  # ========== REMOVE NETWORK RELATED ==========
-  - !registryValue: {path: 'HKCR\Network\Shell\AddToFavorites', operation: delete}
-  - !registryValue: {path: 'HKCR\NetworkLocation\Shell\AddToFavorites', operation: delete}
-  - !registryValue: {path: 'HKCR\Network\Shell\AlwaysAvailableOffline', operation: delete}
-  - !registryValue: {path: 'HKCR\NetworkLocation\Shell\AlwaysAvailableOffline', operation: delete}
-  - !registryValue: {path: 'HKCR\Network\Shell\MapNetworkDrive', operation: delete}
-  - !registryValue: {path: 'HKCR\Network\Shell\DisconnectNetworkDrive', operation: delete}
+  # ================================================================
+  # 4. RESTART EXPLORER TO APPLY
+  # ================================================================
+  - !taskKill: {name: 'explorer'}
+  - !cmd: {command: 'start explorer.exe'}
 
-  # ========== REMOVE LIBRARY RELATED ==========
-  - !registryValue: {path: 'HKCR\Folder\shellex\ContextMenuHandlers\{5e3c39a1-9e5f-4518-ac47-9a0bb91c6a1b}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{5e3c39a1-9e5f-4518-ac47-9a0bb91c6a1b}', operation: delete}
-
-  # ========== REMOVE EXTRA BLOAT ==========
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{7C2CF117-2E48-45E8-AAE0-2721F1F130F8}', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shellex\ContextMenuHandlers\{7C2CF117-2E48-45E8-AAE0-2721F1F130F8}', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shellex\ContextMenuHandlers\{7C2CF117-2E48-45E8-AAE0-2721F1F130F8}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{5c2c81a0-ee37-4795-9166-39ec11e182ab}', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shellex\ContextMenuHandlers\{9cef69de-1a08-4f39-96d1-ac6b9374e012}', operation: delete}
-
-  # ========== REMOVE "TAKE OWNERSHIP" AND "RUN AS ADMINISTRATOR" (safe) ==========
-  - !registryValue: {path: 'HKCR\*\shell\takeownership', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shell\takeownership', operation: delete}
-  - !registryValue: {path: 'HKCR\Drive\shell\takeownership', operation: delete}
-  - !registryValue: {path: 'HKCR\Folder\shell\takeownership', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\runas', operation: delete}
-  - !registryValue: {path: 'HKCR\Directory\shell\runas', operation: delete}
-  - !registryValue: {path: 'HKCR\dllfile\shell\runas', operation: delete}
-  - !registryValue: {path: 'HKCR\exefile\shell\runas', operation: delete}
-
-  # ========== REMOVE "RESTART" (from context menu) ==========
-  - !registryValue: {path: 'HKCR\*\shell\restart', operation: delete}
-
-  # ========== REMOVE QUICK ACTION FOR CAST (Action Center) ==========
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ActionCenter\Quick Actions\All\QuickAction{8E37F5F2-2715-4AB4-90B9-590EBB72ED97}', operation: delete}
-
-  - !writeStatus: {status: "Context menu cleaned (aggressive - all bloat removed)."}
+  - !writeStatus: {status: "Universal context menu cleanup applied. OS is stable."}
