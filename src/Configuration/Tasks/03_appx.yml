@@ -1,4 +1,4 @@
-title: APPX
+title: Removing Bloat Apps
 description: Removal of APPX packages (Keeps NVIDIA, AMD, Intel, Critical System Apps)
 privilege: TrustedInstaller
 actions:
