@@ -4,11 +4,18 @@ on:
   push:
     tags:
       - '*'  # Trigger on any tag
-  workflow_dispatch:     # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Project version (example: 1.0)"
+        required: true
+        default: "0.1"
 
 jobs:
   package-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # This gives permission to create releases
 
     steps:
       - name: Checkout repository
@@ -20,7 +27,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "push" ]]; then
             VERSION="${{ github.ref_name }}"
           else
-            VERSION="0.1"  # Default version for manual trigger
+            VERSION="${{ github.event.inputs.version }}"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
@@ -30,7 +37,7 @@ jobs:
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
           echo "Updated playbook.conf with version $VERSION"
-          cat src/playbook.conf  # Show the updated file for verification
+          cat src/playbook.conf
 
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
@@ -46,5 +53,3 @@ jobs:
           tag_name: ${{ steps.get_version.outputs.version }}
           name: Release ${{ steps.get_version.outputs.version }}
           files: ZLAGOS.apbx
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
