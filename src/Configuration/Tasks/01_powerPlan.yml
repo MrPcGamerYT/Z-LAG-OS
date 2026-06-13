@@ -1,4 +1,4 @@
-title: Create and activate Ultimate Performance power plan
+title: Activating Ultimate Performance power plan
 actions:
   - !writeStatus: {status: "Running power plan setup script..."}
   - !powerShell:
