@@ -15,7 +15,7 @@ jobs:
   package-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # This gives permission to create releases
+      contents: write  # This gives permission to create releases and push commits
 
     steps:
       - name: Checkout repository
@@ -38,6 +38,14 @@ jobs:
           sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
           echo "Updated playbook.conf with version $VERSION"
           cat src/playbook.conf
+
+      - name: Commit version change to repository
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add src/playbook.conf
+          git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
+          git push
 
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
