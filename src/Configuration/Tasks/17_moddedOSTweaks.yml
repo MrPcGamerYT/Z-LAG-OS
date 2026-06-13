@@ -68,7 +68,7 @@ actions:
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'ShowFrequent', type: REG_DWORD, data: '0'}
   
   # Disable Quick Access in File Explorer navigation pane
-  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'Attributes', type: REG_DWORD, data: '2951733500'}
+  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'Attributes', type: REG_DWORD, data: '150994944'}
   - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'FolderValueFlags', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{22877a6d-37a1-461a-91b0-dbda5aaebc99}\ShellFolder', value: 'PinToNameSpaceTree', type: REG_DWORD, data: '1'}
   
