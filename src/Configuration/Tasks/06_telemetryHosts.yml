@@ -1,9 +1,43 @@
 title: Block Microsoft telemetry via hosts file
+description: ZeroLag telemetry suppression layer (safe + effective)
+
 actions:
+
   - !powerShell:
       exeDir: true
       command: '.\add_telemetry_hosts.ps1'
-  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows', value: 'CEIPEnable', type: REG_DWORD, data: 0}
-  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System', value: 'NoConnectedUser', type: REG_DWORD, data: 3}
-  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\OneDrive', value: 'DisableFileSyncNGSC', type: REG_DWORD, data: 1}
-  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent', value: 'DisableWindowsSpotlightFeatures', type: REG_DWORD, data: 1}
+
+  # Disable CEIP (real telemetry core)
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\SQMClient\Windows'
+      value: 'CEIPEnable'
+      type: REG_DWORD
+      data: 0
+
+  # Disable Windows consumer data collection
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent'
+      value: 'DisableWindowsConsumerFeatures'
+      type: REG_DWORD
+      data: 1
+
+  # Disable Spotlight / ads / suggestions
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent'
+      value: 'DisableWindowsSpotlightFeatures'
+      type: REG_DWORD
+      data: 1
+
+  # Disable OneDrive sync policy
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\OneDrive'
+      value: 'DisableFileSyncNGSC'
+      type: REG_DWORD
+      data: 1
+
+  # Disable diagnostics level (IMPORTANT)
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection'
+      value: 'AllowTelemetry'
+      type: REG_DWORD
+      data: 0
