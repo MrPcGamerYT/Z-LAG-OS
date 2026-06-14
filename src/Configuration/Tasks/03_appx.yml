@@ -160,4 +160,46 @@ actions:
   - !appx: {operation: clearCache, name: '*Microsoft.Windows.Search*'}
   - !appx: {operation: clearCache, name: '*Microsoft.Windows.SecHealthUI*'}
 
+  - !writeStatus: {status: "Downloading & Installing Visual C++ AIO, DirectX, and .NET Runtime..."}
+
+  # Download and Install Visual C++ Redistributables (AIO Pack)
+  - !download:
+      url: 'https://github.com/abbodi1406/vcredist/releases/latest/download/VisualCppRedist_AIO_x86_x64.exe'
+      destination: 'VisualCppRedist_AIO.exe'
+  - !cmd:
+      command: 'VisualCppRedist_AIO.exe /y'
+      wait: true
+
+  # Download and Install DirectX Web Setup
+  - !download:
+      url: 'https://download.microsoft.com/download/1/7/1/1718CCC4-6315-4D8E-9543-8E28A4E18C4C/dxwebsetup.exe'
+      destination: 'dxwebsetup.exe'
+  - !cmd:
+      command: 'dxwebsetup.exe /Q'
+      wait: true
+
+  # Download and Install .NET Desktop Runtime (x64)
+  - !download:
+      url: 'https://download.visualstudio.microsoft.com/download/pr/4b998cfb-6003-4613-8472-a425333e69f8/9c45091f37eaf9fc5d9edcd9eabde17e/windowsdesktop-runtime-8.0.2-win-x64.exe'
+      destination: 'dotnet_runtime_x64.exe'
+  - !cmd:
+      command: 'dotnet_runtime_x64.exe /quiet /norestart'
+      wait: true
+
+  # Create shortcuts on Desktop for official GPU drivers
+  - !powerShell:
+      command: |
+        $WshShell = New-Object -comObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut("$HOME\Desktop\Download NVIDIA Drivers.url")
+        $Shortcut.TargetPath = "https://www.nvidia.com/Download/index.aspx"
+        $Shortcut.Save()
+        
+        $Shortcut2 = $WshShell.CreateShortcut("$HOME\Desktop\Download AMD Drivers.url")
+        $Shortcut2.TargetPath = "https://www.amd.com/en/support"
+        $Shortcut2.Save()
+        
+        $Shortcut3 = $WshShell.CreateShortcut("$HOME\Desktop\Download Intel Drivers.url")
+        $Shortcut3.TargetPath = "https://www.intel.com/content/www/us/en/download-center/home.html"
+        $Shortcut3.Save()
+
   - !writeStatus: {status: '✅ All bloatware removed successfully! GPU drivers and critical apps kept intact!'}
