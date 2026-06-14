@@ -204,4 +204,38 @@ actions:
         $Shortcut3.TargetPath = 'https://www.intel.com/content/www/us/en/download-center/home.html'
         $Shortcut3.Save()
 
+  - !writeStatus: {status: 'Installing utilities'}
+  - !powerShell:
+    command: '.\software.ps1'
+    exeDir: true
+    wait: true
+    weight: 150
+    runas: currentUserElevated
+
+    # Browsers
+  - !writeStatus: {status: 'Installing Brave', option: 'browser-brave'}
+  - !powerShell:
+    command: '.\software.ps1 -Brave'
+    exeDir: true
+    wait: true
+    weight: 120
+    option: 'browser-brave'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing operagx', option: 'opera-gx'}
+  - !powerShell:
+    command: '.\software.ps1 -OperaGX'
+    exeDir: true
+    wait: true
+    weight: 120
+    option: 'opera-gx'
+    runas: currentUserElevated
+  - !writeStatus: {status: 'Installing Google Chrome', option: 'browser-chrome'}
+  - !powerShell:
+    command: '.\software.ps1 -Chrome'
+    exeDir: true
+    wait: true
+    weight: 120
+    option: 'browser-chrome'
+    runas: currentUserElevated
+
   - !writeStatus: {status: '✅ All bloatware removed successfully! GPU drivers and critical apps kept intact!'}
