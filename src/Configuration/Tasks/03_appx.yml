@@ -186,20 +186,22 @@ actions:
       command: 'dotnet_runtime_x64.exe /quiet /norestart'
       wait: true
 
-  # Create shortcuts on Desktop for official GPU drivers
+  # Create shortcuts on Desktop for official GPU drivers (Syntax Error Fixed)
   - !powerShell:
       command: |
         $WshShell = New-Object -comObject WScript.Shell
-        $Shortcut = $WshShell.CreateShortcut("$HOME\Desktop\Download NVIDIA Drivers.url")
-        $Shortcut.TargetPath = "https://www.nvidia.com/Download/index.aspx"
+        $DesktopPath = [System.Environment]::GetFolderPath('Desktop')
+        
+        $Shortcut = $WshShell.CreateShortcut($DesktopPath + '\Download NVIDIA Drivers.url')
+        $Shortcut.TargetPath = 'https://www.nvidia.com/Download/index.aspx'
         $Shortcut.Save()
         
-        $Shortcut2 = $WshShell.CreateShortcut("$HOME\Desktop\Download AMD Drivers.url")
-        $Shortcut2.TargetPath = "https://www.amd.com/en/support"
+        $Shortcut2 = $WshShell.CreateShortcut($DesktopPath + '\Download AMD Drivers.url')
+        $Shortcut2.TargetPath = 'https://www.amd.com/en/support'
         $Shortcut2.Save()
         
-        $Shortcut3 = $WshShell.CreateShortcut("$HOME\Desktop\Download Intel Drivers.url")
-        $Shortcut3.TargetPath = "https://www.intel.com/content/www/us/en/download-center/home.html"
+        $Shortcut3 = $WshShell.CreateShortcut($DesktopPath + '\Download Intel Drivers.url')
+        $Shortcut3.TargetPath = 'https://www.intel.com/content/www/us/en/download-center/home.html'
         $Shortcut3.Save()
 
   - !writeStatus: {status: '✅ All bloatware removed successfully! GPU drivers and critical apps kept intact!'}
