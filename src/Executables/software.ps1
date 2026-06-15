@@ -7,7 +7,8 @@ param (
 # ---------------- SAFE BOOTSTRAP ----------------
 $ErrorActionPreference = "SilentlyContinue"
 
-$timeouts = @("--connect-timeout", "10", "--retry", "5", "--retry-delay", "0", "--retry-all-errors")
+# REMOVED "--retry-all-errors" to support older Windows built-in curl versions
+$timeouts = @("--connect-timeout", "10", "--retry", "5", "--retry-delay", "0")
 $msiArgs = "/qn /quiet /norestart ALLUSERS=1 REBOOT=ReallySuppress"
 
 # Detect ARM
@@ -73,7 +74,7 @@ if ($Chrome) {
 
 	$chromeArch = if ($isARM) { "_Arm64" } else { "" }
 
-	$chromeUrl = "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise$chromeArch.msi"
+	$chromeUrl = "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise$chromeArch.MSI"
 
 	& curl.exe -LSs $chromeUrl -o "$tempDir\chrome.msi" $timeouts
 
