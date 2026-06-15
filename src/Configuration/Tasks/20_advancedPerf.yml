@@ -6,7 +6,6 @@ actions:
   - !cmd: {command: 'fsutil behavior set disable8dot3 1'}
   - !powerShell: {command: 'Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object { Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue }'}
   - !cmd: {command: 'netsh int tcp set global autotuninglevel=disabled'}
-  - !cmd: {command: 'netsh int tcp set global rss=disabled'}
   
   - !powerShell:
       exeDir: true
