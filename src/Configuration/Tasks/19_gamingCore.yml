@@ -99,6 +99,11 @@ actions:
       type: REG_DWORD
       data: 2
 
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\final_push.ps1'
+
   # =========================
   # FINAL SYSTEM STABILIZATION
   # =========================
