@@ -1,5 +1,5 @@
 # ==============================================================================
-# Z-LAG OS Engine V2 - Sub-1GB RAM Physical Floor + Ultra-Low Process Stack
+# Z-LAG OS Engine V2.1 - Sub-1GB RAM Floor (Safe Bluetooth & Stock Network)
 # Compatibility: Windows 10 & Windows 11 (All Universal Versions)
 # Security Policy: Standard Windows Defender / Security Subsystems Left Unchanged
 # Run Context: Elevated Administrator PowerShell Session
@@ -11,7 +11,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 
 Write-Output "=================================================================="
-Write-Output "         CONFIGURING Z-LAG REAL TIME SUB-1GB PERFORMANCE          "
+Write-Output "    CONFIGURING Z-LAG REAL TIME SUB-1GB ENGINE (SAFE HARDWARE)    "
 Write-Output "=================================================================="
 
 # ------------------------------------------------------------------------------
@@ -57,11 +57,11 @@ Set-ItemProperty -Path $PrivacyPath -Name "LetAppsRunInBackground" -Value 2 -Typ
 
 
 # ------------------------------------------------------------------------------
-# 4. AGGRESSIVE NON-SECURITY SERVICE PURGE (Max Process Count Drop)
+# 4. AGGRESSIVE NON-SECURITY SERVICE PURGE (Bluetooth & Core Network Untouched)
 # ------------------------------------------------------------------------------
 Write-Output "[+] Halting and disabling non-essential background worker cells..."
 
-# Added Themes, DPS, WdiServiceHost to further drop GUI and Diagnostic RAM usage
+# RESTORED: "bthserv" (Bluetooth) and "DusmSvc" (Network Data) have been removed from this list
 $ServicesToKill = @(
     "DiagTrack", "dmwappushservice", "WerSvc", "PcaSvc", "SysMain", "WSearch",
     "WbioSrvc", "MapsBroker", "Fax", "XblAuthManager", "XblGameSave", "XboxNetApiSvc",
@@ -70,8 +70,8 @@ $ServicesToKill = @(
     "SensorService", "SensrSvc", "BcastDVRUserService", "OneSyncSvc", "UserDataSvc", 
     "UnistoreSvc", "PimIndexMaintenanceSvc", "MessagingService", "wlidsvc", "wuauserv", 
     "WaaSMedicSvc", "FontCache", "FontCache3.0.0.0", "smphost", "DeviceAssociationService",
-    "WebManagementService", "SDRSVC", "WpcMonSvc", "Spooler", "PrintNotify", "bthserv",
-    "Themes", "DPS", "WdiServiceHost", "WdiSystemHost", "DusmSvc"
+    "WebManagementService", "SDRSVC", "WpcMonSvc", "Spooler", "PrintNotify",
+    "Themes", "DPS", "WdiServiceHost", "WdiSystemHost"
 )
 
 foreach ($Svc in $ServicesToKill) {
@@ -110,17 +110,9 @@ foreach ($Task in $TelemetryTasks) {
 
 
 # ------------------------------------------------------------------------------
-# 6. UNTHROTTLED NETWORKING AND LATENCY ENFORCEMENT
+# 6. GPU INTERRUPT SIGNAL MANAGEMENT (Hardware Level Response Optimization)
 # ------------------------------------------------------------------------------
-netsh int tcp set global rss=enabled
-netsh int tcp set global autotuninglevel=normal
-
-Get-NetAdapter | ForEach-Object {
-    $Name = $_.Name
-    Set-NetAdapterAdvancedProperty -Name $Name -DisplayName "Interrupt Moderation" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
-    Set-NetAdapterAdvancedProperty -Name $Name -DisplayName "Flow Control" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
-}
-
+Write-Output "[+] Aligning Message Signaled Interrupts for display arrays..."
 $GpuControllers = Get-CimInstance Win32_VideoController
 foreach ($Gpu in $GpuControllers) {
     $DevicePNP = $Gpu.PNPDeviceID
