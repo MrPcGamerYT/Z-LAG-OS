@@ -1,5 +1,5 @@
 # ==============================================================================
-# Z-LAG OS Engine - Sub-1GB RAM Physical Floor + 42 Process Grouping Stack
+# Z-LAG OS Engine V2 - Sub-1GB RAM Physical Floor + Ultra-Low Process Stack
 # Compatibility: Windows 10 & Windows 11 (All Universal Versions)
 # Security Policy: Standard Windows Defender / Security Subsystems Left Unchanged
 # Run Context: Elevated Administrator PowerShell Session
@@ -25,18 +25,21 @@ Set-ItemProperty -Path $SystemControlPath -Name "SvcHostSplitThresholdInKB" -Val
 # ------------------------------------------------------------------------------
 # 2. DESKTOP INTERFACE RAM STRIPPER (Drops DWM & Explorer RAM Footprint)
 # ------------------------------------------------------------------------------
-Write-Output "[+] Disabling hidden UI render caching to drop memory below 1GB..."
+Write-Output "[+] Disabling hidden UI render caching and forcing minimal DWM footprint..."
 
 # Strip heavy visual effects animations that steal hundreds of MBs from RAM
 $VisualPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects"
 if (-not (Test-Path $VisualPath)) { New-Item -Path $VisualPath -Force | Out-Null }
 Set-ItemProperty -Path $VisualPath -Name "VisualFXSetting" -Value 2 -Type DWord -Force
 
-# Disable translucent animations and window blur layouts globally
+# Disable translucent animations, window blur layouts, and minimize/maximize animations
 $DwmPath = "HKCU:\Software\Microsoft\Windows\DWM"
 Set-ItemProperty -Path $DwmPath -Name "ColorPrevalence" -Value 0 -Type DWord -Force
 Set-ItemProperty -Path $DwmPath -Name "EnableAeroPeek" -Value 0 -Type DWord -Force
 Set-ItemProperty -Path $DwmPath -Name "AlwaysHibernateThumbnails" -Value 1 -Type DWord -Force
+
+$DesktopPath = "HKCU:\Control Panel\Desktop\WindowMetrics"
+Set-ItemProperty -Path $DesktopPath -Name "MinAnimate" -Value "0" -Type String -Force
 
 
 # ------------------------------------------------------------------------------
@@ -54,10 +57,11 @@ Set-ItemProperty -Path $PrivacyPath -Name "LetAppsRunInBackground" -Value 2 -Typ
 
 
 # ------------------------------------------------------------------------------
-# 4. AGGRESSIVE NON-SECURITY SERVICE PURGE (Brings process count down to ~42)
+# 4. AGGRESSIVE NON-SECURITY SERVICE PURGE (Max Process Count Drop)
 # ------------------------------------------------------------------------------
 Write-Output "[+] Halting and disabling non-essential background worker cells..."
 
+# Added Themes, DPS, WdiServiceHost to further drop GUI and Diagnostic RAM usage
 $ServicesToKill = @(
     "DiagTrack", "dmwappushservice", "WerSvc", "PcaSvc", "SysMain", "WSearch",
     "WbioSrvc", "MapsBroker", "Fax", "XblAuthManager", "XblGameSave", "XboxNetApiSvc",
@@ -66,7 +70,8 @@ $ServicesToKill = @(
     "SensorService", "SensrSvc", "BcastDVRUserService", "OneSyncSvc", "UserDataSvc", 
     "UnistoreSvc", "PimIndexMaintenanceSvc", "MessagingService", "wlidsvc", "wuauserv", 
     "WaaSMedicSvc", "FontCache", "FontCache3.0.0.0", "smphost", "DeviceAssociationService",
-    "WebManagementService", "SDRSVC", "WpcMonSvc", "Spooler", "PrintNotify", "bthserv"
+    "WebManagementService", "SDRSVC", "WpcMonSvc", "Spooler", "PrintNotify", "bthserv",
+    "Themes", "DPS", "WdiServiceHost", "WdiSystemHost", "DusmSvc"
 )
 
 foreach ($Svc in $ServicesToKill) {
@@ -78,17 +83,29 @@ foreach ($Svc in $ServicesToKill) {
 
 
 # ------------------------------------------------------------------------------
-# 5. CLEARING ACTIVE GHOST APPS & SHELL WIDGETS
+# 5. CLEARING ACTIVE GHOST APPS & TELEMETRY TASKS
 # ------------------------------------------------------------------------------
-Write-Output "[+] Terminating standalone application background nodes..."
+Write-Output "[+] Terminating standalone application background nodes & Telemetry Tasks..."
 
-$GhostProcesses = @("OneDrive", "MicrosoftEdgeUpdate", "msedge", "Teams", "WidgetService", "SearchHost")
+$GhostProcesses = @("OneDrive", "MicrosoftEdgeUpdate", "msedge", "Teams", "WidgetService", "SearchHost", "YourPhone", "SkypeBackgroundHost")
 foreach ($Proc in $GhostProcesses) {
     Stop-Process -Name $Proc -Force -ErrorAction SilentlyContinue
 }
 
 if ((Get-CimInstance Win32_OperatingSystem).Caption -like "*Windows 11*") {
     Get-AppxPackage -AllUsers *WebExperience* | Remove-AppxPackage -ErrorAction SilentlyContinue
+}
+
+# Purge Microsoft Telemetry Scheduled Tasks from waking up processes
+$TelemetryTasks = @(
+    "\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser",
+    "\Microsoft\Windows\Application Experience\ProgramDataUpdater",
+    "\Microsoft\Windows\Autochk\Proxy",
+    "\Microsoft\Windows\Customer Experience Improvement Program\Consolidator",
+    "\Microsoft\Windows\Customer Experience Improvement Program\UsbCeip"
+)
+foreach ($Task in $TelemetryTasks) {
+    Disable-ScheduledTask -TaskPath (Split-Path $Task) -TaskName (Split-Path $Task -Leaf) -ErrorAction SilentlyContinue
 }
 
 
