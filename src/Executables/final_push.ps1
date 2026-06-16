@@ -1,5 +1,5 @@
 # ==============================================================================
-# Z-LAG OS Engine V2.1 - Sub-1GB RAM Floor (Safe Bluetooth & Stock Network)
+# Z-LAG OS Engine V2.2 - Sub-1GB RAM Floor (Muted Security Notifications)
 # Compatibility: Windows 10 & Windows 11 (All Universal Versions)
 # Security Policy: Standard Windows Defender / Security Subsystems Left Unchanged
 # Run Context: Elevated Administrator PowerShell Session
@@ -57,11 +57,25 @@ Set-ItemProperty -Path $PrivacyPath -Name "LetAppsRunInBackground" -Value 2 -Typ
 
 
 # ------------------------------------------------------------------------------
+# 3.5. SECURITY CENTER NOTIFICATION SUPPRESSION (Nukes "Turn On Protection" Prompts)
+# ------------------------------------------------------------------------------
+Write-Output "[+] Blocking Windows Security Center warning notifications globally..."
+
+$WscNotifPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows Advanced Threat Protection"
+if (-not (Test-Path $WscNotifPath)) { New-Item -Path $WscNotifPath -Force | Out-Null }
+Set-ItemProperty -Path $WscNotifPath -Name "ShowAlertWindow" -Value 0 -Type DWord -Force
+
+$BenignNotifPath = "HKLM:\SOFTWARE\Microsoft\Windows Defender Security Center\Notifications"
+if (-not (Test-Path $BenignNotifPath)) { New-Item -Path $BenignNotifPath -Force | Out-Null }
+Set-ItemProperty -Path $BenignNotifPath -Name "DisableNotifications" -Value 1 -Type DWord -Force
+Set-ItemProperty -Path $BenignNotifPath -Name "DisableEnhancedNotifications" -Value 1 -Type DWord -Force
+
+
+# ------------------------------------------------------------------------------
 # 4. AGGRESSIVE NON-SECURITY SERVICE PURGE (Bluetooth & Core Network Untouched)
 # ------------------------------------------------------------------------------
 Write-Output "[+] Halting and disabling non-essential background worker cells..."
 
-# RESTORED: "bthserv" (Bluetooth) and "DusmSvc" (Network Data) have been removed from this list
 $ServicesToKill = @(
     "DiagTrack", "dmwappushservice", "WerSvc", "PcaSvc", "SysMain", "WSearch",
     "WbioSrvc", "MapsBroker", "Fax", "XblAuthManager", "XblGameSave", "XboxNetApiSvc",
