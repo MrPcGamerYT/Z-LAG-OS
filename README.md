@@ -39,7 +39,7 @@ Z LAG OS is an open-source, performance-driven configuration playbook designed f
 ## 📋 Deployment & Installation
 
 ### Prerequisites
-* A clean, un-tweaked installation of an official **Windows 10 or Windows 11** ISO (refer to our Releases page for supported build numbers).
+* A clean, un-tweaked installation of an official **Windows 10 or Windows 11** ISO (all builds and versions are fully supported).
 * Active internet connection for the verification phase.
 * The official deployment environment tool: **[AME Wizard](https://amelabs.net/)**.
 
@@ -78,3 +78,20 @@ Contributions to further optimize system performance are highly encouraged. Plea
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for comprehensive details.
+
+
+---
+
+## 📖 About Z LAG OS
+
+**Z LAG OS** is not a standalone custom Operating System ISO. Instead, it is an automated configuration **Playbook** built on top of the trusted **AME Wizard framework**. It allows users to transform a standard, bloated Windows installation into a streamlined, high-performance environment optimized for ultra-low latency.
+
+### Why Z LAG OS?
+Standard Windows installations run hundreds of hidden processes, constant data-logging routines (telemetry), and power-saving algorithms that heavily throttle system responsiveness. For competitive players and developers working with resource-heavy Android emulators (like BlueStacks or MSI App Player), these default settings introduce micro-stutters, frame drops, and severe input lag. 
+
+Z LAG OS acts as an automated surgical tool to strip away these limitations safely.
+
+### Technical Highlights
+* **Kernel Latency Reductions:** Fine-tunes how Windows prioritizes processing threads, moving gaming and emulation tasks directly to the front of the queue.
+* **Component Stripping:** Disables or eliminates heavy operating system features like Cortana, OneDrive, Windows Error Reporting, and Diagnostic Tracking apps that steal CPU cycles.
+* **Controlled Execution:** By utilizing the `.apbx` file structure via AME Wizard, every system modification is executed transparently, securely, and uniformly across different Windows builds.
