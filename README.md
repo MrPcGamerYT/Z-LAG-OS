@@ -6,6 +6,14 @@
 
 Z LAG OS is an open-source, performance-driven configuration playbook designed for the AME Wizard deployment framework. Engineered specifically for competitive gaming, emulator optimization, and low-end hardware deployment, it systematically eliminates operating system bloat, minimizes kernel-level latency, and optimizes resource allocation without compromising system stability.
 
+---
+
+## 🖥️ System Showcase
+
+![Z LAG OS Desktop Environment](src/Executables/Z_LAG_Wallpaper/Desktop.png)
+
+---
+
 > ⚠️ **Disclaimer:** This playbook applies aggressive system-wide modifications, disables telemetry, and removes non-essential Windows components. It is strictly optimized for performance-critical environments.
 
 ---
