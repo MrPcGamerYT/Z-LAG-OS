@@ -8,9 +8,7 @@ Z LAG OS is an open-source, performance-driven configuration playbook designed f
 
 ---
 
-## 🖥️ System Showcase
-
-![Z LAG OS Desktop Environment](src/Executables/Z_LAG_Wallpaper/Desktop.png)
+![](src/Executables/Z_LAG_Wallpaper/Desktop.png)
 
 ---
 
@@ -43,12 +41,12 @@ Z LAG OS is an open-source, performance-driven configuration playbook designed f
 ### Prerequisites
 * A clean, un-tweaked installation of an official **Windows 10 or Windows 11** ISO (refer to our Releases page for supported build numbers).
 * Active internet connection for the verification phase.
-* The official deployment environment tool: **[AME Wizard](https://ame.folder.host/)**.
+* The official deployment environment tool: **[AME Wizard](https://amelabs.net/)**.
 
 ### Step-by-Step Installation
 
 1. Navigate to the **[Releases](../../releases)** section of this repository and download the latest `.apbx` playbook file.
-2. Download and extract the latest version of the AME Wizard.
+2. Download and extract the latest version of the AME Wizard from the official website.
 3. Temporarily disable **Windows Defender / Real-Time Protection** to allow the configuration scripts to execute successfully.
 4. Launch `AME Wizard.exe` and drag the downloaded `Z_LAG_OS.apbx` file into the application interface.
 5. Follow the cryptographic verification and configuration prompts within the wizard.
