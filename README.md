@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078d7.svg)]()
-[![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)]()
+[![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://amelabs.net/)
 
 Z LAG OS is an open-source, performance-driven configuration playbook designed for the AME Wizard deployment framework. Engineered specifically for competitive gaming, emulator optimization, and low-end hardware deployment, it systematically eliminates operating system bloat, minimizes kernel-level latency, and optimizes resource allocation without compromising system stability.
 
