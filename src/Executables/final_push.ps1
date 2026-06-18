@@ -1,7 +1,7 @@
 # ==============================================================================
-# Z-LAG OS Engine V2.2 - Sub-1GB RAM Floor (Muted Security Notifications)
-# Compatibility: Windows 10 & Windows 11 (All Universal Versions)
-# Security Policy: Standard Windows Defender / Security Subsystems Left Unchanged
+# Z-LAG OS Engine V3.0 Ultimate Universal Edition - Maximum RAM/Process Drop
+# Compatibility: Windows 10 & Windows 11 (All Universal Builds)
+# Security Policy: Standard Core Kernel Elements & Core Networking Left Intact
 # Run Context: Elevated Administrator PowerShell Session
 # ==============================================================================
 
@@ -11,19 +11,20 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 
 Write-Output "=================================================================="
-Write-Output "    CONFIGURING Z-LAG REAL TIME SUB-1GB ENGINE (SAFE HARDWARE)    "
+Write-Output "   DEPLOYING Z-LAG ULTIMATE PROCESS & RAM REDUCTION ENGINE v3.0   "
 Write-Output "=================================================================="
 
 # ------------------------------------------------------------------------------
-# 1. SVCHOST SERVICE GROUPING (Collapses split processes back to shared pools)
+# 1. SVCHOST SERVICE CONSOLIDATION (Stops process sprawl across your CPU)
 # ------------------------------------------------------------------------------
-Write-Output "[+] Forcing service consolidation into shared host containers..."
+Write-Output "[+] Collapsing independent service processes into single shared pools..."
 $SystemControlPath = "HKLM:\SYSTEM\CurrentControlSet\Control"
+# Forces the OS to bundle multiple low-level services inside the same svchost instance
 Set-ItemProperty -Path $SystemControlPath -Name "SvcHostSplitThresholdInKB" -Value 380000000 -Type DWord -Force
 
 
 # ------------------------------------------------------------------------------
-# 2. DESKTOP INTERFACE RAM STRIPPER (Drops DWM & Explorer RAM Footprint)
+# 2. DESKTOP INTERFACE RAM STRIPPER (Drops DWM & Explorer Memory Footprint)
 # ------------------------------------------------------------------------------
 Write-Output "[+] Disabling hidden UI render caching and forcing minimal DWM footprint..."
 
@@ -57,10 +58,20 @@ Set-ItemProperty -Path $PrivacyPath -Name "LetAppsRunInBackground" -Value 2 -Typ
 
 
 # ------------------------------------------------------------------------------
-# 3.5. SECURITY CENTER NOTIFICATION SUPPRESSION (Nukes "Turn On Protection" Prompts)
+# 3.5. 1000% TOTAL NOTIFICATION LOCKDOWN & EXECUTABLE BLOCK 
 # ------------------------------------------------------------------------------
-Write-Output "[+] Blocking Windows Security Center warning notifications globally..."
+Write-Output "[+] Executing aggressive 1000% notification engine lockdown..."
 
+# Take Ownership and Permanently Kill SecurityHealthSystray Binary Execution
+$Sys32Path = "$env:SystemRoot\System32"
+$SystrayFile = "$Sys32Path\SecurityHealthSystray.exe"
+
+if (Test-Path $SystrayFile) {
+    & takeown.exe /f $SystrayFile /a *>$null
+    & icacls.exe $SystrayFile /inheritance:r /grant:r *S-1-5-32-544:F /deny *S-1-1-0:`(X`) *>$null
+}
+
+# Policy-Level Defenses (Block Windows Security Center Alerts)
 $WscNotifPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows Advanced Threat Protection"
 if (-not (Test-Path $WscNotifPath)) { New-Item -Path $WscNotifPath -Force | Out-Null }
 Set-ItemProperty -Path $WscNotifPath -Name "ShowAlertWindow" -Value 0 -Type DWord -Force
@@ -70,11 +81,29 @@ if (-not (Test-Path $BenignNotifPath)) { New-Item -Path $BenignNotifPath -Force 
 Set-ItemProperty -Path $BenignNotifPath -Name "DisableNotifications" -Value 1 -Type DWord -Force
 Set-ItemProperty -Path $BenignNotifPath -Name "DisableEnhancedNotifications" -Value 1 -Type DWord -Force
 
+# Universal Windows Notification System Global Engine Hard-Kill
+$WpnPolicies = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications"
+if (-not (Test-Path $WpnPolicies)) { New-Item -Path $WpnPolicies -Force | Out-Null }
+Set-ItemProperty -Path $WpnPolicies -Name "NoToastNotification" -Value 1 -Type DWord -Force
+
+$WpnPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications"
+if (-not (Test-Path $WpnPath)) { New-Item -Path $WpnPath -Force | Out-Null }
+Set-ItemProperty -Path $WpnPath -Name "ToastEnabled" -Value 0 -Type DWord -Force
+
+# User Shell Explorer Balloon Warning Block
+$PolicyExplPath = "HKCU:\Software\Policies\Microsoft\Windows\Explorer"
+if (-not (Test-Path $PolicyExplPath)) { New-Item -Path $PolicyExplPath -Force | Out-Null }
+Set-ItemProperty -Path $PolicyExplPath -Name "NoNotificationBalloon" -Value 1 -Type DWord -Force
+
+# Remove Startup Run Items
+$SysTrayIconPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+Remove-ItemProperty -Path $SysTrayIconPath -Name "SecurityHealth" -ErrorAction SilentlyContinue
+
 
 # ------------------------------------------------------------------------------
-# 4. AGGRESSIVE NON-SECURITY SERVICE PURGE (Bluetooth & Core Network Untouched)
+# 4. MAXIMUM DEEP PROCESS PURGE (Safely Clears Non-Core Service Footprint)
 # ------------------------------------------------------------------------------
-Write-Output "[+] Halting and disabling non-essential background worker cells..."
+Write-Output "[+] Halting non-essential services to drop background active handles..."
 
 $ServicesToKill = @(
     "DiagTrack", "dmwappushservice", "WerSvc", "PcaSvc", "SysMain", "WSearch",
@@ -85,7 +114,9 @@ $ServicesToKill = @(
     "UnistoreSvc", "PimIndexMaintenanceSvc", "MessagingService", "wlidsvc", "wuauserv", 
     "WaaSMedicSvc", "FontCache", "FontCache3.0.0.0", "smphost", "DeviceAssociationService",
     "WebManagementService", "SDRSVC", "WpcMonSvc", "Spooler", "PrintNotify",
-    "Themes", "DPS", "WdiServiceHost", "WdiSystemHost"
+    "Themes", "DPS", "WdiServiceHost", "WdiSystemHost",
+    # Extra bloated telemetry/logging modules safely cut down here:
+    "TroubleshootingSvc", "TrainedDeployments", "PushToInstall", "LicenseManager"
 )
 
 foreach ($Svc in $ServicesToKill) {
@@ -97,11 +128,15 @@ foreach ($Svc in $ServicesToKill) {
 
 
 # ------------------------------------------------------------------------------
-# 5. CLEARING ACTIVE GHOST APPS & TELEMETRY TASKS
+# 5. EXPANDED GHOST APP TERM LIST & TELEMETRY TASKS
 # ------------------------------------------------------------------------------
-Write-Output "[+] Terminating standalone application background nodes & Telemetry Tasks..."
+Write-Output "[+] Terminating non-core application background nodes & desktop layouts..."
 
-$GhostProcesses = @("OneDrive", "MicrosoftEdgeUpdate", "msedge", "Teams", "WidgetService", "SearchHost", "YourPhone", "SkypeBackgroundHost")
+$GhostProcesses = @(
+    "OneDrive", "MicrosoftEdgeUpdate", "msedge", "Teams", "WidgetService", 
+    "SearchHost", "YourPhone", "SkypeBackgroundHost", "SecurityHealthSystray",
+    "GameBarPresenceWriter", "Cortana", "mobsync", "ctfmon"
+)
 foreach ($Proc in $GhostProcesses) {
     Stop-Process -Name $Proc -Force -ErrorAction SilentlyContinue
 }
@@ -116,7 +151,9 @@ $TelemetryTasks = @(
     "\Microsoft\Windows\Application Experience\ProgramDataUpdater",
     "\Microsoft\Windows\Autochk\Proxy",
     "\Microsoft\Windows\Customer Experience Improvement Program\Consolidator",
-    "\Microsoft\Windows\Customer Experience Improvement Program\UsbCeip"
+    "\Microsoft\Windows\Customer Experience Improvement Program\UsbCeip",
+    "\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector",
+    "\Microsoft\Windows\Maintenance\Scheduler"
 )
 foreach ($Task in $TelemetryTasks) {
     Disable-ScheduledTask -TaskPath (Split-Path $Task) -TaskName (Split-Path $Task -Leaf) -ErrorAction SilentlyContinue
@@ -146,7 +183,7 @@ $UltimateProfileGuid = "e9a42b02-581c-44d4-9f1f-9c732444b192"
 
 $PowerControlPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling"
 if (-not (Test-Path $PowerControlPath)) { New-Item -Path $PowerControlPath -Force | Out-Null }
-Set-ItemProperty -Path $PowerControlPath -Name "PowerThrottlingOff" -Value 1 -Type DWord -Force
+Set-ItemProperty -Path $PowerControlPath -Name "PowerThrottlingOff" -Value 1 -Value 1 -Type DWord -Force
 
 
 # ------------------------------------------------------------------------------
@@ -201,5 +238,5 @@ Start-Process explorer
 [ZLagTrueEngine]::GlobalPurge()
 
 Write-Output "=================================================================="
-Write-Output " SYSTEM CONFIGURATION SETTLED! PLEASE REBOOT FOR FULL EFFECT.     "
+Write-Output " GLOBAL ENGINE OPTIMIZED! REBOOT COMPUTER TO LOCK PARAMETERS.    "
 Write-Output "=================================================================="
