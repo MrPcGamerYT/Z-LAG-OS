@@ -21,9 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ------------------------------------------------------------------
-      # 1. Get / normalise the version tag
-      # ------------------------------------------------------------------
+      # ------------------- 1. Version tag normalisation -------------------
       - name: Get / normalise version tag
         id: get_version
         run: |
@@ -33,8 +31,7 @@ jobs:
             RAW="${{ github.event.inputs.version }}"
           fi
 
-          # If your tags always start with 'v', force it here.
-          # Remove the next two lines if you never use a prefix.
+          # If your tags always start with 'v', keep this. Otherwise remove the next two lines.
           if [[ "$RAW" != v* ]]; then
             RAW="v$RAW"
           fi
@@ -42,18 +39,14 @@ jobs:
           echo "version=$RAW" >> $GITHUB_OUTPUT
           echo "Using version: $RAW"
 
-      # ------------------------------------------------------------------
-      # 2. Update version string inside playbook.conf
-      # ------------------------------------------------------------------
+      # ------------------- 2. Update playbook.conf -------------------
       - name: Update version in playbook.conf
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
           cat src/playbook.conf
 
-      # ------------------------------------------------------------------
-      # 3. Commit the version bump (optional)
-      # ------------------------------------------------------------------
+      # ------------------- 3. Commit version bump (optional) -------------------
       - name: Commit version change to repository
         run: |
           git config user.name "github-actions"
@@ -62,26 +55,29 @@ jobs:
           git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
           git push
 
-      # ------------------------------------------------------------------
-      # 4. Install p7zip
-      # ------------------------------------------------------------------
+      # ------------------- 4. Install p7zip -------------------
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
-      # ------------------------------------------------------------------
-      # 5. Create the password-protected archive
-      # ------------------------------------------------------------------
+      # ------------------- 5. Create the archive -------------------
       - name: Archive ./src/ to Z_LAG_OS.apbx with password
         run: |
           7z a -p"malte" -t7z ZLAGOS.7z ./src/*
           mv ZLAGOS.7z Z_LAG_OS.apbx
 
-      # ------------------------------------------------------------------
-      # 6. Delete ALL existing releases (older versions + current)
-      #    This is the universal fix: no release survives, so the new one
-      #    is always the only release and never hits the immutable error.
-      # ------------------------------------------------------------------
+      # ----------- 6. VERIFY the .apbx file exists before proceeding -----------
+      - name: Check archive file
+        run: |
+          if [ ! -f "Z_LAG_OS.apbx" ]; then
+            echo "::error::Z_LAG_OS.apbx not found! Aborting."
+            exit 1
+          fi
+          ls -lh Z_LAG_OS.apbx
+
+      # ------------------- 7. Delete all old releases -------------------
       - name: Delete all existing releases
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "Fetching all releases..."
           tags=$(gh release list --json tagName -q '.[].tagName')
@@ -93,13 +89,10 @@ jobs:
           else
             echo "No releases to delete."
           fi
-        env:
-          GH_TOKEN: ${{ github.token }}
 
-      # ------------------------------------------------------------------
-      # 7. Create a brand-new release with the archive
-      # ------------------------------------------------------------------
+      # ------------------- 8. Create release & upload .apbx -------------------
       - name: Create release and upload asset
+        id: create_release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.get_version.outputs.version }}
@@ -108,3 +101,18 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           replacesArtifacts: true
+
+      # ------------------- 9. Remove GitHub’s auto‑generated source archives -------------------
+      - name: Remove unwanted assets (zip, tar.gz)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get_version.outputs.version }}"
+          echo "Cleaning up assets for release $TAG..."
+          # List asset IDs of everything EXCEPT Z_LAG_OS.apbx
+          gh release view "$TAG" --json assets -q '.assets[] | select(.name != "Z_LAG_OS.apbx") | .id' | while read -r id; do
+            echo "Deleting asset with ID: $id"
+            gh release delete-asset "$TAG" "$id" -y
+          done
+          echo "Final asset list:"
+          gh release view "$TAG" --json assets -q '.assets[].name'
