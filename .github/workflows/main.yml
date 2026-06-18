@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Project version (example: 1.0)"
+        description: "Project version (example: 1.0 or v1.0)"
         required: true
         default: "0.1"
 
@@ -21,23 +21,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get tag version
+      # ------------------------------------------------------------------
+      # 1. Get / normalise the version tag
+      # ------------------------------------------------------------------
+      - name: Get / normalise version tag
         id: get_version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            VERSION="${{ github.ref_name }}"
+            RAW="${{ github.ref_name }}"
           else
-            VERSION="${{ github.event.inputs.version }}"
+            RAW="${{ github.event.inputs.version }}"
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
 
+          # If your tags always start with 'v', force it here.
+          # Remove the next two lines if you never use a prefix.
+          if [[ "$RAW" != v* ]]; then
+            RAW="v$RAW"
+          fi
+
+          echo "version=$RAW" >> $GITHUB_OUTPUT
+          echo "Using version: $RAW"
+
+      # ------------------------------------------------------------------
+      # 2. Update version string inside playbook.conf
+      # ------------------------------------------------------------------
       - name: Update version in playbook.conf
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
           cat src/playbook.conf
 
+      # ------------------------------------------------------------------
+      # 3. Commit the version bump (optional)
+      # ------------------------------------------------------------------
       - name: Commit version change to repository
         run: |
           git config user.name "github-actions"
@@ -46,21 +62,44 @@ jobs:
           git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
           git push
 
+      # ------------------------------------------------------------------
+      # 4. Install p7zip
+      # ------------------------------------------------------------------
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
+      # ------------------------------------------------------------------
+      # 5. Create the password-protected archive
+      # ------------------------------------------------------------------
       - name: Archive ./src/ to Z_LAG_OS.apbx with password
         run: |
           7z a -p"malte" -t7z ZLAGOS.7z ./src/*
           mv ZLAGOS.7z Z_LAG_OS.apbx
 
-      - name: Delete existing release (if any) to allow asset update
+      # ------------------------------------------------------------------
+      # 6. Delete ALL existing releases (older versions + current)
+      #    This is the universal fix: no release survives, so the new one
+      #    is always the only release and never hits the immutable error.
+      # ------------------------------------------------------------------
+      - name: Delete all existing releases
+        run: |
+          echo "Fetching all releases..."
+          tags=$(gh release list --json tagName -q '.[].tagName')
+          if [ -n "$tags" ]; then
+            while IFS= read -r tag; do
+              echo "Deleting release for tag: $tag"
+              gh release delete "$tag" --yes
+            done <<< "$tags"
+          else
+            echo "No releases to delete."
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release delete "${{ steps.get_version.outputs.version }}" --yes || true
 
-      - name: Create Release and Upload Asset
+      # ------------------------------------------------------------------
+      # 7. Create a brand-new release with the archive
+      # ------------------------------------------------------------------
+      - name: Create release and upload asset
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.get_version.outputs.version }}
