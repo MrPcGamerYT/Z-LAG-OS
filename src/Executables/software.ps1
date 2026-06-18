@@ -26,6 +26,23 @@ function Remove-TempDirectory {
     Remove-Item -Path $tempDir -Force -Recurse -EA 0
 }
 
+# ---------------- COMPULSORY UNIGETUI INSTALLATION ----------------
+Write-Output "Downloading compulsory app store manager (UniGetUI)..."
+$unigetUrl = "https://github.com/Devolutions/UniGetUI/releases/latest/download/UniGetUI.Installer.exe"
+
+& curl.exe -LSs $unigetUrl -o "$tempDir\UniGetUI_Setup.exe" $timeouts
+
+if ($?) {
+    Write-Output "Installing UniGetUI silently for all users..."
+    # Installed completely headless with auto-start killed to respect your RAM limit boundaries
+    Start-Process -FilePath "$tempDir\UniGetUI_Setup.exe" `
+        -ArgumentList "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NoAutoStart /ALLUSERS /LANG=english" `
+        -WindowStyle Hidden -Wait
+} else {
+    Write-Warning "UniGetUI download failed, continuing with remaining components..."
+}
+
+
 # ---------------- BRAVE ----------------
 if ($Brave) {
     Write-Output "Downloading Brave..."
