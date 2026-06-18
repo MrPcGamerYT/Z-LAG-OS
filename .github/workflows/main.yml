@@ -76,16 +76,29 @@ jobs:
       - name: Wait for GitHub sync
         run: sleep 10
 
-      # 9. Create release
-      - name: Create release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.get_version.outputs.version }}
-          name: Release ${{ steps.get_version.outputs.version }}
-          artifacts: Z_LAG_OS.apbx
-          token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true
-          replacesArtifacts: true
+            # 9. Create release (SAFE METHOD)
+      - name: Create release via GH CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get_version.outputs.version }}"
+
+          echo "Creating release $TAG"
+
+          # Delete release if exists (ignore errors)
+          gh release delete "$TAG" --yes || true
+
+          # Delete tag remotely (IMPORTANT FIX)
+          git push origin :refs/tags/$TAG || true
+
+          # Recreate tag cleanly
+          git tag $TAG
+          git push origin $TAG
+
+          # Create fresh release + upload asset
+          gh release create "$TAG" Z_LAG_OS.apbx \
+            --title "Release $TAG" \
+            --notes "Z LAG OS Release $TAG"
 
       # 10. Cleanup extra assets
       - name: Remove unwanted assets
