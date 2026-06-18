@@ -15,14 +15,19 @@ jobs:
   package-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write   # This is sufficient to create, delete, and upload to releases
 
     steps:
+      # ------------------------------------------------------------------
+      # 1. Checkout the repository
+      # ------------------------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4   # Node 20 deprecation is harmless
 
-      # ------------------- 1. Version tag normalisation -------------------
-      - name: Get / normalise version tag
+      # ------------------------------------------------------------------
+      # 2. Normalise the version tag (optional v-prefix)
+      # ------------------------------------------------------------------
+      - name: Determine version
         id: get_version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
@@ -31,7 +36,7 @@ jobs:
             RAW="${{ github.event.inputs.version }}"
           fi
 
-          # If your tags always start with 'v', keep this. Otherwise remove the next two lines.
+          # Add 'v' prefix if you use tags like v1.2.3. Remove the next two lines if you never use a prefix.
           if [[ "$RAW" != v* ]]; then
             RAW="v$RAW"
           fi
@@ -39,14 +44,18 @@ jobs:
           echo "version=$RAW" >> $GITHUB_OUTPUT
           echo "Using version: $RAW"
 
-      # ------------------- 2. Update playbook.conf -------------------
+      # ------------------------------------------------------------------
+      # 3. Update version inside playbook.conf
+      # ------------------------------------------------------------------
       - name: Update version in playbook.conf
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
           cat src/playbook.conf
 
-      # ------------------- 3. Commit version bump (optional) -------------------
+      # ------------------------------------------------------------------
+      # 4. Commit the version change (optional)
+      # ------------------------------------------------------------------
       - name: Commit version change to repository
         run: |
           git config user.name "github-actions"
@@ -55,17 +64,23 @@ jobs:
           git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
           git push
 
-      # ------------------- 4. Install p7zip -------------------
+      # ------------------------------------------------------------------
+      # 5. Install archiver
+      # ------------------------------------------------------------------
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
-      # ------------------- 5. Create the archive -------------------
+      # ------------------------------------------------------------------
+      # 6. Create the .apbx archive
+      # ------------------------------------------------------------------
       - name: Archive ./src/ to Z_LAG_OS.apbx with password
         run: |
           7z a -p"malte" -t7z ZLAGOS.7z ./src/*
           mv ZLAGOS.7z Z_LAG_OS.apbx
 
-      # ----------- 6. VERIFY the .apbx file exists before proceeding -----------
+      # ------------------------------------------------------------------
+      # 7. Verify the .apbx exists (fail early if missing)
+      # ------------------------------------------------------------------
       - name: Check archive file
         run: |
           if [ ! -f "Z_LAG_OS.apbx" ]; then
@@ -74,45 +89,70 @@ jobs:
           fi
           ls -lh Z_LAG_OS.apbx
 
-      # ------------------- 7. Delete all old releases -------------------
+      # ------------------------------------------------------------------
+      # 8. Delete ALL existing releases – robust version
+      #    This step ONLY ignores “release not found” errors. Any other
+      #    failure (token, permissions, network) will stop the job.
+      # ------------------------------------------------------------------
       - name: Delete all existing releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Fetching all releases..."
-          tags=$(gh release list --json tagName -q '.[].tagName')
+          set -euo pipefail   # Fail on any error, undefined var, or pipe failure
+          echo "Fetching releases..."
+          tags=$(gh release list --json tagName -q '.[].tagName' 2>&1) || {
+            echo "::error::Failed to list releases: $tags"
+            exit 1
+          }
           if [ -n "$tags" ]; then
             while IFS= read -r tag; do
-              echo "Deleting release for tag: $tag"
-              gh release delete "$tag" --yes
+              echo "Deleting release: $tag"
+              # Delete the release; allow only "release not found" exit code (1)
+              # to be treated as success (e.g., if it was already deleted by
+              # another run). All other failures are fatal.
+              output=$(gh release delete "$tag" --yes 2>&1) && ec=$? || ec=$?
+              if [ $ec -ne 0 ]; then
+                if echo "$output" | grep -qi "not found"; then
+                  echo "Release $tag already gone."
+                else
+                  echo "::error::Deletion failed for $tag: $output"
+                  exit 1
+                fi
+              else
+                echo "Deleted release $tag"
+              fi
             done <<< "$tags"
           else
             echo "No releases to delete."
           fi
 
-      # ------------------- 8. Create release & upload .apbx -------------------
+      # ------------------------------------------------------------------
+      # 9. Create a NEW release and upload the .apbx
+      #    No allowUpdates/replacesArtifacts – we start clean every time.
+      # ------------------------------------------------------------------
       - name: Create release and upload asset
-        id: create_release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.get_version.outputs.version }}
           name: Release ${{ steps.get_version.outputs.version }}
           artifacts: "Z_LAG_OS.apbx"
           token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true
-          replacesArtifacts: true
+          # NO allowUpdates: true
+          # NO replacesArtifacts: true
 
-      # ------------------- 9. Remove GitHub’s auto‑generated source archives -------------------
-      - name: Remove unwanted assets (zip, tar.gz)
+      # ------------------------------------------------------------------
+      # 10. Remove GitHub’s automatic source archives (zip, tar.gz)
+      # ------------------------------------------------------------------
+      - name: Remove unwanted source archives
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.get_version.outputs.version }}"
-          echo "Cleaning up assets for release $TAG..."
-          # List asset IDs of everything EXCEPT Z_LAG_OS.apbx
+          echo "Cleaning up auto‑generated assets for release $TAG..."
+          # Delete every asset EXCEPT Z_LAG_OS.apbx
           gh release view "$TAG" --json assets -q '.assets[] | select(.name != "Z_LAG_OS.apbx") | .id' | while read -r id; do
-            echo "Deleting asset with ID: $id"
+            echo "Removing asset ID $id"
             gh release delete-asset "$TAG" "$id" -y
           done
-          echo "Final asset list:"
+          echo "Final assets:"
           gh release view "$TAG" --json assets -q '.assets[].name'
