@@ -18,129 +18,81 @@ jobs:
       contents: write
 
     steps:
-      # ------------------------------------------------------------------
-      # 1. Checkout the repository
-      # ------------------------------------------------------------------
+      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ------------------------------------------------------------------
-      # 2. Determine version (Keep exact tag pushed by user)
-      # ------------------------------------------------------------------
+      # 2. Get version
       - name: Determine version
         id: get_version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            RAW="${{ github.ref_name }}"
+            VERSION="${{ github.ref_name }}"
           else
-            RAW="${{ github.event.inputs.version }}"
+            VERSION="${{ github.event.inputs.version }}"
           fi
-          # Removed the forced 'v' prefix logic so it matches your pushed tag exactly
-          echo "version=$RAW" >> $GITHUB_OUTPUT
-          echo "Using version: $RAW"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
 
-      # ------------------------------------------------------------------
-      # 3. Update version inside playbook.conf
-      # ------------------------------------------------------------------
+      # 3. Update config
       - name: Update version in playbook.conf
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
-          cat src/playbook.conf
 
-      # ------------------------------------------------------------------
-      # 4. Commit the version change
-      # ------------------------------------------------------------------
-      - name: Commit version change to repository
+      # 4. Commit change (SAFE)
+      - name: Commit version change
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add src/playbook.conf
-          git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
-          git push
+          git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes"
+          git push || echo "No push needed"
 
-      # ------------------------------------------------------------------
-      # 5. Install archiver
-      # ------------------------------------------------------------------
+      # 5. Install 7zip
       - name: Install p7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
 
-      # ------------------------------------------------------------------
-      # 6. Create the .apbx archive
-      # ------------------------------------------------------------------
-      - name: Archive ./src/ to Z_LAG_OS.apbx with password
+      # 6. Build package
+      - name: Create APBX
         run: |
-          7z a -p"malte" -t7z ZLAGOS.7z ./src/*
-          mv ZLAGOS.7z Z_LAG_OS.apbx
+          7z a -p"malte" -t7z Z_LAG_OS.apbx ./src/*
+          ls -lh
 
-      # ------------------------------------------------------------------
-      # 7. Verify the .apbx exists
-      # ------------------------------------------------------------------
-      - name: Check archive file
+      # 7. Ensure file exists
+      - name: Verify file
         run: |
-          if [ ! -f "Z_LAG_OS.apbx" ]; then
-            echo "::error::Z_LAG_OS.apbx not found! Aborting."
-            exit 1
-          fi
-          ls -lh Z_LAG_OS.apbx
+          test -f Z_LAG_OS.apbx || (echo "File missing!" && exit 1)
 
-      # ------------------------------------------------------------------
-      # 8. Delete ALL existing releases
-      # ------------------------------------------------------------------
-      - name: Delete all existing releases
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          echo "Fetching releases..."
-          tags=$(gh release list --json tagName -q '.[].tagName' 2>&1) || {
-            echo "::error::Failed to list releases: $tags"
-            exit 1
-          }
-          if [ -n "$tags" ]; then
-            while IFS= read -r tag; do
-              echo "Deleting release: $tag"
-              output=$(gh release delete "$tag" --yes 2>&1) && ec=$? || ec=$?
-              if [ $ec -ne 0 ]; then
-                if echo "$output" | grep -qi "not found"; then
-                  echo "Release $tag already gone."
-                else
-                  echo "::error::Deletion failed for $tag: $output"
-                  exit 1
-                fi
-              else
-                echo "Deleted release $tag"
-              fi
-            done <<< "$tags"
-          else
-            echo "No releases to delete."
-          fi
-
-      # ------------------------------------------------------------------
-      # 9. Create a NEW release and upload the .apbx
-      # ------------------------------------------------------------------
-      - name: Create release and upload asset
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.get_version.outputs.version }}
-          name: Release ${{ steps.get_version.outputs.version }}
-          artifacts: "Z_LAG_OS.apbx"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: true       # Safeguard against GitHub API backend lag
-          replacesArtifacts: true  # Ensures the new file overwrites cleanly
-
-      # ------------------------------------------------------------------
-      # 10. Remove GitHub’s automatic source archives (zip, tar.gz)
-      # ------------------------------------------------------------------
-      - name: Remove unwanted source archives
+      # 8. Delete ONLY same tag release (NOT ALL)
+      - name: Delete existing release (safe)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.get_version.outputs.version }}"
-          echo "Cleaning up auto‑generated assets for release $TAG..."
-          gh release view "$TAG" --json assets -q '.assets[] | select(.name != "Z_LAG_OS.apbx") | .id' | while read -r id; do
-            echo "Removing asset ID $id"
+          gh release delete "$TAG" --yes || echo "No existing release"
+
+      # 🔥 IMPORTANT FIX: wait to avoid GitHub API lag
+      - name: Wait for GitHub sync
+        run: sleep 10
+
+      # 9. Create release
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.get_version.outputs.version }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          artifacts: Z_LAG_OS.apbx
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          replacesArtifacts: true
+
+      # 10. Cleanup extra assets
+      - name: Remove unwanted assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get_version.outputs.version }}"
+          gh release view "$TAG" --json assets -q '.assets[] | select(.name != "Z_LAG_OS.apbx") | .id' | while read id; do
             gh release delete-asset "$TAG" "$id" -y
           done
-          echo "Final assets:"
-          gh release view "$TAG" --json assets -q '.assets[].name'
