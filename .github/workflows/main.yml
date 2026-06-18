@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.0   # Updated to support Node.js 24
+        uses: actions/checkout@v4 # Uses latest v4 release to clear Node 20 warnings
 
       - name: Get tag version
         id: get_version
@@ -44,6 +44,7 @@ jobs:
           git config user.email "github-actions@github.com"
           git add src/playbook.conf
           git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
+          # Avoid re-triggering tag workflows loops if matching a tag name
           git push
 
       - name: Install p7zip
@@ -54,10 +55,12 @@ jobs:
           7z a -p"malte" -t7z ZLAGOS.7z ./src/*
           mv ZLAGOS.7z Z_LAG_OS.apbx
 
-      - name: Create Release and Upload Asset
-        uses: ncipollo/release-action@v1   # Already uses Node.js 24
+      - name: Create or Update Release and Upload Asset
+        uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.get_version.outputs.version }}
           name: Release ${{ steps.get_version.outputs.version }}
           artifacts: "Z_LAG_OS.apbx"
           token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true # Crucial: Allows updating existing releases
+          replacesArtifacts: true # Overwrites the old asset if it already exists
