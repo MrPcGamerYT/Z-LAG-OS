@@ -1,14 +1,15 @@
-title: Windows 11 optimisations (left taskbar, disable copilot, recall, etc.)
+title: Universal Windows 11 Optimisations (Process & RAM Floor)
 actions:
-  # 1. STRIP CORE METRO SHELL GRAPHICS PACK (Drops active process RAM blocks)
+  # 1. STRIP CORE METRO SHELL GRAPHICS PACK (Universal Package Removal)
   - !powerShell: {command: 'Get-AppxPackage -AllUsers *WebExperience* | Remove-AppxPackage -ErrorAction SilentlyContinue'}
 
-  # 2. SHELL LAYOUT ALIGNMENT (Forces Taskbar Left & Nukes News/Widgets/Badges)
+  # 2. UNIVERSAL TASKBAR ALIGNMENT & EXTRA FEATURE DE-BLOAT
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarAl', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarDa', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'TaskbarMn', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowTaskViewButton', type: REG_DWORD, data: '0'}
 
-  # 3. INTERFACE MOTION & RAM STRIPPER (Flattens DWM to clear hundreds of MBs from RAM)
+  # 3. UNIVERSAL INTERFACE FLATTENER & RAM ENGINE OPTIMIZATION
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'EnableSnapBar', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'EnableTaskGroups', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Advanced', value: 'TaskbarAnimations', type: REG_DWORD, data: '0'}
@@ -17,19 +18,25 @@ actions:
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\DWM', value: 'AlwaysHibernateThumbnails', type: REG_DWORD, data: '1'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects', value: 'VisualFXSetting', type: REG_DWORD, data: '2'}
 
-  # 4. COPILOT AI ENGINE BLOCK (Stops background server telemetry sync links)
+  # 4. UNIVERSAL COPILOT AI ENGINE BLOCK (Targets Policies + Direct User App Preferences)
   - !registryValue: {path: 'HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot', value: 'TurnOffWindowsCopilot', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer', value: 'ShowCopilotButton', type: REG_DWORD, data: '0'}
 
-  # 5. WINDOWS RECALL AI SUB-SYSTEM BAN (Halts image analysis / continuous background recording)
+  # 5. UNIVERSAL RECALL AI & AI DATA DATA ANALYSIS BAN (Bypasses Home Edition Policy Blocks)
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI', value: 'DisableAIDataAnalysis', type: REG_DWORD, data: '1'}
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI', value: 'AllowRecallEnablement', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\AI', value: 'RecallEnabled', type: REG_DWORD, data: '0'}
 
-  # 6. EXTREME PROCESS & RAM DROPPER (Nukes cloud search hooks, app pre-loading, and widget containers)
+  # 6. EXTREME PROCESS DROPPER & BING SEARCH BAN (Forces Local-Only Search On All Editions)
   - !registryValue: {path: 'HKCU\Software\Policies\Microsoft\Windows\Explorer', value: 'HideRecommendedSection', type: REG_DWORD, data: '1'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Search', value: 'BingSearchEnabled', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Search', value: 'CortanaConsent', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Dsh', value: 'AllowNewsAndInterests', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Windows Search', value: 'AllowCloudSearch', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Search', value: 'CloudSearchEnabled', type: REG_DWORD, data: '0'}
+
+  # 7. LOCK SCREEN LOCKDOWN & BACKGROUND PROCESS SUSPENSION ENGINE
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'RotatingLockScreenOverlayEnabled', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SubscribedContent-338387Enabled', type: REG_DWORD, data: '0'}
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy', value: 'LetAppsRunInBackground', type: REG_DWORD, data: '2'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications', value: 'GlobalUserDisabled', type: REG_DWORD, data: '1'}
