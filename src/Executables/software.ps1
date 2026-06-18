@@ -26,6 +26,47 @@ function Remove-TempDirectory {
     Remove-Item -Path $tempDir -Force -Recurse -EA 0
 }
 
+# ---------------- FORCE INSTALL WINGET ----------------
+Write-Output "Enforcing Winget (Windows Package Manager) installation/reinstall..."
+
+# Enforce TLS 1.2/1.3 for modern MS downloads
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+
+# Download Winget bundles and UI dependencies
+$wingetUrl = "https://github.com/microsoft/winget-cli/releases/latest/download/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
+$vclibsUrl = "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx"
+$uiXamlUrl = "https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx"
+
+& curl.exe -LSs $vclibsUrl -o "$tempDir\VCLibs.appx" $timeouts
+& curl.exe -LSs $uiXamlUrl -o "$tempDir\UiXaml.appx" $timeouts
+& curl.exe -LSs $wingetUrl -o "$tempDir\Winget.msixbundle" $timeouts
+
+# Force install app packages regardless of current state
+Write-Output "Registering Winget and packages..."
+Add-AppxPackage -Path "$tempDir\VCLibs.appx" -ForceApplicationShutdown -ErrorAction SilentlyContinue
+Add-AppxPackage -Path "$tempDir\UiXaml.appx" -ForceApplicationShutdown -ErrorAction SilentlyContinue
+Add-AppxPackage -Path "$tempDir\Winget.msixbundle" -ForceApplicationShutdown -ErrorAction SilentlyContinue
+
+
+# ---------------- FORCE INSTALL CHOCOLATEY ----------------
+Write-Output "Enforcing Chocolatey installation/reinstall..."
+
+# Wipe existing installation directory if present to guarantee a fresh state
+if (Test-Path "$env:ProgramData\chocolatey") {
+    Write-Output "Existing Chocolatey directory detected. Overwriting for fresh installation..."
+    Remove-Item "$env:ProgramData\chocolatey" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# Run the official Chocolatey installation script via web expression
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+$chocoScript = Invoke-RestMethod -Uri 'https://community.chocolatey.org/install.ps1'
+Invoke-Expression $chocoScript
+
+# Update current session environment variables so 'choco' and 'winget' commands work immediately
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+
 # ---------------- COMPULSORY UNIGETUI INSTALLATION ----------------
 Write-Output "Downloading compulsory app store manager (UniGetUI)..."
 $unigetUrl = "https://github.com/Devolutions/UniGetUI/releases/latest/download/UniGetUI.Installer.exe"
