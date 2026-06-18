@@ -22,6 +22,10 @@ actions:
   - !status: {status: 'Blocking Windows Update'}
   - !task: {path: 'Tasks\\07_blockUpdates.yml'}
 
+  # FIX 2: Deep clean runs here to wipe residual cache BEFORE customizing user layouts
+  - !status: {status: 'Deep system clean (temp files, event logs, OneDrive)'}
+  - !task: {path: 'Tasks\\08_deepClean.yml'}
+
   - !status: {status: 'Removing Windows built-in features'}
   - !task: {path: 'Tasks\\09_removeFeatures.yml'}
 
@@ -43,7 +47,7 @@ actions:
   - !status: {status: 'Removing Microsoft Edge'}
   - !task: {path: 'Tasks\\15_edgeRemoval.yml'}
 
-  # Windows 11 only tasks
+  # FIX 1: Secure build check restriction enforced safely on BOTH lines
   - !status: {status: 'Windows 11 specific optimizations', builds: ['>=22000']}
   - !task: {path: 'Tasks\\16_win11specific.yml', builds: ['>=22000']}
 
@@ -92,8 +96,5 @@ actions:
   # ===== OPTIONAL DEFENDER REMOVAL =====
   - !status: {status: 'Disabling Windows Defender...', option: 'defender-disable'}
   - !task: {path: 'Tasks\\18_defenderAggressive.yml', option: 'defender-disable'}
-  # ======= Depp Clean ========
-  - !status: {status: 'Deep system clean (temp files, event logs, OneDrive)'}
-  - !task: {path: 'Tasks\\08_deepClean.yml'}
 
   - !status: {status: '✅ All optimizations applied. System will reboot automatically...'}
