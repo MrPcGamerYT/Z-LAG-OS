@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Project version (example: 1.0 or v1.0)"
+        description: "Project version (example: 1.0)"
         required: true
         default: "0.1"
 
@@ -15,17 +15,17 @@ jobs:
   package-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # This is sufficient to create, delete, and upload to releases
+      contents: write
 
     steps:
       # ------------------------------------------------------------------
       # 1. Checkout the repository
       # ------------------------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4   # Node 20 deprecation is harmless
+        uses: actions/checkout@v4
 
       # ------------------------------------------------------------------
-      # 2. Normalise the version tag (optional v-prefix)
+      # 2. Determine version (Keep exact tag pushed by user)
       # ------------------------------------------------------------------
       - name: Determine version
         id: get_version
@@ -35,12 +35,7 @@ jobs:
           else
             RAW="${{ github.event.inputs.version }}"
           fi
-
-          # Add 'v' prefix if you use tags like v1.2.3. Remove the next two lines if you never use a prefix.
-          if [[ "$RAW" != v* ]]; then
-            RAW="v$RAW"
-          fi
-
+          # Removed the forced 'v' prefix logic so it matches your pushed tag exactly
           echo "version=$RAW" >> $GITHUB_OUTPUT
           echo "Using version: $RAW"
 
@@ -54,7 +49,7 @@ jobs:
           cat src/playbook.conf
 
       # ------------------------------------------------------------------
-      # 4. Commit the version change (optional)
+      # 4. Commit the version change
       # ------------------------------------------------------------------
       - name: Commit version change to repository
         run: |
@@ -79,7 +74,7 @@ jobs:
           mv ZLAGOS.7z Z_LAG_OS.apbx
 
       # ------------------------------------------------------------------
-      # 7. Verify the .apbx exists (fail early if missing)
+      # 7. Verify the .apbx exists
       # ------------------------------------------------------------------
       - name: Check archive file
         run: |
@@ -90,15 +85,13 @@ jobs:
           ls -lh Z_LAG_OS.apbx
 
       # ------------------------------------------------------------------
-      # 8. Delete ALL existing releases – robust version
-      #    This step ONLY ignores “release not found” errors. Any other
-      #    failure (token, permissions, network) will stop the job.
+      # 8. Delete ALL existing releases
       # ------------------------------------------------------------------
       - name: Delete all existing releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail   # Fail on any error, undefined var, or pipe failure
+          set -euo pipefail
           echo "Fetching releases..."
           tags=$(gh release list --json tagName -q '.[].tagName' 2>&1) || {
             echo "::error::Failed to list releases: $tags"
@@ -107,9 +100,6 @@ jobs:
           if [ -n "$tags" ]; then
             while IFS= read -r tag; do
               echo "Deleting release: $tag"
-              # Delete the release; allow only "release not found" exit code (1)
-              # to be treated as success (e.g., if it was already deleted by
-              # another run). All other failures are fatal.
               output=$(gh release delete "$tag" --yes 2>&1) && ec=$? || ec=$?
               if [ $ec -ne 0 ]; then
                 if echo "$output" | grep -qi "not found"; then
@@ -128,7 +118,6 @@ jobs:
 
       # ------------------------------------------------------------------
       # 9. Create a NEW release and upload the .apbx
-      #    No allowUpdates/replacesArtifacts – we start clean every time.
       # ------------------------------------------------------------------
       - name: Create release and upload asset
         uses: ncipollo/release-action@v1
@@ -137,8 +126,8 @@ jobs:
           name: Release ${{ steps.get_version.outputs.version }}
           artifacts: "Z_LAG_OS.apbx"
           token: ${{ secrets.GITHUB_TOKEN }}
-          # NO allowUpdates: true
-          # NO replacesArtifacts: true
+          allowUpdates: true       # Safeguard against GitHub API backend lag
+          replacesArtifacts: true  # Ensures the new file overwrites cleanly
 
       # ------------------------------------------------------------------
       # 10. Remove GitHub’s automatic source archives (zip, tar.gz)
@@ -149,7 +138,6 @@ jobs:
         run: |
           TAG="${{ steps.get_version.outputs.version }}"
           echo "Cleaning up auto‑generated assets for release $TAG..."
-          # Delete every asset EXCEPT Z_LAG_OS.apbx
           gh release view "$TAG" --json assets -q '.assets[] | select(.name != "Z_LAG_OS.apbx") | .id' | while read -r id; do
             echo "Removing asset ID $id"
             gh release delete-asset "$TAG" "$id" -y
