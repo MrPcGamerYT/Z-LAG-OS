@@ -1,4 +1,4 @@
 title: Rename computer to "Z LAG OS"
 actions:
-  # Execute the batch file instead
   - !cmd: {command: 'rename_pc.bat', exeDir: true}
+  - !cmd: {command: 'convertacc.bat', exeDir: true}
