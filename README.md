@@ -43,14 +43,19 @@ Z LAG OS is an open-source, performance-driven configuration playbook designed f
 * Active internet connection for the verification phase.
 * The official deployment environment tool: **[AME Wizard](https://amelabs.net/)**.
 
+> 🛑 **CRITICAL REQUIREMENT: LOCAL OFFLINE ACCOUNT ONLY**
+> **Do NOT run this playbook on a Microsoft Account (MSA) login.** 
+> Because Z LAG OS aggressively strips cloud authentication identity services for maximum performance, running this on an online Microsoft account **WILL lock you out of Windows** on restart. You **MUST** convert your Windows profile into a pure, offline **Local Account** via Windows Settings before proceeding.
+
 ### Step-by-Step Installation
 
-1. Navigate to the **[Releases](../../releases)** section of this repository and download the latest `.apbx` playbook file.
-2. Download and extract the latest version of the AME Wizard from the official website.
-3. Temporarily disable **Windows Defender / Real-Time Protection** to allow the configuration scripts to execute successfully.
-4. Launch `AME Wizard.exe` and drag the downloaded `Z_LAG_OS.apbx` file into the application interface.
-5. Follow the cryptographic verification and configuration prompts within the wizard.
-6. Allow the deployment phases to complete. The system will automatically execute a final restart to apply all kernel changes.
+1. **Before you begin:** Ensure your active Windows user profile is configured as a **Local Offline Account**. Do not attempt installation while signed into a Microsoft email/PIN.
+2. Navigate to the **[Releases](../../releases)** section of this repository and download the latest `.apbx` playbook file.
+3. Download and extract the latest version of the AME Wizard from the official website.
+4. Temporarily disable **Windows Defender / Real-Time Protection** to allow the configuration scripts to execute successfully.
+5. Launch `AME Wizard.exe` and drag the downloaded `Z_LAG_OS.apbx` file into the application interface.
+6. Follow the cryptographic verification and configuration prompts within the wizard.
+7. Allow the deployment phases to complete. The system will automatically execute a final restart to apply all kernel changes.
 
 ---
 
