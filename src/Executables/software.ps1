@@ -26,42 +26,65 @@ function Remove-TempDirectory {
     Remove-Item -Path $tempDir -Force -Recurse -EA 0
 }
 
-
-# ---------------- FORCE INSTALL CHOCOLATEY ----------------
-Write-Output "Enforcing Chocolatey installation/reinstall..."
-
-# Enforce TLS 1.2/1.3 protocol handling for secure downloads
+# Enforce TLS 1.2/1.3 protocol handling for secure web downloads
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
 
-# Wipe existing installation directory if present to guarantee a fresh state
-if (Test-Path "$env:ProgramData\chocolatey") {
-    Write-Output "Existing Chocolatey directory detected. Overwriting for fresh installation..."
-    Remove-Item "$env:ProgramData\chocolatey" -Recurse -Force -ErrorAction SilentlyContinue
-}
 
-# Run the official Chocolatey installation script via web expression
-Set-ExecutionPolicy Bypass -Scope Process -Force
-$chocoScript = Invoke-RestMethod -Uri 'https://community.chocolatey.org/install.ps1'
-Invoke-Expression $chocoScript
+# ---------------- UNIVERSAL ALT APP INSTALLER SETUP ----------------
+Write-Output "Fetching latest AltAppInstaller release metadata from official repository..."
 
-# Update current session environment variables so 'choco' works immediately without terminal restart
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+$repoUrl = "https://api.github.com/repos/mjishnu/alt-app-installer/releases/latest"
 
+try {
+    $releaseInfo = Invoke-RestMethod -Uri $repoUrl -UseBasicParsing
+    
+    if ($releaseInfo) {
+        # Dynamically matches primary release distribution zip files (e.g., altappinstaller-v2.7.3.zip)
+        $zipAsset = $releaseInfo.assets | Where-Object { 
+            $_.name -like "altappinstaller-v*.zip" -or $_.name -like "*.zip"
+        } | Where-Object { $_.name -notlike "*cert*" } | Select-Object -First 1
 
-# ---------------- COMPULSORY UNIGETUI INSTALLATION ----------------
-Write-Output "Downloading compulsory app store manager (UniGetUI)..."
-$unigetUrl = "https://github.com/Devolutions/UniGetUI/releases/latest/download/UniGetUI.Installer.exe"
+        if ($zipAsset) {
+            $downloadUrl = $zipAsset.browser_download_url
+            $zipPath = Join-Path $tempDir "AltAppInstaller.zip"
+            $installDir = "C:\Program Files\AltAppInstaller"
 
-& curl.exe -LSs $unigetUrl -o "$tempDir\UniGetUI_Setup.exe" $timeouts
+            Write-Output "Downloading package from: $downloadUrl"
+            & curl.exe -LSs $downloadUrl -o $zipPath $timeouts
 
-if ($?) {
-    Write-Output "Installing UniGetUI silently for all users..."
-    # Installed completely headless with auto-start killed to respect your RAM limit boundaries
-    Start-Process -FilePath "$tempDir\UniGetUI_Setup.exe" `
-        -ArgumentList "/SP /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NoAutoStart /ALLUSERS /LANG=english" `
-        -WindowStyle Hidden -Wait
-} else {
-    Write-Warning "UniGetUI download failed, continuing with remaining components..."
+            if (Test-Path $zipPath) {
+                Write-Output "Extracting AltAppInstaller package to $installDir..."
+                if (!(Test-Path $installDir)) {
+                    New-Item -Path $installDir -ItemType Directory -Force | Out-Null
+                }
+                
+                Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
+                
+                # Recursively locate the primary entry point application executable
+                $exePath = Get-ChildItem -Path $installDir -Filter "altappinstaller.exe" -Recurse | Select-Object -ExpandProperty FullName -First 1
+
+                if ($exePath) {
+                    Write-Output "Creating system Start Menu shortcut link..."
+                    $startMenuPath = [System.IO.Path]::Combine($env:ProgramData, "Microsoft\Windows\Start Menu\Programs")
+                    $shortcutPath = Join-Path $startMenuPath "Alt App Installer.lnk"
+                    
+                    $wshShell = New-Object -ComObject WScript.Shell
+                    $shortcut = $wshShell.CreateShortcut($shortcutPath)
+                    $shortcut.TargetPath = $exePath
+                    $shortcut.WorkingDirectory = [System.IO.Path]::GetDirectoryName($exePath)
+                    $shortcut.Description = "Alt App Installer - Alternative Windows Store Frontend"
+                    $shortcut.Save()
+                    Write-Output "AltAppInstaller successfully deployed."
+                } else {
+                    Write-Warning "Extraction successful, but could not identify altappinstaller.exe application entry."
+                }
+            }
+        } else {
+            Write-Warning "Could not isolate target binary zip file asset inside release payloads."
+        }
+    }
+} catch {
+    Write-Warning "An error occurred configuring AltAppInstaller deployment pipeline: $_"
 }
 
 
@@ -69,7 +92,6 @@ if ($?) {
 if ($Brave) {
     Write-Output "Downloading Brave..."
     
-    # Fall back to 32-bit if it's an old X86 machine, otherwise use X64
     $braveArch = if ($osArch -eq "X86") { "winia32" } else { "winx64" }
     $braveUrl = "https://laptop-updates.brave.com/latest/$braveArch"
 
@@ -91,7 +113,6 @@ if ($Brave) {
 # ---------------- OPERA GX ----------------
 if ($OperaGX) {
     Write-Output "Downloading Opera GX (latest)..."
-    # Opera's setup endpoint handles architecture detection automatically on their servers
     & curl.exe -LSs "https://net.geo.opera.com/opera_gx/stable/windows" `
         -o "$tempDir\operagx.exe" $timeouts
 
@@ -113,7 +134,6 @@ if ($OperaGX) {
 if ($Chrome) {
     Write-Output "Downloading Google Chrome..."
 
-    # Match the exact enterprise MSI URL to the target machine architecture
     if ($osArch -eq "ARM64") {
         $chromeUrl = "https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise_Arm64.msi"
     } elseif ($osArch -eq "X64") {
@@ -141,8 +161,6 @@ if ($Chrome) {
 $modernArgs = "/install /quiet /norestart"
 $vcredists = [ordered] @{}
 
-# Smart waterfall injection: 64-bit/ARM environments still require the 32-bit runtimes 
-# to support older applications, but 32-bit systems can only install the X86 package.
 if ($osArch -eq "ARM64") {
     $vcredists["https://aka.ms/vs/17/release/vc_redist.arm64.exe"] = @("2015+-arm64", $modernArgs)
 }
@@ -166,7 +184,6 @@ foreach ($a in $vcredists.GetEnumerator()) {
 
 # ---------------- DIRECTX ----------------
 Write-Output "Installing DirectX..."
-# DirectX installer packs architectures for everything right inside the redist package
 
 & curl.exe -LSs "https://download.microsoft.com/download/8/4/A/84A35BF1-DAFE-4AE8-82AF-AD2AE20B6B14/directx_Jun2010_redist.exe" `
     -o "$tempDir\directx.exe" $timeouts
