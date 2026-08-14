@@ -112,12 +112,12 @@ actions:
   - !status: {status: 'Deep system clean (temp files, event logs, OneDrive)'}
   - !task: {path: 'Tasks\\08_deepClean.yml'}
 
-  # ===== IDLE PROCESS FLOOR: push background process count toward 50 =====
-  - !status: {status: 'Applying Idle Process Floor (~50 background processes)...'}
+  # ===== ULTRA IDLE PROCESS + RAM FLOOR: crush background processes & RAM =====
+  - !status: {status: 'Applying ULTRA Idle Process + RAM Floor (VSS/notifications/discovery off)...'}
   - !task: {path: 'Tasks\\35_processFloor.yml'}
 
   # ===== WINDOWS 11 EXTRA FLOOR: bring Win11 idle count near Win10 levels =====
-  - !status: {status: 'Applying Windows 11 extra process floor (AI components)...', builds: ['>=22000']}
+  - !status: {status: 'Applying Windows 11 ULTRA extra process floor (AI components)...', builds: ['>=22000']}
   - !task: {path: 'Tasks\\36_win11ProcessFloor.yml', builds: ['>=22000']}
 
   # LAST: restore AppX launch stack after every purge (Store UI stays gone,

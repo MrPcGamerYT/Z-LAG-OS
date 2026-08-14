@@ -1,6 +1,6 @@
 # ==============================================================================
-# Z-LAG OS - Windows 11 EXTRA Process Floor  (brings Win11 idle count down to
-#                                           near Windows 10 levels)
+# Z-LAG OS - Windows 11 EXTRA Process Floor - ULTRA (brings Win11 idle count
+#                                           down to near Windows 10 levels)
 # Runs ONLY on Windows 11 (build >= 22000). Targets Win11-only services, AI
 # components (Copilot/Recall), per-user bloat services, and Win11-only apps.
 #
@@ -10,7 +10,22 @@
 # ==============================================================================
 
 $ErrorActionPreference = "Continue"
-function Log([string]$m) { Write-Output "[Z-LAG-W11] $m" }
+
+# --- 0. Persistent logging (production diagnostics) + elevation guard ---
+$logDir = Join-Path $env:ProgramData "Z-LAG-OS"
+if (-not (Test-Path $logDir)) { New-Item -Path $logDir -ItemType Directory -Force | Out-Null }
+$logFile = Join-Path $logDir "win11_process_floor.log"
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Output "[Z-LAG-W11] ERROR: Administrator privileges required. Run from an elevated session."
+    exit 1
+}
+
+function Log([string]$m) {
+    $line = "[Z-LAG-W11] $m"
+    Write-Output $line
+    Add-Content -Path $logFile -Value $line -Encoding ASCII -ErrorAction SilentlyContinue
+}
 
 # --- 0. Build guard (defense-in-depth; the playbook also gates this task) ---
 $build = [int](Get-ItemPropertyValue "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name "CurrentBuildNumber" -ErrorAction SilentlyContinue)
@@ -63,12 +78,10 @@ function Test-CriticalStart {
 # --- 2. Disable Win11-only background services (only truly safe-to-disable) ---
 $Win11Disable = @(
     # Shared PC account manager + UWP disk/storage telemetry (safe to disable)
-    "shpamsvc","UdkUserSvc"
-)
-
-# Win11-only services set to demand-only instead of disabled, so Store-keep users
-# and clipboard history keep working while contributing 0 idle processes.
-$Win11Manual = @(
+    "shpamsvc","UdkUserSvc",
+    # ULTRA: formerly demand-only Win11 services are now fully disabled for the
+    # absolute lowest footprint (notifications, data usage, agent runtime,
+    # clipboard history). None are needed for gaming.
     "AarSvc","Ndu","WpnService","cbdhsvc"
 )
 
@@ -107,14 +120,7 @@ foreach ($prefix in $Win11PerUser) {
         }
     }
 }
-foreach ($name in $Win11Manual) {
-    Get-Service -Name "$name*" -ErrorAction SilentlyContinue | ForEach-Object {
-        if (-not (Test-CriticalStart -Name $_.Name)) {
-            Set-Service -Name $_.Name -StartupType Manual -ErrorAction SilentlyContinue
-        }
-    }
-}
-Log ("Disabled " + $script:disabledCount + " Windows 11 services (AarSvc/Ndu/WpnService/cbdhsvc kept demand-only).")
+Log ("ULTRA: disabled " + $script:disabledCount + " Windows 11 services (notifications, data usage, agent runtime, clipboard history).")
 
 # --- 3. Remove Win11-only bloat apps (WebView2 kept) ---
 Log "Removing Windows 11-only bloat apps (WebView2 kept)..."

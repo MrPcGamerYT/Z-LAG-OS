@@ -5,5 +5,5 @@ actions:
   - !powerShell:
       wait: true
       exeDir: true
-      command: '.\\repair_appx_runtime.ps1'
+      command: '.\repair_appx_runtime.ps1'
   - !writeStatus: {status: "AppX runtime healthy. Sideloaded apps will not crash on launch."}

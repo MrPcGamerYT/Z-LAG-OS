@@ -1,10 +1,10 @@
-title: Minimalist Idle Process + RAM Floor
-description: Consolidates svchost pools, disables every safe-to-remove background service, trims working sets and prefetch to push idle processes and RAM as low as possible. Hard-protects Wi-Fi, Bluetooth, Ethernet, the AppX shell/app-launch stack and WebView2 so nothing the user needs ever breaks or crashes.
+title: ULTRA Idle Process + RAM Floor
+description: ULTRA pass - consolidates svchost pools, disables every safe-to-remove background service PLUS on-demand features (System Restore/VSS, notifications, network discovery, file sharing, hotspot), trims working sets and prefetch to push idle processes and RAM to the absolute floor. Hard-protects the Windows core, Wi-Fi, Bluetooth, Ethernet, the AppX shell/app-launch stack and WebView2 so the OS boots and games/apps never crash.
 privilege: TrustedInstaller
 actions:
-  - !writeStatus: {status: "Applying Minimalist Idle Process + RAM Floor..."}
+  - !writeStatus: {status: "Applying ULTRA Idle Process + RAM Floor..."}
   - !powerShell:
       wait: true
       exeDir: true
-      command: '.\\process_floor.ps1'
+      command: '.\process_floor.ps1'
   - !writeStatus: {status: "Idle process + RAM floor applied. Reboot will lock in the minimal footprint."}

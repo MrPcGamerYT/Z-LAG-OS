@@ -1,9 +1,14 @@
 # ==============================================================================
-# Z-LAG OS - Idle Process + RAM Floor Engine  (minimalist idle state)
+# Z-LAG OS - ULTRA Idle Process + RAM Floor Engine (max gaming footprint drop)
 # ------------------------------------------------------------------------------
-#  Goal: get idle background processes and RAM as low as possible, WITHOUT ever
-#  touching Wi-Fi / Bluetooth / Ethernet, the app-launch stack (so Z-LAG Toolbox
-#  apps and the Start Menu never silently crash), or WebView2.
+#  Goal: crush idle background processes and RAM to the absolute floor for
+#  gaming. On-demand features (System Restore / VSS, notifications, network
+#  discovery, file sharing, hotspot) are now DISABLED entirely, not just set
+#  to demand-only, so they can never spawn processes mid-game.
+#
+#  STILL NEVER TOUCHED: Windows core (no crash / no boot break), Wi-Fi /
+#  Bluetooth / Ethernet, the app-launch stack (so Z-LAG Toolbox apps and the
+#  Start Menu never silently crash), and WebView2.
 #
 #  SAFETY: everything below is gated behind a hard "KEEP" list. A service that
 #  matches the keep list (or a GPU/audio vendor) is NEVER stopped or disabled,
@@ -25,7 +30,22 @@
 # ==============================================================================
 
 $ErrorActionPreference = "Continue"
-function Log([string]$m) { Write-Output "[Z-LAG-FLOOR] $m" }
+
+# --- 0. Persistent logging (production diagnostics) + elevation guard ---
+$logDir = Join-Path $env:ProgramData "Z-LAG-OS"
+if (-not (Test-Path $logDir)) { New-Item -Path $logDir -ItemType Directory -Force | Out-Null }
+$logFile = Join-Path $logDir "process_floor.log"
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Output "[Z-LAG-FLOOR] ERROR: Administrator privileges required. Run from an elevated session."
+    exit 1
+}
+
+function Log([string]$m) {
+    $line = "[Z-LAG-FLOOR] $m"
+    Write-Output $line
+    Add-Content -Path $logFile -Value $line -Encoding ASCII -ErrorAction SilentlyContinue
+}
 
 # --- 1. svchost consolidation: never split service hosts (fewer processes) ---
 Log "Consolidating service hosts into shared pools..."
@@ -49,7 +69,7 @@ $KeepServices = @(
     "SystemEventsBroker","Themes","StorSvc","W32Time","CryptSvc",
     # Shell / AppX / WebView2 host (untouchable -> no silent app crashes)
     "AppXSvc","AppReadiness","ClipSVC","LicenseManager","StateRepository",
-    "camsvc","SystemEventsBroker","wlidsvc","TokenBroker",
+    "camsvc","wlidsvc","TokenBroker",
     # Audio (untouchable)
     "Audiosrv","AudioEndpointBuilder"
 )
@@ -109,7 +129,16 @@ $Disable = @(
     "CaptureService","CscService","defragsvc","EntAppSvc","fhsvc",
     "lfsvc","MSDTC","NcbService","pla","QWAVE","SNMPTRAP","spectrum","svsvc",
     "TapiSrv","TieringEngineService","TrkWks","UevAgentService","vds",
-    "wbengine","wmiApSrv","workfolderssvc","autotimesvc"
+    "wbengine","wmiApSrv","workfolderssvc","autotimesvc",
+    # ULTRA: on-demand features that are NOT needed for gaming are disabled
+    # entirely (System Restore / VSS, notifications, network discovery, file
+    # sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history, Security Center).
+    # These can never spawn a process mid-game now. Core networking, the
+    # AppX/WebView2 stack and boot/system services remain untouched.
+    "VSS","SwPrv","WpnService","WpnUserService","LanmanServer","SharedAccess",
+    "SSDPSRV","upnphost","fdPHost","FDResPub","lltdsvc","WebClient","MSiSCSI",
+    "cbdhsvc","wscsvc","Browser","perceptionsimulation","ssh-agent","sshd",
+    "wlpasvc"
 )
 
 $disabledCount = 0
@@ -132,7 +161,7 @@ Log ("Disabled " + $script:disabledCount + " background services (kept all prote
 # --- 4. Demand-only services (available if an app needs them, 0 at idle) ---
 $Manual = @(
     "StorSvc","DsmSvc","DmEnrollmentSvc","EapHost","EFS","KeyIso",
-    "FontCache","FontCache3.0.0.0","BITS","cbdhsvc"
+    "FontCache","FontCache3.0.0.0","BITS"
 )
 # NOTE: wlidsvc / TokenBroker are intentionally NOT touched here - their final
 # state is decided by the Store option and locked in by repair_appx_runtime.ps1.
@@ -143,21 +172,10 @@ foreach ($name in $Manual) {
 }
 Log "Demand-only (no idle footprint) set for compatibility services."
 
-# --- 4b. On-demand features kept functional (set to Manual, NOT disabled) so we
-#        never break file sharing, hotspot/ICS, network discovery, System
-#        Restore (VSS), or notifications - they simply don't run at idle. ---
-$ManualSafe = @(
-    "LanmanServer","SharedAccess","SSDPSRV","upnphost","fdPHost","FDResPub",
-    "lltdsvc","WebClient","VSS","WpnService","WpnUserService","MSiSCSI"
-)
-foreach ($name in $ManualSafe) {
-    Get-Service -Name "$name*" -ErrorAction SilentlyContinue | ForEach-Object {
-        if (-not (Test-CriticalStart -Name $_.Name)) {
-            Set-Service -Name $_.Name -StartupType Manual -ErrorAction SilentlyContinue
-        }
-    }
-}
-Log "On-demand features kept functional (Manual, no idle footprint): file sharing, hotspot, discovery, VSS, notifications."
+# --- 4b. ULTRA: the old "on-demand features kept functional" block was removed.
+#        System Restore / VSS, notifications, discovery, file sharing and
+#        hotspot are now fully DISABLED above (they add nothing to gaming and
+#        can never spawn a process mid-game).
 
 # --- 5. RAM floor: memory-management registry tuning ---
 $mm = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
@@ -170,6 +188,30 @@ if (Test-Path $mm) {
     Set-ItemProperty -Path $prefetch -Name "EnableSuperfetch" -Value 0 -Type DWord -Force
     Log "RAM floor: prefetch/superfetch off, paging executive enabled."
 }
+
+# --- 5b. ULTRA: ban background apps + kill remaining maintenance wakeups ---
+$bg = "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications"
+if (-not (Test-Path $bg)) { New-Item -Path $bg -Force | Out-Null }
+Set-ItemProperty -Path $bg -Name "GlobalUserDisabled" -Value 1 -Type DWord -Force
+
+$taskPaths = @(
+    "\Microsoft\Windows\Application Experience\*",
+    "\Microsoft\Windows\Customer Experience Improvement Program\*",
+    "\Microsoft\Windows\DiskDiagnostic\*",
+    "\Microsoft\Windows\Windows Error Reporting\QueueReporting",
+    "\Microsoft\Windows\Location\*",
+    "\Microsoft\Windows\SettingSync\*",
+    "\Microsoft\Windows\CloudExperienceHost\CreateObjectTask",
+    "\Microsoft\Windows\Defrag\ScheduledDefrag",
+    "\Microsoft\Windows\Diagnosis\*",
+    "\Microsoft\Windows\Feedback\Siuf\DmClient"
+)
+$allTasks = Get-ScheduledTask -ErrorAction SilentlyContinue
+foreach ($tp in $taskPaths) {
+    $allTasks | Where-Object { $_.TaskPath -like $tp } |
+        Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
+}
+Log "ULTRA: background apps banned + telemetry/maintenance wakeups disabled."
 
 # --- 6. Clear startup Run entries (nothing auto-spawns at logon) ---
 $runKeys = @(
@@ -226,5 +268,6 @@ try {
 Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
 Start-Process explorer
 
-Log "Idle process + RAM floor applied. Reboot for full effect."
-Log "Protected: Wi-Fi / Bluetooth / Ethernet, AppX shell + app launching, WebView2."
+Log "ULTRA idle process + RAM floor applied. Reboot for full effect."
+Log "Disabled: VSS/System Restore, notifications, discovery, file sharing, hotspot."
+Log "Protected: Windows core, Wi-Fi / Bluetooth / Ethernet, AppX shell + app launching, WebView2."

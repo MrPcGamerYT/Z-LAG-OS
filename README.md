@@ -3,7 +3,7 @@
 [![License: Use Only](https://img.shields.io/badge/License-Proprietary%20%2F%20Use--Only-red.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078d7.svg)](https://www.microsoft.com/windows)
 [![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://amelabs.net/)
-[![Version: 5.10](https://img.shields.io/badge/Version-5.10-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
+[![Version: 5.11](https://img.shields.io/badge/Version-5.11-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
 [![Build: Stable](https://img.shields.io/badge/Build-Stable-brightgreen.svg)]()
 
 > **Maximum FPS. Zero Lag. No Bloat.** A performance-driven AME Wizard playbook engineered for competitive gaming, Android emulators (BlueStacks / MSI App Player / LDPlayer), and low-end hardware.
@@ -19,7 +19,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ## 📚 Table of Contents
 - [Core Objectives](#-core-objectives)
-- [What's New in v5.10](#-whats-new-in-v510)
+- [What's New in v5.11](#-whats-new-in-v511)
 - [Optimization Matrix](#️-optimization-matrix)
 - [Optional Performance Profiles](#-optional-performance-profiles)
 - [Expected Performance Gains](#-expected-performance-gains)
@@ -43,7 +43,31 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ---
 
-## 🆕 What's New in v5.10
+## 🆕 What's New in v5.11
+
+### v5.11 - ULTRA process & RAM floor (VSS, notifications & discovery now off)
+- **ULTRA idle floor**: `process_floor.ps1` now *disables* the on-demand features
+  it used to keep "demand-only" — **System Restore (VSS), Windows notifications,
+  network discovery, file sharing, hotspot/ICS, WebDAV, iSCSI and clipboard
+  history** — so they can never spawn a process mid-game. Idle process & RAM
+  counts drop further on both Windows 10 and Windows 11.
+- **Background apps banned** (user-level `GlobalUserDisabled`) and the remaining
+  telemetry/maintenance scheduled-task wakeups (CEIP, App Experience, Disk
+  Diagnostic, WER queue, Location, SettingSync, Defrag, Diagnosis, Feedback)
+  are disabled.
+- **Still hard-protected**: Windows core (no boot break / no crash), Wi-Fi /
+  Bluetooth / Ethernet, WebView2, and the AppX app-launch stack (Toolbox apps +
+  Start Menu never silently crash). The boot/system-service guard (Start ≤ 1)
+  is untouched.
+- **Win11 ULTRA pass**: Win11-only `AarSvc`, `Ndu`, `WpnService` and `cbdhsvc`
+  are now fully disabled instead of demand-only.
+- **Safety restore point**: the playbook now creates a real restore point
+  *before* any aggressive tweaks run (while VSS is still enabled), so you have
+  a rollback target even though System Restore is disabled afterwards.
+- **Production hardening**: the ULTRA floor scripts log to
+  `C:\ProgramData\Z-LAG-OS\` (`process_floor.log` / `win11_process_floor.log`),
+  self-check for elevation, and the broken Run-key cleanup + the logon banner
+  (extra "OK" click) were removed.
 
 ### v5.10 - Minimalist idle (~40–55 processes) + total MS removal + zero silent crashes + universal Win10/Win11
 - **Universal Windows 10 + Windows 11**: version-aware taskbar and power plan
@@ -60,10 +84,10 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   / app-launch stack and WebView2 are *never* touched, so networking keeps working
   and Toolbox-installed apps never silently crash.
 - **Break-proofing**: boot/system-critical services are never disabled (a Start
-  value ≤ 1 guard on top of the keep-list), and on-demand features — file sharing,
-  hotspot/ICS, network discovery, System Restore (VSS), notifications, clipboard
-  history — are set to demand-only (Manual) instead of disabled, so they still
-  work but add zero idle processes.
+  value ≤ 1 guard on top of the keep-list). *(Superseded in v5.11 ULTRA: the
+  on-demand features — file sharing, hotspot/ICS, network discovery, System
+  Restore (VSS), notifications, clipboard history — are now **fully disabled**
+  for the absolute lowest idle footprint.)*
 - **Fixed svchost threshold inconsistency** in `02_registry.yml` that was silently
   *increasing* the process count (now matches `final_push.ps1` = `380000000`).
 - **Microsoft services are now removed *totally* when you pick that option**:
@@ -140,6 +164,7 @@ Optimization achieves: less background CPU, more CPU cycles to game threads via 
 ### Removed / Disabled
 - Built-in apps: People, Maps, Alarms, Camera, 3D Viewer, Sticky Notes, Mail, Calendar, Feedback, GetStarted, PowerAutomate, Clipchamp, Office Hub, Xbox layers (optional), YourPhone, and more
 - Services: DiagTrack, dmwappush, WerSvc, SysMain, WSearch, MapsBroker, Fax, Xbox networking, RetailDemo, RemoteRegistry, and many others
+- ULTRA (v5.11): System Restore/VSS, notifications, network discovery, file sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history are now fully disabled for gaming (see the v5.11 notes before applying)
 - Optional removals: Defender, Bluetooth stack, Wi-Fi stack, Store + MS identity/gaming services (all gated behind options)
 - Telemetry: CEIP tasks, appraiser, 43 hosts-file entries, update-host blocking
 - Features: OneDrive setup, Widgets, Edge, Transparency, Animations, Search highlights, News/Feeds, Cortana hotkey
@@ -154,6 +179,7 @@ Optimization achieves: less background CPU, more CPU cycles to game threads via 
 - **Win32 core**: SFC, DISM, core audio, networking core (TCP/IP, DHCP, DNS cache kept)
 - **Windows shell AppX runtime** (AppXSvc, StateRepository, LicenseManager, ClipSVC) - kept even with "Remove MS Services" so the Start Menu/Search and Toolbox-installed apps keep launching
 - **WLAN / Bluetooth hardware** - kept by default; only removed if you opt in
+- **Windows core / boot** - boot & system-critical services (Start ≤ 1) are never touched, so the OS boots cleanly on both Windows 10 and 11 even with ULTRA applied
 
 ---
 
@@ -275,4 +301,4 @@ is required for anything outside this limited use permission. All rights reserve
 **Star ⭐ this repo if you get an FPS boost!**
 
 ---
-*Z LAG OS v5.10 - Zero Lag, Max Performance. Built for gamers, by gamers.*
+*Z LAG OS v5.11 - Zero Lag, Max Performance. Built for gamers, by gamers.*
