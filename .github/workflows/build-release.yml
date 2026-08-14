@@ -1,0 +1,111 @@
+name: Package and Release Z LAG OS.apbx
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Project version (example: 1.0)"
+        required: true
+        default: "0.1"
+
+jobs:
+  package-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      # 1. Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Get version
+      - name: Determine version
+        id: get_version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
+      # 3. Update config
+      - name: Update version in playbook.conf
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          sed -i "s|<Version>.*</Version>|<Version>$VERSION</Version>|" src/playbook.conf
+
+      # 4. Commit change (SAFE)
+      - name: Commit version change
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add src/playbook.conf
+          git commit -m "Update version to ${{ steps.get_version.outputs.version }}" || echo "No changes"
+          git push || echo "No push needed"
+
+      # 5. Install 7zip
+      - name: Install p7zip
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      # 6. Build package
+      - name: Create APBX
+        run: |
+          7z a -p"malte" -t7z Z_LAG_OS.apbx ./src/*
+          ls -lh
+
+      # 7. Ensure file exists
+      - name: Verify file
+        run: |
+          test -f Z_LAG_OS.apbx || (echo "File missing!" && exit 1)
+
+      # 8. Delete ONLY same tag release (NOT ALL)
+      - name: Delete existing release (safe)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get_version.outputs.version }}"
+          gh release delete "$TAG" --yes || echo "No existing release"
+
+      # 🔥 IMPORTANT FIX: wait to avoid GitHub API lag
+      - name: Wait for GitHub sync
+        run: sleep 10
+
+            # 9. Create release (SAFE METHOD)
+      - name: Create release via GH CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get_version.outputs.version }}"
+
+          echo "Creating release $TAG"
+
+          # Delete release if exists (ignore errors)
+          gh release delete "$TAG" --yes || true
+
+          # Delete tag remotely (IMPORTANT FIX)
+          git push origin :refs/tags/$TAG || true
+
+          # Recreate tag cleanly
+          git tag $TAG
+          git push origin $TAG
+
+          # Create fresh release + upload asset
+          gh release create "$TAG" Z_LAG_OS.apbx \
+            --title "Release $TAG" \
+            --notes "Z LAG OS Release $TAG"
+
+      # 10. Cleanup extra assets
+      - name: Remove unwanted assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.get_version.outputs.version }}"
+          gh release view "$TAG" --json assets -q '.assets[] | select(.name != "Z_LAG_OS.apbx") | .id' | while read id; do
+            gh release delete-asset "$TAG" "$id" -y
+          done
