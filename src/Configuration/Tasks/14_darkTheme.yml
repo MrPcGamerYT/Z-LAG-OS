@@ -1,0 +1,29 @@
+title: "Configure Z-LAG OS Personalization & Themes"
+description: "Sets dark mode for Windows and apps, plus custom dark mouse cursor."
+actions:
+  - !writeStatus: {status: "Enabling dark mode..."}
+
+  # Set dark mode for apps (UWP and modern apps)
+  - !registryValue:
+      path: 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+      value: 'AppsUseLightTheme'
+      data: '0'
+      type: REG_DWORD
+
+  # Set dark mode for system elements (taskbar, Start menu, etc.)
+  - !registryValue:
+      path: 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+      value: 'SystemUsesLightTheme'
+      data: '0'
+      type: REG_DWORD
+
+  # Set custom dark mouse cursor (runs your existing script with admin rights)
+  - !powerShell:
+      command: .\set_dark_mousecursor.ps1
+      exeDir: true
+      wait: true
+      runas: currentUserElevated
+
+  # Refresh Explorer to apply changes immediately
+  - !taskKill: {name: 'explorer'}
+  - !cmd: {command: 'start explorer.exe'}

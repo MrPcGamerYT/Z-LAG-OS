@@ -1,0 +1,13 @@
+title: CPU Priority for Gaming Processes
+actions:
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csgo.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Valorant.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\RocketLeague.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\COD.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\ApexLegends.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Overwatch.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Minecraft.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\javaw.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\GTA5.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Cyberpunk2077.exe\PerfOptions', value: 'CpuPriorityClass', type: REG_DWORD, data: 3}

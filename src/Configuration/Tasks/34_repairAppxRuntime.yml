@@ -1,0 +1,9 @@
+title: Repairing AppX runtime (sideloaded apps / error -2147416359)
+description: Restores LicenseManager, ClipSVC, AppXSvc, StateRepository and sideload policy so Z-LAG Toolbox installed apps launch without crashing. Respects the user's "remove Microsoft services" choice (does not re-enable wlidsvc/TokenBroker when the Store was removed).
+actions:
+  - !writeStatus: {status: "Repairing AppX runtime for sideloaded apps..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\\repair_appx_runtime.ps1'
+  - !writeStatus: {status: "AppX runtime healthy. Sideloaded apps will not crash on launch."}

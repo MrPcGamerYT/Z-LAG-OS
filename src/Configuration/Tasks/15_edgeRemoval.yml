@@ -1,0 +1,7 @@
+title: Remove Microsoft Edge (Complete - WebView2 preserved)
+description: Aggressively removes the Microsoft Edge browser (processes, files, AppX, registry, services, tasks, shortcuts) from Desktop, Start Menu and Taskbar. WebView2 runtime is kept so apps that depend on it keep working.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Running aggressive Edge removal (WebView2 preserved)..."}
+  - !cmd: {command: 'edge_remover.bat', exeDir: true}
+  - !writeStatus: {status: "✅ Microsoft Edge fully removed. WebView2 runtime preserved."}

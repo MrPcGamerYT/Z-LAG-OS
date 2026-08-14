@@ -1,0 +1,10 @@
+title: Minimalist Idle Process + RAM Floor
+description: Consolidates svchost pools, disables every safe-to-remove background service, trims working sets and prefetch to push idle processes and RAM as low as possible. Hard-protects Wi-Fi, Bluetooth, Ethernet, the AppX shell/app-launch stack and WebView2 so nothing the user needs ever breaks or crashes.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Applying Minimalist Idle Process + RAM Floor..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\\process_floor.ps1'
+  - !writeStatus: {status: "Idle process + RAM floor applied. Reboot will lock in the minimal footprint."}
