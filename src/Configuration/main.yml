@@ -109,9 +109,6 @@ actions:
   - !status: {status: 'Cleaning right-click context menu'}
   - !task: {path: 'Tasks\\28_contextMenuCleaner.yml'}
 
-  - !status: {status: 'Deep system clean (temp files, event logs, OneDrive)'}
-  - !task: {path: 'Tasks\\08_deepClean.yml'}
-
   # ===== ULTRA IDLE PROCESS + RAM FLOOR: crush background processes & RAM =====
   - !status: {status: 'Applying ULTRA Idle Process + RAM Floor (VSS/notifications/discovery off)...'}
   - !task: {path: 'Tasks\\35_processFloor.yml'}
@@ -120,9 +117,18 @@ actions:
   - !status: {status: 'Applying Windows 11 ULTRA extra process floor (AI components)...', builds: ['>=22000']}
   - !task: {path: 'Tasks\\36_win11ProcessFloor.yml', builds: ['>=22000']}
 
+  # ===== FINAL WEBVIEW2 GUARANTEE: never leave apps without the runtime =====
+  - !status: {status: 'Guaranteeing WebView2 Runtime...'}
+  - !task: {path: 'Tasks\\37_repairWebView2.yml'}
+
   # LAST: restore AppX launch stack after every purge (Store UI stays gone,
   # and Microsoft account services stay removed when the user chose that).
   - !status: {status: 'Repairing AppX runtime for sideloaded apps...'}
   - !task: {path: 'Tasks\\34_repairAppxRuntime.yml'}
+
+  # ===== DEEP SYSTEM CLEAN: run ABSOLUTELY LAST so it can never delete any
+  #      script before it has executed (extra protection). =====
+  - !status: {status: 'Deep system clean (temp files, event logs, OneDrive)'}
+  - !task: {path: 'Tasks\\08_deepClean.yml'}
 
   - !status: {status: '✅ All optimizations applied. System will reboot automatically...'}
