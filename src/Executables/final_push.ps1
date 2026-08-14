@@ -241,10 +241,8 @@ public class ZLagTrueEngine {
 
 Add-Type -TypeDefinition $TrueRamDropperCode -ErrorAction SilentlyContinue
 
-# Cycle the environment shell to load variables cleanly
-Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
-Start-Process explorer
-
+# Shell restart is handled by the playbook as the ACTIVE USER - do not restart
+# explorer here under TrustedInstaller (it would leave the user without a desktop).
 # Run final hard trim script-side
 [ZLagTrueEngine]::GlobalPurge()
 

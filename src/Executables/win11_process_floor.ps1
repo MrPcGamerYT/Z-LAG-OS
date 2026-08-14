@@ -180,9 +180,8 @@ Set-ItemProperty -Path $cdm -Name "SilentInstalledAppsEnabled" -Value 0 -Type DW
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name "BingSearchEnabled" -Value 0 -Type DWord -Force
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name "CloudSearchEnabled" -Value 0 -Type DWord -Force
 
-# --- 6. Restart the shell cleanly ---
-Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
-Start-Process explorer
-
+# --- 6. Shell restart is handled by the playbook as the ACTIVE USER (or by the
+#        final reboot) - restarting explorer under TrustedInstaller would leave
+#        the user without a desktop.
 Log "Windows 11 extra process floor applied. Reboot for full effect."
 Log "Protected: Wi-Fi / Bluetooth / Ethernet, AppX shell + app launching, WebView2."

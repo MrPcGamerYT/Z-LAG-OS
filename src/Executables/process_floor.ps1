@@ -264,10 +264,9 @@ try {
     Log "RAM trim skipped (not fatal)."
 }
 
-# --- 9. Apply the change: restart the shell cleanly ---
-Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
-Start-Process explorer
-
+# --- 9. Shell restart is handled by the playbook as the ACTIVE USER (or by the
+#        final reboot). Restarting explorer here would run it in the
+#        TrustedInstaller session and leave the user without a desktop.
 Log "ULTRA idle process + RAM floor applied. Reboot for full effect."
 Log "Disabled: VSS/System Restore, notifications, discovery, file sharing, hotspot."
 Log "Protected: Windows core, Wi-Fi / Bluetooth / Ethernet, AppX shell + app launching, WebView2."

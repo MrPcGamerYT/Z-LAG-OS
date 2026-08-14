@@ -119,27 +119,34 @@ if (Test-Path $defaultHivePath) {
     # Force close any hanging read-locks on the template file
     [GC]::Collect()
     [GC]::WaitForPendingFinalizers()
-    
+
     # Mount the template blueprint registry hive into our session
-    reg load "HKU\DefaultUserTemplate" $defaultHivePath | Out-Null
-    
-    $templatePaths = @(
-        "HKU\DefaultUserTemplate\Control Panel\Desktop",
-        "HKU\DefaultUserTemplate\Software\Microsoft\Windows\CurrentVersion\Policies\System",
-        "HKU\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization"
-    )
-    foreach ($tp in $templatePaths) { if (-not (Test-Path $tp)) { New-Item $tp -Force | Out-Null } }
-    
-    # Set values natively inside the blueprint so every account inherits them at setup
-    Set-ItemProperty -Path "HKU\DefaultUserTemplate\Control Panel\Desktop" -Name "Wallpaper" -Value $destDesktopPng -Force
-    Set-ItemProperty -Path "HKU\DefaultUserTemplate\Control Panel\Desktop" -Name "WallpaperStyle" -Value "2" -Force
-    Set-ItemProperty -Path "HKU\DefaultUserTemplate\Control Panel\Desktop" -Name "TileWallpaper" -Value "0" -Force
-    Set-ItemProperty -Path "HKU\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "LockScreenImage" -Value $destLockJpg -Type String -Force
-    Set-ItemProperty -Path "HKU\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "NoChangingLockScreen" -Value 1 -Type DWord -Force
-    
-    # Safely detach the blueprint hive
-    reg unload "HKU\DefaultUserTemplate" | Out-Null
-    Write-Host "[+] Phase 3: Default User template modified. All future profiles are forced." -ForegroundColor Green
+    reg load "HKU\DefaultUserTemplate" $defaultHivePath 2>$null | Out-Null
+
+    if (Test-Path "HKU:\DefaultUserTemplate") {
+        $templatePaths = @(
+            "HKU:\DefaultUserTemplate\Control Panel\Desktop",
+            "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization"
+        )
+        foreach ($tp in $templatePaths) { if (-not (Test-Path $tp)) { New-Item $tp -Force | Out-Null } }
+
+        # Set values natively inside the blueprint so every account inherits them at setup
+        if (Test-Path "HKU:\DefaultUserTemplate\Control Panel\Desktop") {
+            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Control Panel\Desktop" -Name "Wallpaper" -Value $destDesktopPng -Type String -Force
+            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Control Panel\Desktop" -Name "WallpaperStyle" -Value "2" -Type String -Force
+            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Control Panel\Desktop" -Name "TileWallpaper" -Value "0" -Type String -Force
+        }
+        if (Test-Path "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization") {
+            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "LockScreenImage" -Value $destLockJpg -Type String -Force
+            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "NoChangingLockScreen" -Value 1 -Type DWord -Force
+        }
+
+        # Safely detach the blueprint hive
+        reg unload "HKU\DefaultUserTemplate" 2>$null | Out-Null
+        Write-Host "[+] Phase 3: Default User template modified. All future profiles are forced." -ForegroundColor Green
+    } else {
+        Write-Host "[-] Phase 3: Default User hive could not be mounted - skipped (wallpaper still applied to live users)." -ForegroundColor Yellow
+    }
 } else {
     Write-Host "[-] Phase 3: Default User template hive path not resolved." -ForegroundColor Red
 }

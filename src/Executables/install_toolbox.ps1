@@ -157,21 +157,36 @@ try {
     $process = [System.Diagnostics.Process]::Start($psi)
     $process.WaitForExit(30000) | Out-Null
 
-    # Poll install dir for the main executable (NSIS spawns child processes)
-    $timeoutSeconds = 90
+    # Search the most common install locations for the main executable
+    # (NSIS may install per-user or under a differently-named folder).
+    $candidateDirs = @(
+        $installDir,
+        "C:\Program Files (x86)\Z-LAG Toolbox",
+        "C:\Program Files (x86)\Z-LAG-TOOLBOX",
+        "$env:LocalAppData\Programs\Z-LAG Toolbox",
+        "$env:LocalAppData\Programs\Z-LAG-TOOLBOX",
+        "$env:ProgramFiles\Z-LAG Toolbox",
+        "$env:ProgramFiles\Z-LAG-TOOLBOX"
+    )
+
+    # Poll for the installed binary (NSIS spawns child processes; be patient)
+    $timeoutSeconds = 300
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     $finalExe = $null
     while ($stopwatch.Elapsed.TotalSeconds -lt $timeoutSeconds) {
-        if (Test-Path $installDir) {
-            $finalExe = Get-ChildItem -Path $installDir -Filter "*.exe" -ErrorAction SilentlyContinue |
-                        Where-Object { $_.Name -notmatch "(?i)unins" } | Select-Object -First 1
-            if ($finalExe) { Start-Sleep -Seconds 3; break }
+        foreach ($dir in $candidateDirs) {
+            if (Test-Path $dir) {
+                $finalExe = Get-ChildItem -Path $dir -Filter "*.exe" -ErrorAction SilentlyContinue |
+                            Where-Object { $_.Name -notmatch "(?i)unins" } | Select-Object -First 1
+                if ($finalExe) { break }
+            }
         }
-        Start-Sleep -Seconds 2
+        if ($finalExe) { Start-Sleep -Seconds 3; break }
+        Start-Sleep -Seconds 3
     }
     $stopwatch.Stop()
 
-    if (-not $finalExe) { throw "Installer timed out - executable not found in '$installDir'." }
+    if (-not $finalExe) { throw "Installer finished but no Z-LAG Toolbox executable was found in the expected locations." }
 
     # Smoke test: the binary must exist, be non-trivial and carry version info.
     $vi = $finalExe.VersionInfo
@@ -194,6 +209,8 @@ if ($ok) {
 }
 
 # --- 6. Cleanup ---
-if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+if ($tempDir -and (Test-Path -LiteralPath $tempDir)) {
+    try { Remove-Item -LiteralPath $tempDir -Recurse -Force -ErrorAction SilentlyContinue } catch {}
+}
 
 Write-Log "[Z-LAG] Task complete. Result: $(if ($ok) { 'SUCCESS' } else { 'FAILED' }). Log: $logFile"
