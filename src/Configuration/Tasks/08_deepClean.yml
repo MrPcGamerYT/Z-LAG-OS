@@ -13,7 +13,7 @@ actions:
   - !powerShell: {command: 'Remove-Item -Recurse -Force "$env:USERPROFILE\OneDrive" -ErrorAction SilentlyContinue'}
 
   # Recycle bin and DISM component cleanup
-  - !powerShell: {command: 'Clear-RecycleBin -Force -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'try { Clear-RecycleBin -Force -ErrorAction SilentlyContinue } catch {}; exit 0'}
   - !cmd: {command: 'dism /online /cleanup-image /startcomponentcleanup /quiet'}
 
   # Clear event logs (safe version)
@@ -25,12 +25,16 @@ actions:
         }
 
   # UI performance tweaks
-  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'DragFullWindows', type: REG_SZ, data: '0'}
-  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'FontSmoothing', type: REG_SZ, data: '2'}
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0'}
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'EnableTransparency', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'DragFullWindows', type: REG_SZ, data: '0', runas: currentUserElevated}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'FontSmoothing', type: REG_SZ, data: '2', runas: currentUserElevated}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0', runas: currentUserElevated}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'EnableTransparency', type: REG_DWORD, data: '0', runas: currentUserElevated}
 
-    # Clean temp files and prefetch
-  - !cmd: {command: 'del /f /s /q "%TEMP%\*" 2>nul'}
+    # Clean temp files and prefetch.
+    # CRITICAL: never use 'del %TEMP%\*' - AME runs the playbook FROM
+    # %TEMP%\AME\..., so deleting it mid-run removes the remaining scripts
+    # (process_floor.ps1, repair_appx_runtime.ps1, etc.) and they all fail with
+    # "is not recognized". Instead delete everything in TEMP EXCEPT the AME dir.
+  - !powerShell: {command: 'Get-ChildItem -Path $env:TEMP -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "AME" } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue'}
   - !cmd: {command: 'del /f /s /q "C:\Windows\Temp\*" 2>nul'}
   - !cmd: {command: 'del /f /s /q "C:\Windows\Prefetch\*" 2>nul'}

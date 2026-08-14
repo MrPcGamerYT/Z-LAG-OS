@@ -3,6 +3,9 @@ actions:
   - !powerShell:
       exeDir: true
       command: '.\disable_network_offload.ps1'
+  - !powerShell:
+      exeDir: true
+      command: '.\set_tcp_nodelay_per_interface.ps1'
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpAckFrequency', type: REG_DWORD, data: 1}
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpDelAckTicks', type: REG_DWORD, data: 0}
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'TcpTimedWaitDelay', type: REG_DWORD, data: 30}
@@ -12,4 +15,4 @@ actions:
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile', value: 'NetworkThrottlingIndex', type: REG_DWORD, data: 4294967295}
   - !cmd: {command: 'netsh int tcp set global autotuninglevel=normal'}
   - !cmd: {command: 'ipconfig /flushdns'}
-  - !cmd: {command: 'netsh int ip reset'}
+  - !cmd: {command: 'netsh int ip reset >nul 2>&1 || echo Network stack reset flagged for reboot (non-fatal)'}

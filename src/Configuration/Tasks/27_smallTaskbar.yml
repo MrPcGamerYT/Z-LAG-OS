@@ -6,4 +6,5 @@ actions:
       wait: true
       exeDir: true
       command: '.\set_small_taskbar.ps1'
+      runas: currentUserElevated
   - !writeStatus: {status: "Taskbar configured for this Windows version."}

@@ -8,7 +8,7 @@ actions:
   # BOOT / TIMER STABILITY (SAFE REAL TUNING)
   # =========================
 
-  - !cmd: {command: 'bcdedit /deletevalue useplatformclock'}
+  - !cmd: {command: 'bcdedit /deletevalue useplatformclock >nul 2>&1 || ver >nul'}
   - !cmd: {command: 'bcdedit /set disabledynamictick yes'}
 
   # (REMOVED useplatformtick — causes instability on modern Windows)
@@ -56,12 +56,14 @@ actions:
       value: 'GameDVR_DXGIHonorFSEWindowsCompatible'
       type: REG_DWORD
       data: 1
+      runas: currentUserElevated
 
   - !registryValue:
       path: 'HKCU\System\GameConfigStore'
       value: 'GameDVR_HonorUserFSEBehaviorMode'
       type: REG_DWORD
       data: 1
+      runas: currentUserElevated
 
   # =========================
   # INPUT LATENCY REDUCTION
@@ -72,12 +74,14 @@ actions:
       value: 'MouseHoverTime'
       type: REG_SZ
       data: '0'
+      runas: currentUserElevated
 
   - !registryValue:
       path: 'HKCU\Control Panel\Keyboard'
       value: 'KeyboardDelay'
       type: REG_SZ
       data: '0'
+      runas: currentUserElevated
 
   # =========================
   # POWER OPTIMIZATION (REAL IMPACT)
@@ -109,8 +113,9 @@ actions:
   # =========================
 
   - !writeStatus: {status: "ZLAG Gaming Core Engine Applied Successfully"}
-  # Restart Explorer to apply tweaks
+  # Restart Explorer in the user's session to apply tweaks
   - !powerShell:
       command: |
         Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
         Start-Process explorer
+      runas: currentUserElevated

@@ -4,14 +4,8 @@ actions:
   - !writeStatus: {status: "Creating system restore point (safety net)..."}
   - !powerShell:
       wait: true
-      command: |
-        try {
-          Enable-ComputerRestore -Drive "C:\" -ErrorAction SilentlyContinue
-          Checkpoint-Computer -Description "Z-LAG OS - Pre-Optimization" -RestorePointType MODIFY_SETTINGS -ErrorAction Stop | Out-Null
-          Write-Output "[Z-LAG] Restore point created."
-        } catch {
-          Write-Output "[Z-LAG] Restore point skipped (System Protection unavailable): $($_.Exception.Message)"
-        }
+      exeDir: true
+      command: '.\create_restore_point.ps1'
 
   - !writeStatus: {status: "Running power plan setup script..."}
   - !powerShell:

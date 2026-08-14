@@ -1,18 +1,33 @@
 title: "Configure Z-LAG OS Personalization & Themes"
-description: "Sets dark mode for Windows and apps, plus custom dark mouse cursor."
+description: "Sets dark mode for Windows and apps (current user + default user), plus custom dark mouse cursor. All user-level changes run as the active user so they apply on first run."
 actions:
   - !writeStatus: {status: "Enabling dark mode..."}
 
-  # Set dark mode for apps (UWP and modern apps)
+  # Dark mode for apps (UWP/modern) + system chrome. run as the active user so
+  # HKCU actually lands in the logged-in user's hive (TrustedInstaller's HKCU
+  # would be the SYSTEM account's hive and change nothing for the user).
   - !registryValue:
       path: 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
       value: 'AppsUseLightTheme'
       data: '0'
       type: REG_DWORD
+      runas: currentUserElevated
 
-  # Set dark mode for system elements (taskbar, Start menu, etc.)
   - !registryValue:
       path: 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+      value: 'SystemUsesLightTheme'
+      data: '0'
+      type: REG_DWORD
+      runas: currentUserElevated
+
+  # Also bake dark mode into the Default User template for future accounts.
+  - !registryValue:
+      path: 'HKU\.DEFAULT\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+      value: 'AppsUseLightTheme'
+      data: '0'
+      type: REG_DWORD
+  - !registryValue:
+      path: 'HKU\.DEFAULT\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
       value: 'SystemUsesLightTheme'
       data: '0'
       type: REG_DWORD
@@ -24,6 +39,7 @@ actions:
       wait: true
       runas: currentUserElevated
 
-  # Refresh Explorer to apply changes immediately
-  - !taskKill: {name: 'explorer'}
-  - !cmd: {command: 'start explorer.exe'}
+  # Refresh Explorer in the user's session to apply changes immediately
+  - !powerShell:
+      command: 'Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue; Start-Process explorer'
+      runas: currentUserElevated

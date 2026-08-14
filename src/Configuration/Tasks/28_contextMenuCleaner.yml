@@ -4,7 +4,7 @@ actions:
   - !writeStatus: {status: "Removing unwanted context menu entries (aggressive)..."}
 
   # ---- Enable classic right-click menu on Windows 11 ----
-  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32', value: '', type: REG_SZ, data: ''}
+  - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32', value: '', type: REG_SZ, data: '', runas: currentUserElevated}
 
   # ========== REMOVE "SET AS DESKTOP BACKGROUND" (image files) ==========
   - !registryValue: {path: 'HKCR\*\shell\setdesktopwallpaper', operation: delete}
@@ -187,6 +187,6 @@ actions:
   - !registryValue: {path: 'HKCR\*\shell\restart', operation: delete}
 
   # ========== REMOVE QUICK ACTION FOR CAST (Action Center) ==========
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ActionCenter\Quick Actions\All\QuickAction{8E37F5F2-2715-4AB4-90B9-590EBB72ED97}', operation: delete}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ActionCenter\Quick Actions\All\QuickAction{8E37F5F2-2715-4AB4-90B9-590EBB72ED97}', operation: delete, runas: currentUserElevated}
 
   - !writeStatus: {status: "Context menu cleaned (aggressive - all bloat removed)."}
