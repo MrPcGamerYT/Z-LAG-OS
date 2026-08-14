@@ -68,6 +68,29 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   `C:\ProgramData\Z-LAG-OS\` (`process_floor.log` / `win11_process_floor.log`),
   self-check for elevation, and the broken Run-key cleanup + the logon banner
   (extra "OK" click) were removed.
+- **Edge removal now actually works on the first run**: replaced the old batch
+  (which could silently exit on its admin check and missed user shortcuts under
+  the wrong profile) with a production PowerShell remover (`remove_edge.ps1`)
+  following the proven `ShadowWhisperer/Remove-MS-Edge` technique — official
+  `setup.exe --uninstall --system-level --force-uninstall`, AppX + provisioned
+  package removal, services/tasks/registry cleanup, and shortcut + Start-tile
+  removal from **every** user profile. The `Edge.lnk` leftovers are gone.
+- **WebView2 is now guaranteed, never broken**: `repair_webview2.ps1` verifies
+  the WebView2 Runtime after Edge removal and at the end of the playbook, and
+  silently reinstalls the official Evergreen runtime if it is missing — so the
+  "WebView2 runtime missing" error cannot happen.
+- **First-run bloat removal fixed**: `appx_remover.ps1` now *deprovisions*
+  inbox apps (they can no longer come back for new users) and no longer skips
+  packages flagged `NonRemovable`, so all listed bloat is removed in a single
+  apply. The previously-unwired per-interface TCP NoDelay script is now hooked
+  into the network latency task.
+- **User-facing tweaks now actually apply on first run**: every `HKCU`
+  registry write (dark mode, small taskbar, start menu, mouse/keyboard,
+  explorer, notifications, gaming config) and every Explorer restart now runs
+  with `runas: currentUserElevated`, so settings land in the *logged-in user's*
+  hive instead of the SYSTEM account's hive (which is why taskbar/dark-mode
+  changes silently did nothing before). The floor scripts no longer restart
+  Explorer under TrustedInstaller (that left the user without a desktop).
 
 ### v5.10 - Minimalist idle (~40–55 processes) + total MS removal + zero silent crashes + universal Win10/Win11
 - **Universal Windows 10 + Windows 11**: version-aware taskbar and power plan
