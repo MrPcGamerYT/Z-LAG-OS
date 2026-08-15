@@ -1,0 +1,10 @@
+title: Native boot status and VBS Welcome panel
+description: Keeps loading text on the secure Windows Welcome screen, then launches the proven PowerShell Welcome panel through a hidden VBS launcher after Explorer loads. Task Manager Startup shows the clear name Z LAG Services.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Configuring lock-screen loading status and VBS Welcome panel..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\configure_boot_welcome.ps1'
+  - !writeStatus: {status: "VBS Welcome panel configured as Z LAG Services."}
