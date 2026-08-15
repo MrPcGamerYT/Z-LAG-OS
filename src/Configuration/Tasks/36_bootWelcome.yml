@@ -1,0 +1,10 @@
+title: Native boot status and post-boot Welcome panel
+description: Keeps loading/status text on the real secure Windows Welcome screen only. After Explorer finishes loading, shows a short custom Z LAG Welcome panel with no process, service, app, or boot-status list.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Configuring lock-screen loading status and Welcome-only post-boot panel..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\configure_boot_welcome.ps1'
+  - !writeStatus: {status: "Native boot status and post-boot Z LAG Welcome panel configured."}
