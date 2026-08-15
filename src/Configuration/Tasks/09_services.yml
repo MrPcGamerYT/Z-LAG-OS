@@ -46,8 +46,7 @@ actions:
   - !service: {name: 'BDESVC', operation: change, startup: 4}
   - !service: {name: 'iphlpsvc', operation: change, startup: 3}
   - !service: {name: 'ShellHWDetection', operation: change, startup: 3}
-  # Bluetooth Keep restores CDPSvc late; Bluetooth Disable leaves it off.
-  - !service: {name: 'CDPSvc', operation: change, startup: 4}
+  # CDPSvc is untouched because Bluetooth Add Device depends on it.
   - !service: {name: 'PhoneSvc', operation: change, startup: 4}
   - !service: {name: 'Spooler', operation: change, startup: 4}
   - !service: {name: 'TrkWks', operation: change, startup: 4}

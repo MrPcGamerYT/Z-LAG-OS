@@ -1,15 +1,9 @@
-title: Repairing AppX runtime and kept connectivity
-description: Restores the AppX launch chain and, when Bluetooth Keep is selected, repairs the Bluetooth radio, pairing brokers, per-user services and disabled PnP devices after the aggressive service floor.
+title: Repairing AppX runtime (sideloaded apps / error -2147416359)
+description: Restores LicenseManager, ClipSVC, AppXSvc, StateRepository and sideload policy so Z-LAG Toolbox installed apps launch without crashing. Bluetooth pairing dependencies are excluded from the global service floor instead of being repaired afterward.
 actions:
   - !writeStatus: {status: "Repairing AppX runtime for sideloaded apps..."}
   - !powerShell:
       wait: true
       exeDir: true
       command: '.\repair_appx_runtime.ps1'
-  - !writeStatus: {status: "Repairing Bluetooth radio and Add Device services...", option: 'bluetooth-keep'}
-  - !powerShell:
-      option: 'bluetooth-keep'
-      wait: true
-      exeDir: true
-      command: '.\repair_bluetooth.ps1'
-  - !writeStatus: {status: "AppX runtime and selected connectivity are healthy."}
+  - !writeStatus: {status: "AppX runtime healthy. Sideloaded apps will not crash on launch."}

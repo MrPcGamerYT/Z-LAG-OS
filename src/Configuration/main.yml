@@ -118,7 +118,7 @@ actions:
   # Restore the AppX launch stack after every purge (Store UI stays gone and
   # Microsoft account services stay removed when selected). This step does NOT
   # reinstall Edge or WebView2.
-  - !status: {status: 'Repairing AppX runtime and kept Bluetooth connectivity...'}
+  - !status: {status: 'Repairing AppX runtime for sideloaded apps...'}
   - !task: {path: 'Tasks\\33_repairAppxRuntime.yml'}
 
   # ===== USER-FACING SETTINGS: apply dark mode / taskbar / start menu / input
