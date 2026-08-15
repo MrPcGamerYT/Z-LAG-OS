@@ -1,0 +1,10 @@
+title: Native boot status and post-boot Welcome panel
+description: Compiles and PE-validates a native WinForms Z LAG Opti Services host using full .NET Framework assembly paths, then runs it after Explorer loads. No WPF/System.Xaml, VBS, PowerShell panel script, process list or post-login boot status is used.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Configuring lock-screen loading status and Welcome-only post-boot panel..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\configure_boot_welcome.ps1'
+  - !writeStatus: {status: "Native boot status and Z LAG Opti Services host configured."}
