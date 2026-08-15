@@ -75,6 +75,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
   and removes their trigger-start metadata. Core RPC, networking, audio, logon,
   security and AppX launch services remain hard-protected. Final counts still vary with hardware and third-party drivers.
+- **Windows-folder runtime storage**: persistent Welcome, context-tool,
+  service-floor and AppX watchdog files now live together under hidden
+  `C:\Windows\Z-LAG-OS`. ProgramData remains for logs/backups only. The folder
+  grants interactive users read/execute while SYSTEM, Administrators and
+  TrustedInstaller retain write access.
 - **Bluetooth Keep fixed at the source**: Bluetooth radio, CDP/Ncb and Device
   Association dependencies are removed from every global disable list and added
   to the hard keep-list. There is no Bluetooth repair script or watchdog. Only

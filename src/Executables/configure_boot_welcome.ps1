@@ -8,9 +8,11 @@
 # ==============================================================================
 
 $ErrorActionPreference = 'Continue'
-$installDir = Join-Path $env:ProgramData 'Z-LAG-OS'
+$dataDir = Join-Path $env:ProgramData 'Z-LAG-OS'
+$installDir = Join-Path $env:SystemRoot 'Z-LAG-OS'
+New-Item -Path $dataDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
 New-Item -Path $installDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
-$logFile = Join-Path $installDir 'boot_welcome_install.log'
+$logFile = Join-Path $dataDir 'boot_welcome_install.log'
 
 function Write-ZLagLog {
     param([Parameter(Mandatory = $true)][string]$Message)
@@ -42,6 +44,11 @@ if (-not (Test-Path -LiteralPath $panelSource -PathType Leaf)) {
     Write-ZLagLog ('ERROR: Welcome panel source was not found: ' + $panelSource)
     exit 2
 }
+& attrib.exe -h -s $installDir 2>$null
+& takeown.exe /f $installDir /a /r /d y 2>$null | Out-Null
+$currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$currentGrant = '*' + $currentSid + ':(OI)(CI)F'
+& icacls.exe $installDir /inheritance:e /grant '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' $currentGrant /t /c /q 2>$null | Out-Null
 Copy-Item -LiteralPath $panelSource -Destination $panelDestination -Force -ErrorAction Stop
 
 # WScript starts Windows PowerShell with window style 0, so after boot the custom
@@ -56,16 +63,20 @@ shell.Run command, 0, False
 "@
 Set-Content -LiteralPath $launcherDestination -Value $launcher -Encoding Unicode -Force
 
-# Standard users may read/execute the installed files but cannot replace them.
-foreach ($file in @($panelDestination, $launcherDestination)) {
-    & icacls.exe $file /inheritance:r /grant:r '*S-1-5-18:F' '*S-1-5-32-544:F' '*S-1-5-32-545:RX' /q 2>$null | Out-Null
-}
+# Hidden Windows-folder code remains executable by interactive users but writable
+# only by SYSTEM, Administrators and TrustedInstaller.
+& icacls.exe $installDir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+& icacls.exe $installDir /setintegritylevel '(OI)(CI)M' /t /c /q 2>$null | Out-Null
+& attrib.exe +h +s $installDir 2>$null
 
 # Remove the previous live startup-status implementation and its permanent copy.
 $runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
 New-Item -Path $runKey -Force -ErrorAction SilentlyContinue | Out-Null
 Remove-ItemProperty -Path $runKey -Name 'ZLAGStartupStatus' -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath (Join-Path $installDir 'show_startup_status.ps1') -Force -ErrorAction SilentlyContinue
+foreach ($oldFile in @('show_startup_status.ps1', 'show_welcome_panel.ps1', 'launch_welcome_panel.vbs')) {
+    Remove-Item -LiteralPath (Join-Path $dataDir $oldFile) -Force -ErrorAction SilentlyContinue
+}
 
 # Register the silent launcher after all startup-purge tasks have already run.
 $runCommand = '"' + (Join-Path $env:SystemRoot 'System32\wscript.exe') + '" "' + $launcherDestination + '"'

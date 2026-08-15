@@ -117,8 +117,15 @@ Set-ItemProperty -Path $devUnlock -Name "AllowAllTrustedApps" -Value 1 -Type DWo
 Set-ItemProperty -Path $devUnlock -Name "AllowDevelopmentWithoutDevLicense" -Value 1 -Type DWord -Force
 
 # --- Watchdog: persists the correct startup state across reboots ---
-$installDir = Join-Path $env:ProgramData "Z-LAG-OS"
+$dataDir = Join-Path $env:ProgramData "Z-LAG-OS"
+$installDir = Join-Path $env:SystemRoot "Z-LAG-OS"
+if (-not (Test-Path $dataDir)) { New-Item -Path $dataDir -ItemType Directory -Force | Out-Null }
 if (-not (Test-Path $installDir)) { New-Item -Path $installDir -ItemType Directory -Force | Out-Null }
+& attrib.exe -h -s $installDir 2>$null
+& takeown.exe /f $installDir /a /r /d y 2>$null | Out-Null
+$currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$currentGrant = '*' + $currentSid + ':(OI)(CI)F'
+& icacls.exe $installDir /inheritance:e /grant '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' $currentGrant /t /c /q 2>$null | Out-Null
 
 # The watchdog honours the StoreRemoved marker: it never re-enables Microsoft
 # account services on a machine where the user chose to remove them.
@@ -154,10 +161,15 @@ if not %errorlevel%==0 (
 "@
 Set-Content -Path $starter -Value $starterContent -Encoding ASCII
 
-# Persist a copy of this repair script next to the watchdog
+# Persist a protected Windows-folder copy next to the watchdog.
 try {
     Copy-Item -Path $PSCommandPath -Destination (Join-Path $installDir "repair_appx_runtime.ps1") -Force
 } catch {}
+foreach ($oldFile in @("start_appx_runtime.cmd", "repair_appx_runtime.ps1")) {
+    Remove-Item -LiteralPath (Join-Path $dataDir $oldFile) -Force -ErrorAction SilentlyContinue
+}
+& icacls.exe $installDir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+& attrib.exe +h +s $installDir 2>$null
 
 $taskName = "ZLAG-StartAppXRuntime"
 Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
@@ -172,7 +184,7 @@ $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerBoot, $triggerLogon, $triggerDelay) -Principal $principal -Settings $settings -Force | Out-Null
 
-& $starter
+& $env:ComSpec /d /c ('"' + $starter + '"') 2>$null | Out-Null
 
 Write-Output "[Z-LAG] AppX runtime is self-healing (task: $taskName)."
 if ($storeRemoved) {
