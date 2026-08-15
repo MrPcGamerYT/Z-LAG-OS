@@ -43,7 +43,7 @@ $KeepServices = @(
     "WcmSvc","WlanSvc","vwififlt","vwifibus","vwifimp","bthserv","BTAGService",
     "bthpriv","BluetoothUserService","RasMan","RasAuto","RemoteAccess","SstpSvc",
     "IKEEXT","BFE","MpsSvc","EapHost","dot3svc","WwanSvc","RmSvc","PolicyAgent",
-    "NcdAutoSetup","DusmSvc","NPSMSvc","wcncsvc",
+
     # Security / logon / user
     "WinDefend","WdNisSvc","SecurityHealthService","SamSs","ProfSvc","UserManager",
     "seclogon","KeyIso","VaultSvc","gpsvc","SENS","Winmgmt","msiserver",

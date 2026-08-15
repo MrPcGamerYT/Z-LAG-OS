@@ -1,5 +1,5 @@
 title: ULTRA Idle Process + RAM Floor (persistent)
-description: Consolidates svchost pools, disables safe non-gaming services and on-demand features, trims working sets, then installs a brief non-resident SYSTEM watchdog at boot/logon/every 15 minutes. This prevents trigger-start and per-user service instances from raising idle process count after the first boot while hard-protecting Windows core, networking, audio and AppX launch services.
+description: Consolidates svchost pools, disables an expanded Windows 10/11 non-gaming service set, removes its trigger-start metadata, trims working sets, then installs a brief non-resident SYSTEM watchdog at boot/logon/every 15 minutes. Core RPC, networking, audio, logon, security and AppX launch services stay hard-protected.
 privilege: TrustedInstaller
 actions:
   - !writeStatus: {status: "Applying ULTRA Idle Process + RAM Floor..."}

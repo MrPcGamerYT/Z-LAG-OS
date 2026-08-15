@@ -108,7 +108,7 @@ actions:
   - !task: {path: 'Tasks\\30_contextMenuCleaner.yml'}
 
   # ===== PERSISTENT IDLE PROCESS + RAM FLOOR: survives trigger-start/logon =====
-  - !status: {status: 'Applying persistent ULTRA process floor (legacy/per-user services locked off)...'}
+  - !status: {status: 'Disabling expanded Windows 10/11 extras and locking the persistent process floor...'}
   - !task: {path: 'Tasks\\31_processFloor.yml'}
 
   # ===== WINDOWS 11 EXTRA FLOOR: bring Win11 idle count near Win10 levels =====

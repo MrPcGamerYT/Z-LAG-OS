@@ -46,32 +46,45 @@ $targetServices = @(
     # Search, telemetry, diagnostics, compatibility and maintenance.
     'SysMain', 'WSearch', 'DiagTrack', 'dmwappushservice', 'WerSvc', 'PcaSvc',
     'DPS', 'WdiServiceHost', 'WdiSystemHost', 'TroubleshootingSvc', 'DcpSvc',
-    'UhsSvc', 'DoSvc', 'UsoSvc', 'WaaSMedicSvc', 'wuauserv', 'defragsvc',
-    'fhsvc', 'pla', 'wmiApSrv',
+    'UhsSvc', 'WEPHOSTSVC', 'wercplsupport', 'diagsvc',
+    'diagnosticshub.standardcollector.service', 'InventorySvc',
+    'DoSvc', 'UsoSvc', 'WaaSMedicSvc', 'wuauserv', 'defragsvc',
+    'fhsvc', 'pla', 'wmiApSrv', 'AppMgmt', 'AeLookupSvc', 'AxInstSV',
 
     # Cloud/content/Xbox/phone and safe per-user service templates.
     'OneSyncSvc', 'UserDataSvc', 'UnistoreSvc', 'PimIndexMaintenanceSvc',
     'MessagingService', 'BcastDVRUserService', 'CaptureService', 'CDPSvc',
     'CDPUserSvc', 'CloudBackupRestoreSvc', 'AarSvc', 'cbdhsvc', 'WpnService',
-    'WpnUserService', 'UdkUserSvc', 'shpamsvc', 'Ndu', 'MapsBroker', 'PhoneSvc',
-    'XblAuthManager', 'XblGameSave', 'XboxNetApiSvc', 'XboxGipSvc',
+    'WpnUserService', 'UdkUserSvc', 'shpamsvc', 'Ndu', 'DusmSvc',
+    'NcdAutoSetup', 'wcncsvc', 'NPSMSvc', 'MapsBroker', 'PhoneSvc',
+    'WalletService', 'NaturalAuthentication', 'lfsvc', 'dcsvc', 'NcbService',
+    'spectrum', 'svsvc', 'XblAuthManager', 'XblGameSave', 'XboxNetApiSvc',
+    'XboxGipSvc',
 
     # Printing, imaging, sensors and optional consumer hardware helpers.
     'Spooler', 'PrintNotify', 'PrintWorkflowUserSvc', 'StiSvc', 'WiaRpc',
     'WbioSrvc', 'SensorService', 'SensorDataService', 'SensrSvc', 'FrameServer',
-    'WPDBusEnum', 'TabletInputService', 'wisvc',
+    'FrameServerMonitor', 'WPDBusEnum', 'TabletInputService', 'wisvc',
 
     # Sharing, discovery, remote management and other non-gaming extras.
     'LanmanServer', 'SharedAccess', 'SSDPSRV', 'upnphost', 'fdPHost', 'FDResPub',
     'lltdsvc', 'WebClient', 'MSiSCSI', 'Wecsvc', 'WinRM', 'NetTcpPortSharing',
-    'p2pimsvc', 'p2psvc', 'PNRPsvc', 'RemoteRegistry', 'TrkWks', 'Fax',
-    'RetailDemo', 'Browser', 'workfolderssvc', 'autotimesvc',
+    'NetTcpActivator', 'NetPipeActivator', 'NetMsmqActivator', 'ALG', 'lmhosts',
+    'IpxlatCfgSvc', 'PeerDistSvc', 'QWAVE', 'TapiSrv', 'icssvc',
+    'WFDSConMgrSvc', 'p2pimsvc', 'p2psvc', 'PNRPsvc', 'RemoteRegistry',
+    'TrkWks', 'Fax', 'RetailDemo', 'Browser', 'workfolderssvc', 'autotimesvc',
+    'tzautoupdate', 'TermService', 'SessionEnv', 'UmRdpService',
 
     # Optional platform/enterprise components already disabled by the floor.
-    'SCardSvc', 'ScDeviceEnum', 'SCPolicySvc', 'NfcSvc', 'SEMgrSvc',
-    'embeddedmode', 'vmcompute', 'HvHost', 'vmms', 'hns', 'AJRouter',
-    'AppVClient', 'AssignedAccessManagerSvc', 'UevAgentService', 'CscService',
-    'TieringEngineService', 'MixedRealityOpenXRSvc', 'GraphicsPerfSvc'
+    'SCardSvc', 'ScDeviceEnum', 'SCPolicySvc', 'CertPropSvc', 'EFS',
+    'NfcSvc', 'SEMgrSvc', 'embeddedmode', 'vmcompute', 'HvHost', 'vmms', 'hns',
+    'vmicguestinterface', 'vmicheartbeat', 'vmickvpexchange', 'vmicrdv',
+    'vmicshutdown', 'vmictimesync', 'vmicvmsession', 'vmicvss', 'AJRouter',
+    'LxssManager', 'WslService', 'LxssManagerUser', 'P9RdrService',
+    'AppVClient', 'EntAppSvc', 'AssignedAccessManagerSvc', 'UevAgentService',
+    'CscService', 'TieringEngineService', 'MixedRealityOpenXRSvc',
+    'SharedRealitySvc', 'GraphicsPerfSvc', 'edgeupdate', 'edgeupdatem',
+    'MicrosoftEdgeElevationService', 'ClickToRunSvc'
 ) | Select-Object -Unique
 
 # Defense-in-depth: even if a future edit accidentally adds one of these names,
@@ -97,6 +110,7 @@ function Get-ZLagBaseServiceName {
 function Invoke-ZLagFloorEnforcement {
     $changedStartup = 0
     $stopped = 0
+    $removedTriggers = 0
     $skippedCritical = 0
     $serviceRoot = 'HKLM:\SYSTEM\CurrentControlSet\Services'
     $allKeys = Get-ChildItem -Path $serviceRoot -ErrorAction SilentlyContinue
@@ -114,6 +128,15 @@ function Invoke-ZLagFloorEnforcement {
             if ($null -ne $properties.Start -and [int]$properties.Start -le 1) {
                 $skippedCritical++
                 continue
+            }
+
+            # Remove service trigger metadata as well as setting Start=4. This
+            # prevents network/logon/device events from resurrecting the service
+            # if another component temporarily changes it back to demand-start.
+            $triggerPath = Join-Path $key.PSPath 'TriggerInfo'
+            if (Test-Path -LiteralPath $triggerPath) {
+                Remove-Item -LiteralPath $triggerPath -Recurse -Force -ErrorAction SilentlyContinue
+                if (-not (Test-Path -LiteralPath $triggerPath)) { $removedTriggers++ }
             }
 
             $service = Get-Service -Name $name -ErrorAction SilentlyContinue
@@ -149,7 +172,7 @@ function Invoke-ZLagFloorEnforcement {
     New-ItemProperty -Path $marker -Name 'ServiceFloorLastRun' -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
     New-ItemProperty -Path $marker -Name 'ServiceFloorTargetCount' -Value $targetServices.Count -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
 
-    Write-ZLagFloorLog ('Enforced {0} target families: startup corrected={1}, running stopped={2}, boot/system skipped={3}.' -f $targetServices.Count, $changedStartup, $stopped, $skippedCritical)
+    Write-ZLagFloorLog ('Enforced {0} target families: startup corrected={1}, running stopped={2}, triggers removed={3}, boot/system skipped={4}.' -f $targetServices.Count, $changedStartup, $stopped, $removedTriggers, $skippedCritical)
 }
 
 if ($EnforceOnly) {

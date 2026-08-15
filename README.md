@@ -69,7 +69,10 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   at boot, logon and every 15 minutes. It explicitly disables VSS/SwPrv, RPC
   Locator (not core RPC), SNMP Trap, Virtual Disk, WMP Network Sharing,
   ssh-agent, MSDTC, Windows Backup and their safe per-user/background peers.
-  Core RPC, networking, audio, logon, security and AppX launch services remain
+  The expanded floor also covers unused RDP, WSL/Hyper-V guest integration,
+  BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
+  and removes their trigger-start metadata. Core RPC, networking, audio, logon,
+  security and AppX launch services remain
   hard-protected. Final counts still vary with hardware and third-party drivers.
 - **Z LAG context toolbox**: the visible Classic Sound Start Menu folder and its
   standalone context submenu are removed. A single first-position **Z LAG**
