@@ -96,7 +96,7 @@ $Disable = @(
     # Store-removal path so "keep the Store" users can still install apps)
     "OneSyncSvc","UserDataSvc","UnistoreSvc","PimIndexMaintenanceSvc",
     "MessagingService","BcastDVRUserService","CDPSvc","CDPUserSvc","WSearch",
-    "MapsBroker","wisvc",
+    "CloudBackupRestoreSvc","MapsBroker","wisvc",
     # Xbox
     "XblAuthManager","XblGameSave","XboxNetApiSvc","XboxGipSvc",
     # Telemetry / errors / diagnostics / compatibility
@@ -109,11 +109,11 @@ $Disable = @(
     # Superfetch / RAM hogs
     "SysMain",
     # Printing / imaging / biometrics / sensors
-    "Spooler","PrintNotify","StiSvc","WiaRpc","WbioSrvc","SensorService",
+    "Spooler","PrintNotify","PrintWorkflowUserSvc","StiSvc","WiaRpc","WbioSrvc","SensorService",
     "SensorDataService","SensrSvc","FrameServer","WPDBusEnum",
     # Media / misc bloat
     "WMPNetworkSvc","WalletService","NaturalAuthentication","WpcMonSvc",
-    "RetailDemo","RemoteRegistry","PhoneSvc","Fax","TabletInputService",
+    "RpcLocator","RetailDemo","RemoteRegistry","PhoneSvc","Fax","TabletInputService",
     "GraphicsPerfSvc","MixedRealityOpenXRSvc",
     # P2P / remote management (NOT core connectivity - safe to disable)
     "p2pimsvc","p2psvc","PNRPsvc","Wecsvc","WinRM","NetTcpPortSharing","lmhosts",
@@ -129,7 +129,7 @@ $Disable = @(
     "CaptureService","CscService","defragsvc","EntAppSvc","fhsvc",
     "lfsvc","MSDTC","NcbService","pla","QWAVE","SNMPTRAP","spectrum","svsvc",
     "TapiSrv","TieringEngineService","TrkWks","UevAgentService","vds",
-    "wbengine","wmiApSrv","workfolderssvc","autotimesvc",
+    "wbengine","SDRSVC","smphost","wmiApSrv","workfolderssvc","autotimesvc",
     # ULTRA: on-demand features that are NOT needed for gaming are disabled
     # entirely (System Restore / VSS, notifications, network discovery, file
     # sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history, Security Center).

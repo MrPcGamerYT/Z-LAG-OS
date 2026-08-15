@@ -90,7 +90,8 @@ $Win11Disable = @(
 $Win11PerUser = @(
     "OneSyncSvc_","UnistoreSvc_","PimIndexMaintenanceSvc_","UserDataSvc_",
     "BcastDVRUserService_","MessagingService_","CaptureService_",
-    "CDPUserSvc_"
+    "CDPUserSvc_","WpnUserService_","AarSvc_","cbdhsvc_","UdkUserSvc_",
+    "CloudBackupRestoreSvc_","PrintWorkflowUserSvc_"
 )
 
 $disabledCount = 0

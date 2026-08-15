@@ -1,5 +1,5 @@
-title: ULTRA Idle Process + RAM Floor
-description: ULTRA pass - consolidates svchost pools, disables every safe-to-remove background service PLUS on-demand features (System Restore/VSS, notifications, network discovery, file sharing, hotspot), trims working sets and prefetch to push idle processes and RAM to the absolute floor. Hard-protects the Windows core, Wi-Fi, Bluetooth, Ethernet and the AppX shell/app-launch stack so the OS boots and apps still launch. Edge and WebView2 are intentionally not protected.
+title: ULTRA Idle Process + RAM Floor (persistent)
+description: Consolidates svchost pools, disables safe non-gaming services and on-demand features, trims working sets, then installs a brief non-resident SYSTEM watchdog at boot/logon/every 15 minutes. This prevents trigger-start and per-user service instances from raising idle process count after the first boot while hard-protecting Windows core, networking, audio and AppX launch services.
 privilege: TrustedInstaller
 actions:
   - !writeStatus: {status: "Applying ULTRA Idle Process + RAM Floor..."}
@@ -7,4 +7,9 @@ actions:
       wait: true
       exeDir: true
       command: '.\process_floor.ps1'
-  - !writeStatus: {status: "Idle process + RAM floor applied. Reboot will lock in the minimal footprint."}
+  - !writeStatus: {status: "Locking the service floor across later boots and logons..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\enforce_service_floor.ps1'
+  - !writeStatus: {status: "Persistent idle service/process floor installed."}

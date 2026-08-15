@@ -107,8 +107,8 @@ actions:
   - !status: {status: 'Cleaning right-click context menu'}
   - !task: {path: 'Tasks\\30_contextMenuCleaner.yml'}
 
-  # ===== ULTRA IDLE PROCESS + RAM FLOOR: crush background processes & RAM =====
-  - !status: {status: 'Applying ULTRA Idle Process + RAM Floor (VSS/notifications/discovery off)...'}
+  # ===== PERSISTENT IDLE PROCESS + RAM FLOOR: survives trigger-start/logon =====
+  - !status: {status: 'Applying persistent ULTRA process floor (legacy/per-user services locked off)...'}
   - !task: {path: 'Tasks\\31_processFloor.yml'}
 
   # ===== WINDOWS 11 EXTRA FLOOR: bring Win11 idle count near Win10 levels =====
