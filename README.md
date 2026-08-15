@@ -68,11 +68,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   `C:\Windows\Z-LAG-OS\Core`. SYSTEM, Administrators and TrustedInstaller can
   write it; standard users receive read/execute access only. ProgramData is now
   limited to logs, markers and backups, and obsolete code copies are deleted.
-- **Native Z LAG Opti Services host**: the post-boot panel is compiled as
-  `ZLAGOptiServices.exe`, eliminating the VBS and PowerShell panel launcher.
-  Related non-resident tasks use transparent family names for Process Floor,
-  AppX Runtime and Lock Screen. The five-second GUI process remains auditable in
-  Task Manager rather than using unsafe process-concealment techniques.
+- **Reliable VBS Welcome launcher**: runtime C# compilation was removed. The
+  proven PowerShell panel is launched hidden through `Z LAG Services.vbs`, and
+  the Startup entry is clearly named **Z LAG Services**. `wscript.exe` exits
+  immediately; the hidden PowerShell panel host exists only for the five-second
+  Welcome display.
 - **Welcome behavior corrected**: Windows-native `VerboseStatus` remains on the
   secure Welcome/Please wait screen only. After Explorer is ready, the native
   panel shows a static Welcome message and exits after five seconds—no process,
@@ -83,12 +83,10 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   clean spaced names, with RAM Trim/Clean first, Temp Clean second, then recycle
   cleanup, DNS flush, Explorer restart and classic sound tools. The former
   visible Classic Sound Start Menu folder is removed.
-- **Targeted runtime corrections**: AppX watchdog updates temporarily restore
+- **Targeted runtime correction**: AppX watchdog updates temporarily restore
   write access to an already locked Windows core folder and invoke the generated
-  CMD through `cmd.exe`. Welcome compilation now uses universally available
-  .NET Framework WinForms instead of WPF/System.Xaml, resolves full assembly
-  paths, validates the PE header and product identity, and installs only a fully
-  verified `ZLAGOptiServices.exe`.
+  CMD through `cmd.exe`. The failed native compiler path was removed completely
+  in favor of the previously working VBS/PowerShell Welcome panel.
 - **Stable sequential pipeline**: the task directory contains exactly 37 active
   tasks, numbered in the same `01` through `37` order used by `main.yml`.
 
@@ -342,7 +340,7 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
 
 **Q: Where are permanent Z-LAG files stored, and can the Welcome process be hidden from Task Manager?**
-A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes and write access limited to SYSTEM, Administrators and TrustedInstaller. ProgramData contains only logs/backups. The native host is `ZLAGOptiServices.exe`, with matching product metadata and clearly named scheduled tasks. It is not one persistent service: watchdog jobs remain brief scheduled actions to preserve the low process floor. The five-second Welcome host stays visible in Task Manager because hiding it would require unsafe rootkit-style behavior.
+A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes and write access limited to SYSTEM, Administrators and TrustedInstaller. ProgramData contains only logs/backups. The Startup entry is named **Z LAG Services**. The VBS launcher exits immediately, while Task Manager may briefly show `powershell.exe` during the five-second panel because Windows cannot safely rename or conceal that host process.
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.

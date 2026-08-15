@@ -130,9 +130,9 @@ actions:
   - !status: {status: 'Creating clean Z LAG TOOLBOX context menu (RAM / temp / maintenance)...'}
   - !task: {path: 'Tasks\\35_zlagContextMenu.yml'}
 
-  # ===== BOOT WELCOME: native lock-screen status + compiled Welcome app =====
+  # ===== BOOT WELCOME: native lock-screen status + VBS Welcome panel =====
   # Run after every startup purge so the all-user Welcome entry remains installed.
-  - !status: {status: 'Compiling and validating Z LAG Opti Services native host...'}
+  - !status: {status: 'Configuring Z LAG Services VBS Welcome panel...'}
   - !task: {path: 'Tasks\\36_bootWelcome.yml'}
 
   # ===== DEEP SYSTEM CLEAN: run ABSOLUTELY LAST so it can never delete any
