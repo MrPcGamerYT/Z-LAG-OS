@@ -36,6 +36,6 @@ actions:
   # Never use "del %TEMP%\*" here: AME executes the playbook from
   # %TEMP%\AME, so that would delete scripts that are still in use. Delete all
   # other temporary entries while keeping AME's working directory intact.
-  - !powerShell: {command: 'Get-ChildItem -Path $env:TEMP -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne ([string][char[]](65,77,69)) } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; exit 0'}
+  - !powerShell: {command: 'Get-ChildItem -Path $env:TEMP -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne "AME" } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue'}
   - !cmd: {command: 'del /f /s /q "C:\Windows\Temp\*" 2>nul'}
   - !cmd: {command: 'del /f /s /q "C:\Windows\Prefetch\*" 2>nul'}

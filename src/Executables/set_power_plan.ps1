@@ -1,53 +1,49 @@
-# Z-LAG OS - bounded Ultimate/High Performance power configuration.
-$ErrorActionPreference = 'Continue'
-$ultimateTemplate = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
-$highPerformance = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
+# ==============================================================================
+# Z-LAG OS - Ultimate Performance power plan + timing tweaks (Win10 + Win11)
+# Universal: uses the real Ultimate Performance GUID, falls back to High
+# Performance on editions where Ultimate is not available, and applies both AC
+# and DC settings so laptops and desktops behave identically.
+# ==============================================================================
 
-Write-Output '[Z-LAG] Creating/activating performance power plan...'
-$activeGuid = $null
-$duplicateOutput = (& powercfg.exe -duplicatescheme $ultimateTemplate 2>$null | Out-String)
-$guidMatch = [regex]::Match($duplicateOutput, '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}')
-if ($guidMatch.Success) { $activeGuid = $guidMatch.Value }
+$ErrorActionPreference = "Continue"
 
-if (-not $activeGuid) {
-    $schemes = (& powercfg.exe -list 2>$null | Out-String)
-    if ($schemes -match [regex]::Escape($highPerformance)) { $activeGuid = $highPerformance }
-}
+$UltimateProfileGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61"   # Ultimate Performance
+$HighPerfGuid        = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"   # High Performance
 
-if ($activeGuid) {
-    & powercfg.exe -setactive $activeGuid 2>$null | Out-Null
-    if ($activeGuid -ne $highPerformance) {
-        & powercfg.exe -changename $activeGuid 'Maximum FPS' 'Optimized for zero-lag gaming' 2>$null | Out-Null
-        Write-Output '[Z-LAG] Maximum FPS (Ultimate Performance) activated.'
-    } else {
-        Write-Output '[Z-LAG] High Performance fallback activated.'
-    }
+# ----- 1. Create + activate the performance scheme (universal fallback) -----
+Write-Host "[Z-LAG] Creating/activating performance power plan..."
+$created = $false
+powercfg -duplicatescheme $UltimateProfileGuid 2>$null | Out-Null
+
+$schemes = powercfg -list 2>$null
+if ($schemes -match $UltimateProfileGuid) {
+    powercfg -setactive $UltimateProfileGuid
+    powercfg -changename $UltimateProfileGuid "Maximum FPS" "Optimized for zero-lag gaming"
+    Write-Host "[Z-LAG] Ultimate Performance activated."
+} elseif ($schemes -match $HighPerfGuid) {
+    powercfg -setactive $HighPerfGuid
+    Write-Host "[Z-LAG] Ultimate Performance unavailable - High Performance activated instead."
 } else {
-    Write-Output '[Z-LAG] Performance scheme creation unavailable; tuning the current scheme.'
+    Write-Host "[Z-LAG] No High/Ultimate scheme found; using current scheme."
 }
 
-Write-Output '[Z-LAG] Applying power scheme fine-tuning (AC + DC)...'
-foreach ($scope in @('setacvalueindex', 'setdcvalueindex')) {
-    foreach ($setting in @(
-        @('SUB_PROCESSOR','PROCTHROTTLEMIN','100'),
-        @('SUB_PROCESSOR','PROCTHROTTLEMAX','100'),
-        @('SUB_PROCESSOR','PERFBOOSTMODE','2'),
-        @('SUB_DISK','DISKIDLE','0'),
-        @('SUB_VIDEO','VIDEOIDLE','0'),
-        @('SUB_SLEEP','STANDBYIDLE','0')
-    )) {
-        & powercfg.exe ('-' + $scope) SCHEME_CURRENT $setting[0] $setting[1] $setting[2] 2>$null | Out-Null
-    }
+# ----- 2. Fine-tune the ACTIVE scheme (both AC and DC for laptops) -----
+Write-Host "[Z-LAG] Applying power scheme fine-tuning (AC + DC)..."
+foreach ($scope in @("setacvalueindex", "setdcvalueindex")) {
+    powercfg -$scope SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100 2>$null
+    powercfg -$scope SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100 2>$null
+    powercfg -$scope SCHEME_CURRENT SUB_PROCESSOR PERFBOOSTMODE 2 2>$null
+    powercfg -$scope SCHEME_CURRENT SUB_DISK DISKIDLE 0 2>$null
+    powercfg -$scope SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 0 2>$null
+    powercfg -$scope SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 0 2>$null
 }
-& powercfg.exe -setactive SCHEME_CURRENT 2>$null | Out-Null
-& powercfg.exe -hibernate off 2>$null | Out-Null
+powercfg -setactive SCHEME_CURRENT
+powercfg -hibernate off 2>$null
 
-# Missing BCDEdit values are expected on many systems. Capture every stream so
-# harmless "Element not found" text does not appear as a playbook failure.
-Write-Output '[Z-LAG] Applying BCDEdit timing tweaks...'
-$null = & bcdedit.exe /deletevalue useplatformclock 2>&1
-$null = & bcdedit.exe /set tscsyncpolicy Enhanced 2>&1
-$null = & bcdedit.exe /set disabledynamictick yes 2>&1
+# ----- 3. BCDEdit timing tweaks (ignore errors if values missing) -----
+Write-Host "[Z-LAG] Applying BCDEdit timing tweaks..."
+bcdedit /deletevalue useplatformclock 2>$null
+bcdedit /set tscsyncpolicy Enhanced 2>$null
+bcdedit /set disabledynamictick yes 2>$null
 
-Write-Output '[Z-LAG] Power plan and timing optimizations complete.'
-exit 0
+Write-Host "[Z-LAG] Power plan and timing optimizations complete."

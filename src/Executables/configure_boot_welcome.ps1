@@ -179,10 +179,11 @@ namespace ZLagOS
 try {
     # Resolve full GAC paths first; bare WindowsBase.dll names are not reliably
     # resolved by CodeDOM on Windows 10.
-    Add-Type -AssemblyName @('WindowsBase', 'PresentationCore', 'PresentationFramework') -ErrorAction Stop
+    Add-Type -AssemblyName @('WindowsBase', 'PresentationCore', 'PresentationFramework', 'System.Xaml') -ErrorAction Stop
     $references = @(
         [System.Diagnostics.Process].Assembly.Location,
         [System.Linq.Enumerable].Assembly.Location,
+        [System.Xaml.XamlReader].Assembly.Location,
         [System.Windows.Threading.Dispatcher].Assembly.Location,
         [System.Windows.Media.Brush].Assembly.Location,
         [System.Windows.Application].Assembly.Location

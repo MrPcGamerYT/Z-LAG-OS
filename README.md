@@ -83,13 +83,10 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   clean spaced names, with RAM Trim/Clean first, Temp Clean second, then recycle
   cleanup, DNS flush, Explorer restart and classic sound tools. The former
   visible Classic Sound Start Menu folder is removed.
-- **Clean first-run execution**: restore-point creation now re-enables VSS and is
-  capped at 45 seconds; Ultimate Performance activates the duplicated GUID;
-  harmless BCDEdit/AppX errors are contained; Toolbox installs in the real user
-  profile with bounded waits; AppX watchdog commands execute through `cmd.exe`;
-  default-user wallpaper/cursor hives use the correct registry provider; and
-  Start Menu, ReTrim, user-default-value and deep-temp cleanup no longer emit
-  expected parser/file-not-found failures.
+- **Targeted runtime corrections**: AppX watchdog updates now temporarily restore
+  write access to an already locked Windows core folder and invoke the generated
+  CMD through `cmd.exe`; native Welcome compilation now includes the required
+  `System.Xaml` assembly path on Windows 10.
 - **Stable sequential pipeline**: the task directory contains exactly 37 active
   tasks, numbered in the same `01` through `37` order used by `main.yml`.
 

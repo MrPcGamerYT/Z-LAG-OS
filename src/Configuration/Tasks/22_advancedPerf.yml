@@ -12,6 +12,6 @@ actions:
       command: '.\set_smooth_mouse.ps1'
       runas: currentUserElevated
   
-  - !powerShell: {command: 'try { Optimize-Volume -DriveLetter C -ReTrim -ErrorAction Stop | Out-Null } catch {}; exit 0'}
+  - !powerShell: {command: 'Optimize-Volume -DriveLetter C -ReTrim -ErrorAction SilentlyContinue'}
   - !cmd: {command: 'ipconfig /flushdns'}
   - !cmd: {command: 'ipconfig /registerdns'}

@@ -7,8 +7,6 @@ param (
     [switch]$Unregister = $false
 )
 
-$ErrorActionPreference = "SilentlyContinue"
-
 # CRITICAL: Apps to KEEP (ONLY NVIDIA, AMD, Intel, and ABSOLUTELY ESSENTIAL system apps)
 $KeepApps = @(
     # NVIDIA
@@ -52,7 +50,7 @@ foreach ($package in $Packages) {
 }
 
 $baseRegistryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore"
-$allPackages = Get-AppxPackage -AllUsers | Select-Object -Property @('PackageFullName', 'PackageFamilyName', 'PackageUserInformation', 'NonRemovable')
+$allPackages = Get-AppxPackage -AllUsers | Select-Object PackageFullName, PackageFamilyName, PackageUserInformation, NonRemovable
 
 foreach ($package in $FilteredPackages) {
     $filteredPackages = $allPackages | Where-Object { $_.PackageFullName -like "*$package*" }
@@ -102,22 +100,18 @@ foreach ($package in $FilteredPackages) {
             $endOfLifePath = "$baseRegistryPath\EndOfLife\$userSid\$fullPackageName"
             New-Item -Path $endOfLifePath -Force | Out-Null
 
-            try {
-                if ($Unregister) {
-                    Remove-AppxPackage -Package $fullPackageName -User $userSid -PreserveRoamableApplicationData -ErrorAction Stop 2>$null | Out-Null
-                } else {
-                    Remove-AppxPackage -Package $fullPackageName -User $userSid -ErrorAction Stop 2>$null | Out-Null
-                }
-            } catch { }
+            if ($Unregister) {
+                Remove-AppxPackage -Package $fullPackageName -User $userSid -PreserveRoamableApplicationData -ErrorAction SilentlyContinue
+            } else {
+                Remove-AppxPackage -Package $fullPackageName -User $userSid -ErrorAction SilentlyContinue
+            }
         }
 
-        try {
-            if ($Unregister) {
-                Remove-AppxPackage -Package $fullPackageName -AllUsers -PreserveRoamableApplicationData -ErrorAction Stop 2>$null | Out-Null
-            } else {
-                Remove-AppxPackage -Package $fullPackageName -AllUsers -ErrorAction Stop 2>$null | Out-Null
-            }
-        } catch { }
+        if ($Unregister) {
+            Remove-AppxPackage -Package $fullPackageName -AllUsers -PreserveRoamableApplicationData -ErrorAction SilentlyContinue
+        } else {
+            Remove-AppxPackage -Package $fullPackageName -AllUsers -ErrorAction SilentlyContinue
+        }
     }
 }
 

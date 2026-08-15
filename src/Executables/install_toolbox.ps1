@@ -66,7 +66,7 @@ function Invoke-RobustDownload {
         for ($i = 1; $i -le $maxRetries; $i++) {
             Write-Log "[Z-LAG] Download attempt $i/$maxRetries (curl)..."
             & $curlExe @("-LSs", "-o", $OutFile, "--connect-timeout", "30", "--retry", "3", "--fail", $Url) 2>&1 | Out-Null
-            if ($LASTEXITCODE -eq 0 -and (Test-Path $OutFile) -and (Get-Item $OutFile).Length -gt 1048576) { return $true }
+            if ($LASTEXITCODE -eq 0 -and (Test-Path $OutFile) -and (Get-Item $OutFile).Length -gt 1MB) { return $true }
             Start-Sleep -Seconds 3
         }
     }
@@ -74,7 +74,7 @@ function Invoke-RobustDownload {
     for ($i = 1; $i -le $maxRetries; $i++) {
         try {
             Invoke-WebRequest -Uri $Url -OutFile $OutFile -UseBasicParsing -TimeoutSec 60 | Out-Null
-            if ((Test-Path $OutFile) -and (Get-Item $OutFile).Length -gt 1048576) { return $true }
+            if ((Test-Path $OutFile) -and (Get-Item $OutFile).Length -gt 1MB) { return $true }
         } catch { Start-Sleep -Seconds 3 }
     }
     return $false
@@ -155,10 +155,7 @@ try {
     $psi.UseShellExecute = $false
     $psi.CreateNoWindow = $true
     $process = [System.Diagnostics.Process]::Start($psi)
-    if (-not $process.WaitForExit(120000)) {
-        Write-Log "[WARNING] Installer exceeded 120 seconds; stopping the parent process and checking installation results."
-        try { $process.Kill() } catch { }
-    }
+    $process.WaitForExit(30000) | Out-Null
 
     # Search the most common install locations for the main executable
     # (NSIS may install per-user or under a differently-named folder).
@@ -173,7 +170,7 @@ try {
     )
 
     # Poll for the installed binary (NSIS spawns child processes; be patient)
-    $timeoutSeconds = 90
+    $timeoutSeconds = 300
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     $finalExe = $null
     while ($stopwatch.Elapsed.TotalSeconds -lt $timeoutSeconds) {
@@ -193,7 +190,7 @@ try {
 
     # Smoke test: the binary must exist, be non-trivial and carry version info.
     $vi = $finalExe.VersionInfo
-    if ($finalExe.Length -lt 1024 -or -not $vi.FileVersion) {
+    if ($finalExe.Length -lt 1KB -or -not $vi.FileVersion) {
         throw "Installed binary failed the smoke test (invalid file or no version info)."
     }
 
@@ -217,4 +214,3 @@ if ($tempDir -and (Test-Path -LiteralPath $tempDir)) {
 }
 
 Write-Log "[Z-LAG] Task complete. Result: $(if ($ok) { 'SUCCESS' } else { 'FAILED' }). Log: $logFile"
-exit 0

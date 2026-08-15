@@ -20,9 +20,8 @@ Write-Output "[Z-LAG] Repairing AppX runtime (auto-start + boot watchdog)..."
 
 $storeRemoved = $false
 $marker = Get-ItemProperty -Path "HKLM:\SOFTWARE\Z-LAG-OS" -Name "StoreRemoved" -ErrorAction SilentlyContinue
-$storePolicy = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "RemoveWindowsStore" -ErrorAction SilentlyContinue).RemoveWindowsStore
-if (($marker -and $marker.StoreRemoved -eq 1) -or $storePolicy -eq 1) { $storeRemoved = $true }
-Write-Output ("[Z-LAG] Store removed state: " + $storeRemoved)
+if ($marker -and $marker.StoreRemoved -eq 1) { $storeRemoved = $true }
+Write-Output ("[Z-LAG] Store removed marker: " + $storeRemoved)
 
 function Set-ServiceStartup {
     param([string]$Name, [ValidateSet("auto", "demand")][string]$Mode = "auto")
@@ -126,6 +125,14 @@ $coreDir = Join-Path $coreRoot "Core"
 if (-not (Test-Path $dataDir)) { New-Item -Path $dataDir -ItemType Directory -Force | Out-Null }
 if (-not (Test-Path $coreDir)) { New-Item -Path $coreDir -ItemType Directory -Force | Out-Null }
 
+# A previous run may have already locked this folder. Temporarily grant the
+# current elevated/TI token write access before updating watchdog files.
+& attrib.exe -h -s $coreRoot 2>$null
+& takeown.exe /f $coreRoot /a /r /d y 2>$null | Out-Null
+$currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$currentGrant = '*' + $currentSid + ':(OI)(CI)F'
+& icacls.exe $coreRoot /inheritance:e /grant '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' $currentGrant /t /c /q 2>$null | Out-Null
+
 # The watchdog honours the StoreRemoved marker: it never re-enables Microsoft
 # account services on a machine where the user chose to remove them.
 $starter = Join-Path $coreDir "start_appx_runtime.cmd"
@@ -187,8 +194,6 @@ $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerBoot, $triggerLogon, $triggerDelay) -Principal $principal -Settings $settings -Force | Out-Null
 
-# Execute through cmd.exe explicitly; invoking a .cmd directly from the protected
-# Windows core folder can be rejected by PowerShell's native-command resolver.
 & $env:ComSpec /d /c ('"' + $starter + '"') 2>$null | Out-Null
 
 Write-Output "[Z-LAG] AppX runtime is self-healing (task: $taskName)."
