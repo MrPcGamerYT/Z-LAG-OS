@@ -1,7 +1,6 @@
 title: Removing Bloat Apps
-description: Removal of APPX packages (Keeps NVIDIA, AMD, Intel, Critical System Apps). Uses appx_remover.ps1 which deprovisions each package, removes it for all users (never skips NonRemovable) and clears the Start Menu cache so removed apps stop showing ghost tiles.
+description: Removal of APPX packages (Keeps NVIDIA, AMD, Intel, Critical System Apps)
 privilege: TrustedInstaller
-onUpgrade: false
 actions:
 
   - !writeStatus: {status: "Removing Appx Packages - Keeping GPU drivers and critical system apps"}
@@ -70,7 +69,9 @@ actions:
           'MicrosoftWindows.CrossDevice',
           'Microsoft.WindowsCalculator',
           'Microsoft.Windows.Photos',
-          'Microsoft.ScreenSketch'
+          'Microsoft.WindowsStore',
+          'Microsoft.ScreenSketch',
+          'Microsoft.StorePurchaseApp'
         )
 
   - !writeStatus: {status: "Removing Photos", option: "remove-appx-photos"}
@@ -108,20 +109,16 @@ actions:
       exeDir: true
       command: '.\appx_remover.ps1 -Packages @("Microsoft.YourPhone", "MicrosoftWindows.CrossDevice")'
 
-
-  # Clear AppX caches + Start Menu cache so removed apps stop showing ghost tiles
+  
+  # Clear AppX caches
   - !writeStatus: {status: 'Clearing AppX caches'}
   - !appx: {operation: clearCache, name: '*MicrosoftWindows.Client.CBS*'}
   - !appx: {operation: clearCache, name: '*Microsoft.Windows.Search*'}
   - !appx: {operation: clearCache, name: '*Microsoft.Windows.SecHealthUI*'}
-  - !taskKill: {name: 'StartMenuExperienceHost', ignoreErrors: true}
-  - !appx: {operation: clearCache, name: 'Microsoft.Windows.StartMenuExperienceHost*'}
-  - !powerShell:
-      wait: true
-      exeDir: true
-      command: '.\clear_start_menu_cache.ps1'
 
-  - !writeStatus: {status: 'Installing Browser'}
+  - !writeStatus: {status: "Downloading & Installing Visual C++ AIO, DirectX, and .NET Runtime..."}
+
+  - !writeStatus: {status: 'Installing utilities'}
   - !powerShell:
     command: '.\software.ps1'
     exeDir: true
