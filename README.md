@@ -63,10 +63,12 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   entries/tasks/sync roots/Explorer namespaces/installers/caches, and prevents
   setup for future users. The playbook's fresh-install mode also removes local
   `OneDrive` and `OneDrive - *` sync folders.
-- **Classic Sound Manager**: native `mmsys.cpl` tabs and `sndvol.exe` now have an
-  all-user Start Menu folder, a desktop-background submenu, and **Ctrl+Alt+V**
-  opens the classic Volume Mixer. The classic compact volume flyout is selected
-  on Windows builds that still honor `EnableMtcUvc`.
+- **Z LAG context toolbox**: the visible Classic Sound Start Menu folder and its
+  standalone context submenu are removed. A single first-position **Z LAG**
+  submenu now provides **RAM Trim / Clean** first, **Temp Clean** second, then
+  recycle-bin cleanup, DNS flush, Explorer restart, classic Sound Manager and
+  the classic Volume Mixer. The compact classic flyout is still selected on
+  Windows builds that honor `EnableMtcUvc`.
 - **Real startup status**: Windows' supported `VerboseStatus` policy now shows
   real system-phase text below **Welcome / Please wait**. As soon as the secure
   sign-in desktop hands off to the user session, a short overlay reports actual
@@ -178,7 +180,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 | **Input & Timer** | Disabled dynamic tick, high-resolution timer, instant key/mouse response | Lower DPC latency, snappier input |
 | **Networking** | Global + per-interface TCP no-delay, offload tuning, DNS flush | Reduced jitter, competitive ping |
 | **Privacy & Telemetry** | Telemetry blocked at host + task level, update hosts blocked | Zero background upload |
-| **UI/UX** | Transparency & animations off, forced dark theme, small taskbar, clean Start layout, classic Sound Manager, verbose/live startup status | Less RAM usage, cleaner workflow and visible boot progress |
+| **UI/UX** | Transparency & animations off, forced dark theme, small taskbar, clean Start layout, first-position Z LAG maintenance submenu, classic sound tools, verbose/live startup status | Less RAM usage, cleaner workflow and visible boot progress |
 
 ---
 
@@ -308,8 +310,8 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 **Q: Why do app names appear just after sign-in instead of directly inside the secure lock screen?**
 A: Windows blocks normal applications from drawing over the secure LogonUI desktop. The supported `VerboseStatus` text appears below Welcome/Please wait; the Z-LAG overlay takes over immediately after authentication and reports real user-session process starts. It does not patch or replace security-sensitive Winlogon binaries.
 
-**Q: How do I open the classic sound tools?**
-A: Open **Start > Z-LAG OS > Classic Sound Manager**, use the desktop right-click **Sound Manager (Classic)** submenu, or press **Ctrl+Alt+V** for `sndvol.exe`. New Windows 11 taskbars may ignore the legacy compact-flyout registry value, but these native Win32 tools always remain available.
+**Q: Where are the cleanup and classic sound tools?**
+A: Right-click the desktop or a folder background and open **Z LAG**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
 
 **Q: Will Windows Update break this?**
 A: The hosts file blocks updates and the update service is disabled. If you later want updates, restore the hosts file first.
