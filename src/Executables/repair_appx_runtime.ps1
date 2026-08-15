@@ -176,7 +176,7 @@ foreach ($oldRoot in @($dataDir, (Join-Path $env:ProgramFiles "Z-LAG-OS\Core")))
         Remove-Item -LiteralPath (Join-Path $oldRoot $oldFile) -Force -ErrorAction SilentlyContinue
     }
 }
-& icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+& icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
 & attrib.exe +h +s $coreRoot 2>$null
 
 $taskName = "Z LAG Opti Services - AppX Runtime"
