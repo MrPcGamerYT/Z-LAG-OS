@@ -5,5 +5,6 @@ actions:
   - !powerShell:
       wait: true
       exeDir: true
+      runas: currentUserElevated
       command: '.\install_toolbox.ps1'
   - !writeStatus: {status: "Z-LAG Toolbox deployment finished (see C:\\ProgramData\\Z-LAG-OS\\toolbox_install.log)."}

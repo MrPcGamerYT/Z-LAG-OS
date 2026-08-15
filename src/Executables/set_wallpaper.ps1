@@ -123,22 +123,22 @@ if (Test-Path $defaultHivePath) {
     # Mount the template blueprint registry hive into our session
     reg load "HKU\DefaultUserTemplate" $defaultHivePath 2>$null | Out-Null
 
-    if (Test-Path "HKU:\DefaultUserTemplate") {
+    if (Test-Path "Registry::HKEY_USERS\DefaultUserTemplate") {
         $templatePaths = @(
-            "HKU:\DefaultUserTemplate\Control Panel\Desktop",
-            "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization"
+            "Registry::HKEY_USERS\DefaultUserTemplate\Control Panel\Desktop",
+            "Registry::HKEY_USERS\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization"
         )
         foreach ($tp in $templatePaths) { if (-not (Test-Path $tp)) { New-Item $tp -Force | Out-Null } }
 
         # Set values natively inside the blueprint so every account inherits them at setup
-        if (Test-Path "HKU:\DefaultUserTemplate\Control Panel\Desktop") {
-            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Control Panel\Desktop" -Name "Wallpaper" -Value $destDesktopPng -Type String -Force
-            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Control Panel\Desktop" -Name "WallpaperStyle" -Value "2" -Type String -Force
-            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Control Panel\Desktop" -Name "TileWallpaper" -Value "0" -Type String -Force
+        if (Test-Path "Registry::HKEY_USERS\DefaultUserTemplate\Control Panel\Desktop") {
+            Set-ItemProperty -Path "Registry::HKEY_USERS\DefaultUserTemplate\Control Panel\Desktop" -Name "Wallpaper" -Value $destDesktopPng -Type String -Force
+            Set-ItemProperty -Path "Registry::HKEY_USERS\DefaultUserTemplate\Control Panel\Desktop" -Name "WallpaperStyle" -Value "2" -Type String -Force
+            Set-ItemProperty -Path "Registry::HKEY_USERS\DefaultUserTemplate\Control Panel\Desktop" -Name "TileWallpaper" -Value "0" -Type String -Force
         }
-        if (Test-Path "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization") {
-            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "LockScreenImage" -Value $destLockJpg -Type String -Force
-            Set-ItemProperty -Path "HKU:\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "NoChangingLockScreen" -Value 1 -Type DWord -Force
+        if (Test-Path "Registry::HKEY_USERS\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization") {
+            Set-ItemProperty -Path "Registry::HKEY_USERS\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "LockScreenImage" -Value $destLockJpg -Type String -Force
+            Set-ItemProperty -Path "Registry::HKEY_USERS\DefaultUserTemplate\Software\Policies\Microsoft\Windows\Personalization" -Name "NoChangingLockScreen" -Value 1 -Type DWord -Force
         }
 
         # Safely detach the blueprint hive

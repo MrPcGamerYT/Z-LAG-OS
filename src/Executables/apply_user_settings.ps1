@@ -13,7 +13,7 @@ $ErrorActionPreference = "Continue"
 function Set-ZLagUserValue {
     param(
         [Parameter(Mandatory = $true)][string]$Path,      # HKCU:\... path
-        [Parameter(Mandatory = $true)][string]$Name,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Name,
         [Parameter(Mandatory = $true)][AllowEmptyString()]$Value,
         [Parameter(Mandatory = $true)][ValidateSet('DWord', 'String', 'Binary')]$Type
     )
@@ -21,7 +21,11 @@ function Set-ZLagUserValue {
     foreach ($target in @($Path, $defaultTarget)) {
         try {
             if (-not (Test-Path $target)) { New-Item -Path $target -Force -ErrorAction Stop | Out-Null }
-            New-ItemProperty -Path $target -Name $Name -Value $Value -PropertyType $Type -Force -ErrorAction Stop | Out-Null
+            if ($Name -eq '') {
+                Set-Item -Path $target -Value $Value -Force -ErrorAction Stop
+            } else {
+                New-ItemProperty -Path $target -Name $Name -Value $Value -PropertyType $Type -Force -ErrorAction Stop | Out-Null
+            }
         } catch { }
     }
 }

@@ -20,8 +20,9 @@ Write-Output "[Z-LAG] Repairing AppX runtime (auto-start + boot watchdog)..."
 
 $storeRemoved = $false
 $marker = Get-ItemProperty -Path "HKLM:\SOFTWARE\Z-LAG-OS" -Name "StoreRemoved" -ErrorAction SilentlyContinue
-if ($marker -and $marker.StoreRemoved -eq 1) { $storeRemoved = $true }
-Write-Output ("[Z-LAG] Store removed marker: " + $storeRemoved)
+$storePolicy = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "RemoveWindowsStore" -ErrorAction SilentlyContinue).RemoveWindowsStore
+if (($marker -and $marker.StoreRemoved -eq 1) -or $storePolicy -eq 1) { $storeRemoved = $true }
+Write-Output ("[Z-LAG] Store removed state: " + $storeRemoved)
 
 function Set-ServiceStartup {
     param([string]$Name, [ValidateSet("auto", "demand")][string]$Mode = "auto")
@@ -186,7 +187,9 @@ $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerBoot, $triggerLogon, $triggerDelay) -Principal $principal -Settings $settings -Force | Out-Null
 
-& $starter
+# Execute through cmd.exe explicitly; invoking a .cmd directly from the protected
+# Windows core folder can be rejected by PowerShell's native-command resolver.
+& $env:ComSpec /d /c ('"' + $starter + '"') 2>$null | Out-Null
 
 Write-Output "[Z-LAG] AppX runtime is self-healing (task: $taskName)."
 if ($storeRemoved) {
