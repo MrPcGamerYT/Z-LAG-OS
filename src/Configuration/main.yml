@@ -94,8 +94,6 @@ actions:
   - !task: {path: 'Tasks\\27_smallTaskbar.yml'}
 
   # ===== LIMIT PUSH - SERVICE PURGE =====
-  - !status: {status: 'Purging unnecessary services'}
-  - !task: {path: 'Tasks\\23_servicePurge.yml'}
 
   # ===== LIMIT PUSH - FEATURE STRIPPER =====
   - !status: {status: 'Stripping unnecessary Windows features'}
@@ -125,6 +123,11 @@ actions:
   # and Microsoft account services stay removed when the user chose that).
   - !status: {status: 'Repairing AppX runtime for sideloaded apps...'}
   - !task: {path: 'Tasks\\34_repairAppxRuntime.yml'}
+
+  # ===== USER-FACING SETTINGS: apply dark mode / taskbar / start menu / input
+  #      to the ACTIVE user (runas: currentUserElevated). =====
+  - !status: {status: 'Applying user-facing settings (dark mode / taskbar / start menu)...'}
+  - !task: {path: 'Tasks\\38_userSettings.yml'}
 
   # ===== DEEP SYSTEM CLEAN: run ABSOLUTELY LAST so it can never delete any
   #      script before it has executed (extra protection). =====
