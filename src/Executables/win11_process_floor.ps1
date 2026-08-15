@@ -5,8 +5,8 @@
 # components (Copilot/Recall), per-user bloat services, and Win11-only apps.
 #
 # SAFETY: same hard keep-list as process_floor.ps1 - networking (Wi-Fi /
-# Bluetooth / Ethernet), the AppX shell + app-launch stack and WebView2 are
-# NEVER touched.
+# Bluetooth / Ethernet) and the AppX shell + app-launch stack are NEVER touched.
+# Edge and WebView2 are intentionally removed and receive no keep-list exemption.
 # ==============================================================================
 
 $ErrorActionPreference = "Continue"
@@ -52,7 +52,7 @@ $KeepServices = @(
     "RpcSs","RpcEptMapper","DcomLaunch","Power","PlugPlay","Schedule","EventLog",
     "EventSystem","BrokerInfrastructure","CoreMessagingRegistrar",
     "SystemEventsBroker","Themes","StorSvc","W32Time","CryptSvc",
-    # Shell / AppX / WebView2 host (untouchable -> no silent app crashes)
+    # Shell / AppX host (untouchable -> no silent app crashes)
     "AppXSvc","AppReadiness","ClipSVC","LicenseManager","StateRepository",
     "camsvc","wlidsvc","TokenBroker",
     # Audio
@@ -122,8 +122,8 @@ foreach ($prefix in $Win11PerUser) {
 }
 Log ("ULTRA: disabled " + $script:disabledCount + " Windows 11 services (notifications, data usage, agent runtime, clipboard history).")
 
-# --- 3. Remove Win11-only bloat apps (WebView2 kept) ---
-Log "Removing Windows 11-only bloat apps (WebView2 kept)..."
+# --- 3. Remove Win11-only bloat apps and any WebView host packages ---
+Log "Removing Windows 11-only bloat apps and WebView host packages..."
 $Win11Packages = @(
     "Microsoft.Windows.Ai","Microsoft.Copilot","Clipchamp.Clipchamp",
     "Microsoft.PowerAutomateDesktop","Microsoft.Windows.DevHome",
@@ -131,19 +131,19 @@ $Win11Packages = @(
     "MicrosoftTeams","MSTeams","Microsoft.OutlookForWindows",
     "MicrosoftWindows.Client.WebExperience","Microsoft.WindowsFeedbackHub",
     "Microsoft.GetHelp","Microsoft.Getstarted","Microsoft.Todos",
-    "Microsoft.WindowsCamera","Microsoft.WindowsMaps","Microsoft.WindowsSoundRecorder"
+    "Microsoft.WindowsCamera","Microsoft.WindowsMaps","Microsoft.WindowsSoundRecorder",
+    "Microsoft.Win32WebViewHost","Microsoft.EdgeWebView"
 )
 foreach ($Pkg in $Win11Packages) {
     Get-AppxPackage -AllUsers -Name "*$Pkg*" -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -notlike "*WebView*" } |
         Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
     Get-AppxProvisionedPackage -Online |
-        Where-Object { $_.DisplayName -like "*$Pkg*" -and $_.DisplayName -notlike "*WebView*" } |
+        Where-Object { $_.DisplayName -like "*$Pkg*" } |
         Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
 }
 
 # --- 4. Kill Win11-only resident processes ---
-$Win11Processes = @("Copilot","Recall","Widgets","ms-teams","Clipchamp","PhoneExperienceHost","PowerAutomate","DevHome")
+$Win11Processes = @("Copilot","Recall","Widgets","ms-teams","Clipchamp","PhoneExperienceHost","PowerAutomate","DevHome","msedgewebview2","Win32WebViewHost")
 foreach ($p in $Win11Processes) {
     Stop-Process -Name $p -Force -ErrorAction SilentlyContinue
 }
@@ -184,4 +184,4 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" 
 #        final reboot) - restarting explorer under TrustedInstaller would leave
 #        the user without a desktop.
 Log "Windows 11 extra process floor applied. Reboot for full effect."
-Log "Protected: Wi-Fi / Bluetooth / Ethernet, AppX shell + app launching, WebView2."
+Log "Protected: Wi-Fi / Bluetooth / Ethernet and AppX shell + app launching. Edge/WebView2 are removed."

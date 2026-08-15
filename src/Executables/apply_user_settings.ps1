@@ -47,6 +47,7 @@ Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Adva
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'TaskbarDa'           0 'DWord'
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'TaskbarSi'           0 'DWord'
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'ShowCopilotButton'   0 'DWord'
+Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer' 'HideSCAVolume'       0 'DWord'
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'EnableSnapBar'       0 'DWord'
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'EnableTaskGroups'    0 'DWord'
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' 'SnapFill'            0 'DWord'
