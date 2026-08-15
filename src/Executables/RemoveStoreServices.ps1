@@ -79,7 +79,8 @@ $StoreServices = @(
     "InstallService", "PushToInstall",
     "XblAuthManager", "XblGameSave", "XboxNetApiSvc", "XboxGipSvc",
     "OneSyncSvc", "UserDataSvc", "UnistoreSvc", "PimIndexMaintenanceSvc",
-    "MessagingService", "CDPSvc", "CDPUserSvc", "BcastDVRUserService",
+    # CDPSvc/CDPUserSvc are pairing infrastructure, not Store services.
+    "MessagingService", "BcastDVRUserService",
     "WSearch", "MapsBroker", "wisvc"
 )
 

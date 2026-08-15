@@ -56,8 +56,11 @@ $KeepServices = @(
     # Networking - Wi-Fi / Bluetooth / Ethernet / VPN / firewall (untouchable)
     "Dhcp","Dnscache","NlaSvc","nsi","Tcpip","NetBT","LanmanWorkstation","netprofm",
     "WcmSvc","WlanSvc","vwififlt","vwifibus","vwifimp","bthserv","BTAGService",
-    "bthpriv","BluetoothUserService","RasMan","RasAuto","RemoteAccess","SstpSvc",
-    "IKEEXT","BFE","MpsSvc","EapHost","dot3svc","WwanSvc","RmSvc","PolicyAgent",
+    "bthpriv","BluetoothUserService","BthAvctpSvc","bthHFSrv","RasMan","RasAuto",
+    "RemoteAccess","SstpSvc","IKEEXT","BFE","MpsSvc","EapHost","dot3svc",
+    "WwanSvc","RmSvc","PolicyAgent","CDPSvc","CDPUserSvc","NcbService",
+    "DeviceAssociationService","DeviceAssociationBrokerSvc","DevicePickerUserSvc",
+    "DevicesFlowUserSvc","DeviceInstall","DsmSvc",
 
     # Security / logon / user (untouchable)
     "WinDefend","WdNisSvc","SecurityHealthService","SamSs","ProfSvc","UserManager",
@@ -95,7 +98,7 @@ $Disable = @(
     # Cloud / identity / content (Store install services are handled ONLY by the
     # Store-removal path so "keep the Store" users can still install apps)
     "OneSyncSvc","UserDataSvc","UnistoreSvc","PimIndexMaintenanceSvc",
-    "MessagingService","BcastDVRUserService","CDPSvc","CDPUserSvc","WSearch",
+    "MessagingService","BcastDVRUserService","WSearch",
     "CloudBackupRestoreSvc","MapsBroker","wisvc",
     # Xbox
     "XblAuthManager","XblGameSave","XboxNetApiSvc","XboxGipSvc",
@@ -132,7 +135,7 @@ $Disable = @(
     "NetTcpActivator","NetPipeActivator","NetMsmqActivator",
     "ALG","AeLookupSvc","AppVClient","AssignedAccessManagerSvc","AxInstSV",
     "CaptureService","CscService","defragsvc","EntAppSvc","fhsvc",
-    "lfsvc","MSDTC","NcbService","pla","QWAVE","SNMPTRAP","spectrum","svsvc",
+    "lfsvc","MSDTC","pla","QWAVE","SNMPTRAP","spectrum","svsvc",
     "TapiSrv","TieringEngineService","TrkWks","UevAgentService","vds",
     "wbengine","SDRSVC","smphost","wmiApSrv","workfolderssvc","autotimesvc",
     # ULTRA: on-demand features that are NOT needed for gaming are disabled

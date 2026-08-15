@@ -1,5 +1,5 @@
 title: ULTRA Idle Process + RAM Floor (persistent)
-description: Consolidates svchost pools, disables an expanded Windows 10/11 non-gaming service set, removes its trigger-start metadata, trims working sets, then installs a brief non-resident SYSTEM watchdog at boot/logon/every 15 minutes. Core RPC, networking, audio, logon, security and AppX launch services stay hard-protected.
+description: Disables an expanded Windows 10/11 non-gaming service set and removes trigger-start metadata while excluding core services and option-kept hardware dependencies. Bluetooth Keep gets its correct baseline directly inside this floor task; no repair script or Bluetooth watchdog is installed.
 privilege: TrustedInstaller
 actions:
   - !writeStatus: {status: "Applying ULTRA Idle Process + RAM Floor..."}
@@ -12,4 +12,30 @@ actions:
       wait: true
       exeDir: true
       command: '.\enforce_service_floor.ps1'
-  - !writeStatus: {status: "Persistent idle service/process floor installed."}
+
+  # Root configuration: pairing dependencies are allowlisted globally and their
+  # normal states are applied after the floor only when Bluetooth Keep is chosen.
+  - !writeStatus: {status: "Applying Bluetooth Keep service baseline...", option: 'bluetooth-keep'}
+  - !powerShell:
+      option: 'bluetooth-keep'
+      wait: true
+      command: |
+        Unregister-ScheduledTask -TaskName 'ZLAG-RepairBluetooth' -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item "$env:ProgramData\Z-LAG-OS\repair_bluetooth.ps1" -Force -ErrorAction SilentlyContinue
+        Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Z-LAG-OS' -Name 'BluetoothKeepRepaired' -ErrorAction SilentlyContinue
+        $auto = @('bthserv','RmSvc','CDPSvc')
+        $demand = @('BluetoothUserService','CDPUserSvc','NcbService','BTAGService','BthAvctpSvc','bthHFSrv','bthpriv','DeviceAssociationService','DeviceAssociationBrokerSvc','DevicePickerUserSvc','DevicesFlowUserSvc','DeviceInstall','DsmSvc')
+        $root = 'HKLM:\SYSTEM\CurrentControlSet\Services'
+        foreach ($family in $auto + $demand) {
+          $start = if ($auto -contains $family) { 2 } else { 3 }
+          $mode = if ($start -eq 2) { 'auto' } else { 'demand' }
+          Get-ChildItem $root -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -eq $family -or $_.PSChildName -like ($family + '_*') } | ForEach-Object {
+            New-ItemProperty -Path $_.PSPath -Name Start -Value $start -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
+            sc.exe config $_.PSChildName start= $mode 2>$null | Out-Null
+          }
+        }
+        foreach ($name in $auto) { Start-Service -Name $name -ErrorAction SilentlyContinue }
+        foreach ($pattern in @('BluetoothUserService*','CDPUserSvc*','DeviceAssociationBrokerSvc*','DevicesFlowUserSvc*')) { Get-Service -Name $pattern -ErrorAction SilentlyContinue | Start-Service -ErrorAction SilentlyContinue }
+        if (Get-Command Enable-PnpDevice -ErrorAction SilentlyContinue) { Get-PnpDevice -Class Bluetooth -ErrorAction SilentlyContinue | Where-Object { $_.Status -ne 'OK' } | Enable-PnpDevice -Confirm:$false -ErrorAction SilentlyContinue }
+
+  - !writeStatus: {status: "Persistent process floor and option-kept dependencies configured."}
