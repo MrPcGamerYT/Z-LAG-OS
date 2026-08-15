@@ -1,95 +1,125 @@
 title: Removing Bloat Apps
-description: Removes AppX bloat packages using AME's native appx action (deprovisions + removes for all users). GPU drivers, the Windows shell, WebView2 and critical system apps are NOT listed, so they are never touched.
+description: Removal of APPX packages (Keeps NVIDIA, AMD, Intel, Critical System Apps). Uses appx_remover.ps1 which deprovisions each package, removes it for all users (never skips NonRemovable) and clears the Start Menu cache so removed apps stop showing ghost tiles.
 privilege: TrustedInstaller
 onUpgrade: false
 actions:
-  - !writeStatus: {status: "Removing AppX packages - keeping GPU drivers and critical system apps"}
 
-  # Each package is removed by family name via AME's native action, which
-  # handles per-user + provisioned removal correctly (no hand-rolled PowerShell,
-  # no 0x80070002 DeStage errors).
-  - !appx: {name: 'Microsoft.Windows.SecureAssessmentBrowser*', type: family}
-  - !appx: {name: 'Microsoft.Windows.PeopleExperienceHost*', type: family}
-  - !appx: {name: 'Microsoft.WindowsCamera*', type: family}
-  - !appx: {name: 'MicrosoftWindows.Client.WebExperience*', type: family}
-  - !appx: {name: 'Microsoft.WidgetsPlatformRuntime*', type: family}
-  - !appx: {name: 'Microsoft.WindowsAlarms*', type: family}
-  - !appx: {name: 'Microsoft.WindowsMaps*', type: family}
-  - !appx: {name: 'Microsoft.MicrosoftStickyNotes*', type: family}
-  - !appx: {name: 'microsoft.windowscommunicationsapps*', type: family}
-  - !appx: {name: 'Microsoft.People*', type: family}
-  - !appx: {name: 'Microsoft.BingNews*', type: family}
-  - !appx: {name: 'Microsoft.BingSearch*', type: family}
-  - !appx: {name: 'Microsoft.BingWeather*', type: family}
-  - !appx: {name: 'Microsoft.MicrosoftSolitaireCollection*', type: family}
-  - !appx: {name: 'Microsoft.WindowsFeedbackHub*', type: family}
-  - !appx: {name: 'Microsoft.GetHelp*', type: family}
-  - !appx: {name: 'Microsoft.Getstarted*', type: family}
-  - !appx: {name: 'Microsoft.Todos*', type: family}
-  - !appx: {name: 'Microsoft.PowerAutomateDesktop*', type: family}
-  - !appx: {name: 'Microsoft.549981C3F5F10*', type: family}
-  - !appx: {name: 'MicrosoftCorporationII.QuickAssist*', type: family}
-  - !appx: {name: 'MicrosoftCorporationII.MicrosoftFamily*', type: family}
-  - !appx: {name: 'Microsoft.ZuneMusic*', type: family}
-  - !appx: {name: 'Microsoft.ZuneVideo*', type: family}
-  - !appx: {name: 'Microsoft.WindowsSoundRecorder*', type: family}
-  - !appx: {name: 'Clipchamp.Clipchamp*', type: family}
-  - !appx: {name: 'Microsoft.Whiteboard*', type: family}
-  - !appx: {name: 'Microsoft.MicrosoftTeamsforSurfaceHub*', type: family}
-  - !appx: {name: 'MicrosoftCorporationII.MailforSurfaceHub*', type: family}
-  - !appx: {name: 'Microsoft.MicrosoftPowerBIForWindows*', type: family}
-  - !appx: {name: 'Microsoft.SkypeApp*', type: family}
-  - !appx: {name: 'Microsoft.MicrosoftOfficeHub*', type: family}
-  - !appx: {name: 'Microsoft.Office.Excel*', type: family}
-  - !appx: {name: 'Microsoft.Office.PowerPoint*', type: family}
-  - !appx: {name: 'Microsoft.Office.Word*', type: family}
-  - !appx: {name: 'Microsoft.Office.OneNote*', type: family}
-  - !appx: {name: 'Microsoft.OutlookForWindows*', type: family}
-  - !appx: {name: 'SpotifyAB.SpotifyMusic*', type: family}
-  - !appx: {name: 'OutlookPWA*', type: family}
-  - !appx: {name: 'Microsoft.Microsoft3DViewer*', type: family}
-  - !appx: {name: 'Microsoft.Advertising.Xaml*', type: family}
-  - !appx: {name: 'MixedReality.Portal*', type: family}
-  - !appx: {name: 'Microsoft.MSPaint*', type: family}
-  - !appx: {name: 'Microsoft.Copilot*', type: family}
-  - !appx: {name: 'MicrosoftTeams*', type: family}
-  - !appx: {name: 'MSTeams*', type: family}
-  - !appx: {name: 'Disney.37853FC22B2CE*', type: family}
-  - !appx: {name: 'Netflix*', type: family}
-  - !appx: {name: 'Microsoft.XboxApp*', type: family}
-  - !appx: {name: 'Microsoft.XboxGamingOverlay*', type: family}
-  - !appx: {name: 'Microsoft.XboxIdentityProvider*', type: family}
-  - !appx: {name: 'Microsoft.XboxSpeechToTextOverlay*', type: family}
-  - !appx: {name: 'Microsoft.Xbox.TCUI*', type: family}
-  - !appx: {name: 'Microsoft.XboxGameCallableUI*', type: family}
-  - !appx: {name: 'Microsoft.GamingApp*', type: family}
-  - !appx: {name: 'Microsoft.YourPhone*', type: family}
-  - !appx: {name: 'MicrosoftWindows.CrossDevice*', type: family}
-  - !appx: {name: 'Microsoft.WindowsCalculator*', type: family}
-  - !appx: {name: 'Microsoft.Windows.Photos*', type: family}
-  - !appx: {name: 'Microsoft.ScreenSketch*', type: family}
-  - !appx: {name: 'Microsoft.Windows.DevHome*', type: family}
-
-  # DEPROVISION the removed packages so Windows can never re-stage them after a
-  # reboot or for a new user (this is the step that stops the apps coming back).
-  - !writeStatus: {status: "Deprovisioning removed AppX packages (so they can't return)..."}
+  - !writeStatus: {status: "Removing Appx Packages - Keeping GPU drivers and critical system apps"}
   - !powerShell:
       wait: true
       exeDir: true
-      command: '.\deprovision_apps.ps1'
+      command: |
+        .\appx_remover.ps1 -Packages @(
+          'Microsoft.Windows.SecureAssessmentBrowser',
+          'Microsoft.Windows.PeopleExperienceHost',
+          'Microsoft.WindowsCamera',
+          'MicrosoftWindows.Client.WebExperience',
+          'Microsoft.WidgetsPlatformRuntime',
+          'Microsoft.WindowsAlarms',
+          'Microsoft.WindowsMaps',
+          'Microsoft.MicrosoftStickyNotes',
+          'microsoft.windowscommunicationsapps',
+          'Microsoft.People',
+          'Microsoft.BingNews',
+          'Microsoft.BingSearch',
+          'Microsoft.BingWeather',
+          'Microsoft.MicrosoftSolitaireCollection',
+          'Microsoft.WindowsFeedbackHub',
+          'Microsoft.GetHelp',
+          'Microsoft.Getstarted',
+          'Microsoft.Todos',
+          'Microsoft.PowerAutomateDesktop',
+          'Microsoft.549981C3F5F10',
+          'MicrosoftCorporationII.QuickAssist',
+          'MicrosoftCorporationII.MicrosoftFamily',
+          'Microsoft.ZuneMusic',
+          'Microsoft.ZuneVideo',
+          'Microsoft.WindowsSoundRecorder',
+          'Clipchamp.Clipchamp',
+          'Microsoft.Whiteboard',
+          'Microsoft.MicrosoftTeamsforSurfaceHub',
+          'MicrosoftCorporationII.MailforSurfaceHub',
+          'Microsoft.MicrosoftPowerBIForWindows',
+          'Microsoft.SkypeApp',
+          'Microsoft.MicrosoftOfficeHub',
+          'Microsoft.Office.Excel',
+          'Microsoft.Office.PowerPoint',
+          'Microsoft.Office.Word',
+          'Microsoft.Office.OneNote',
+          'Microsoft.OutlookForWindows',
+          'SpotifyAB.SpotifyMusic',
+          'OutlookPWA',
+          'Microsoft.Microsoft3DViewer',
+          'Microsoft.Advertising',
+          'MixedReality.Portal',
+          'Microsoft.MSPaint',
+          'Microsoft.StartExperiencesApp',
+          'Microsoft.Copilot',
+          'MicrosoftTeams',
+          'MSTeams',
+          'Disney.37853FC22B2CE',
+          'Netflix',
+          'Microsoft.XboxApp',
+          'Microsoft.XboxGamingOverlay',
+          'Microsoft.XboxIdentityProvider',
+          'Microsoft.XboxSpeechToTextOverlay',
+          'Microsoft.Xbox.TCUI',
+          'Microsoft.XboxGameCallableUI',
+          'Microsoft.GamingApp',
+          'Microsoft.YourPhone',
+          'MicrosoftWindows.CrossDevice',
+          'Microsoft.WindowsCalculator',
+          'Microsoft.Windows.Photos',
+          'Microsoft.ScreenSketch'
+        )
 
-  # Xbox Game Bar registry cleanup (only when the Xbox option is chosen)
+  - !writeStatus: {status: "Removing Photos", option: "remove-appx-photos"}
+  - !powerShell:
+      option: "remove-appx-photos"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages "Microsoft.Windows.Photos"'
+
+  - !writeStatus: {status: "Removing Dev Home", option: "remove-appx-devhome"}
+  - !powerShell:
+      option: "remove-appx-devhome"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages "Microsoft.Windows.DevHome"'
+
+  - !writeStatus: {status: "Removing Xbox Apps", option: "remove-appx-xbox"}
+  - !powerShell:
+      option: "remove-appx-xbox"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages @("Microsoft.Xbox", "Microsoft.XboxApp", "Microsoft.GamingApp", "Microsoft.Edge.GameAssist") -ExcludePackages "Microsoft.XboxGameCallableUI"'
+
+  # Xbox Registry Tweaks
   - !registryValue: {path: 'HKCR\ms-gamebar', value: '', type: REG_SZ, data: 'URL:ms-gamebar', option: "remove-appx-xbox"}
   - !registryValue: {path: 'HKCR\ms-gamebar', value: 'URL Protocol', type: REG_SZ, data: '', option: "remove-appx-xbox"}
   - !registryKey: {path: 'HKCR\ms-gamebar\shell\open\command', operation: add, option: "remove-appx-xbox"}
   - !registryValue: {path: 'HKCR\ms-gamebar', value: '', type: REG_SZ, data: '%SystemRoot%\System32\systray.exe', option: "remove-appx-xbox"}
   - !registryValue: {path: 'HKCU\Software\Microsoft\GameBar', value: 'ShowStartupPanel', type: REG_DWORD, data: 0, option: "remove-appx-xbox"}
 
-  # Clear AppX caches
+  - !writeStatus: {status: "Removing Your Phone", option: "remove-appx-yourphone"}
+  - !powerShell:
+      option: "remove-appx-yourphone"
+      wait: true
+      exeDir: true
+      command: '.\appx_remover.ps1 -Packages @("Microsoft.YourPhone", "MicrosoftWindows.CrossDevice")'
+
+
+  # Clear AppX caches + Start Menu cache so removed apps stop showing ghost tiles
   - !writeStatus: {status: 'Clearing AppX caches'}
   - !appx: {operation: clearCache, name: '*MicrosoftWindows.Client.CBS*'}
   - !appx: {operation: clearCache, name: '*Microsoft.Windows.Search*'}
   - !appx: {operation: clearCache, name: '*Microsoft.Windows.SecHealthUI*'}
+  - !taskKill: {name: 'StartMenuExperienceHost', ignoreErrors: true}
+  - !appx: {operation: clearCache, name: 'Microsoft.Windows.StartMenuExperienceHost*'}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\clear_start_menu_cache.ps1'
 
   - !writeStatus: {status: 'Installing Browser'}
   - !powerShell:

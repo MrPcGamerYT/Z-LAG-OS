@@ -1,12 +1,9 @@
 title: Remove Microsoft Edge (Complete - WebView2 guaranteed)
-description: Removes the Edge browser completely (processes, official uninstaller, AppX + provisioned packages, services, tasks, files, shortcuts, registry) while preserving the WebView2 runtime, then verifies/reinstalls WebView2 so WebView2-dependent apps never break.
+description: Removes the Edge browser completely (processes, official uninstaller, AppX + provisioned packages, services, tasks, files, shortcuts, registry, Start Menu cache) while preserving the WebView2 runtime, then verifies/reinstalls WebView2 so WebView2-dependent apps never break.
 privilege: TrustedInstaller
 actions:
   - !writeStatus: {status: "Removing Microsoft Edge browser (WebView2 preserved)..."}
-  - !powerShell:
-      wait: true
-      exeDir: true
-      command: '.\remove_edge.ps1'
+  - !cmd: {command: 'edge_remover.bat', exeDir: true}
   - !writeStatus: {status: "Verifying WebView2 Runtime (auto-repair if missing)..."}
   - !powerShell:
       wait: true
