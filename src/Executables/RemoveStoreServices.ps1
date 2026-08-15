@@ -66,11 +66,13 @@ $StorePackages = @(
 )
 
 foreach ($Pkg in $StorePackages) {
-    Get-AppxPackage -AllUsers -Name "*$Pkg*" -ErrorAction SilentlyContinue |
-        Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
-    Get-AppxProvisionedPackage -Online |
-        Where-Object { $_.DisplayName -like "*$Pkg*" } |
-        Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+    Get-AppxPackage -AllUsers -Name "*$Pkg*" -ErrorAction SilentlyContinue | ForEach-Object {
+        try { Remove-AppxPackage -Package $_.PackageFullName -AllUsers -ErrorAction Stop 2>$null | Out-Null } catch { }
+    }
+    Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue |
+        Where-Object { $_.DisplayName -like "*$Pkg*" } | ForEach-Object {
+            try { Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -AllUsers -ErrorAction Stop 2>$null | Out-Null } catch { }
+        }
 }
 
 # --- 2. Stop + disable Microsoft account/cloud/identity/telemetry services ---
@@ -148,7 +150,9 @@ Set-ItemProperty -Path $DevUnlock -Name "AllowDevelopmentWithoutDevLicense" -Val
 # --- 5. Marker so repair_appx_runtime.ps1 does not undo this removal ---
 $ZlagKey = "HKLM:\SOFTWARE\Z-LAG-OS"
 if (-not (Test-Path $ZlagKey)) { New-Item -Path $ZlagKey -Force | Out-Null }
-Set-ItemProperty -Path $ZlagKey -Name "StoreRemoved" -Value 1 -Type DWord -Force
+New-ItemProperty -Path $ZlagKey -Name "StoreRemoved" -Value 1 -PropertyType DWord -Force | Out-Null
+$markerCheck = (Get-ItemProperty -Path $ZlagKey -Name StoreRemoved -ErrorAction SilentlyContinue).StoreRemoved
+Write-Output ("[Z-LAG] Store removal marker committed: " + $markerCheck)
 
 # --- 6. Remove Store shortcuts ---
 Get-ChildItem -Path "$env:ProgramData\Microsoft\Windows\Start Menu\Programs" -Filter "*Store*" -Recurse -ErrorAction SilentlyContinue |

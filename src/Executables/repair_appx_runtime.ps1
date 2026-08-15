@@ -20,8 +20,9 @@ Write-Output "[Z-LAG] Repairing AppX runtime (auto-start + boot watchdog)..."
 
 $storeRemoved = $false
 $marker = Get-ItemProperty -Path "HKLM:\SOFTWARE\Z-LAG-OS" -Name "StoreRemoved" -ErrorAction SilentlyContinue
-if ($marker -and $marker.StoreRemoved -eq 1) { $storeRemoved = $true }
-Write-Output ("[Z-LAG] Store removed marker: " + $storeRemoved)
+$storePolicy = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "RemoveWindowsStore" -ErrorAction SilentlyContinue).RemoveWindowsStore
+if (($marker -and $marker.StoreRemoved -eq 1) -or $storePolicy -eq 1) { $storeRemoved = $true }
+Write-Output ("[Z-LAG] Store removed state: " + $storeRemoved)
 
 function Set-ServiceStartup {
     param([string]$Name, [ValidateSet("auto", "demand")][string]$Mode = "auto")

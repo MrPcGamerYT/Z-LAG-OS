@@ -3,7 +3,7 @@
 [![License: Use Only](https://img.shields.io/badge/License-Proprietary%20%2F%20Use--Only-red.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078d7.svg)](https://www.microsoft.com/windows)
 [![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://amelabs.net/)
-[![Version: 5.12](https://img.shields.io/badge/Version-5.12-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
+[![Version: 5.14](https://img.shields.io/badge/Version-5.14-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
 [![Build: Stable](https://img.shields.io/badge/Build-Stable-brightgreen.svg)]()
 
 > **Maximum FPS. Zero Lag. No Bloat.** A performance-driven AME Wizard playbook engineered for competitive gaming, Android emulators (BlueStacks / MSI App Player / LDPlayer), and low-end hardware.
@@ -19,13 +19,14 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ## 📚 Table of Contents
 - [Core Objectives](#-core-objectives)
-- [What's New in v5.12](#-whats-new-in-v512)
+- [What's New in v5.14](#-whats-new-in-v514)
 - [Optimization Matrix](#️-optimization-matrix)
 - [Optional Performance Profiles](#-optional-performance-profiles)
 - [Expected Performance Gains](#-expected-performance-gains)
 - [What Is Removed vs Preserved](#-what-is-removed-vs-preserved)
 - [Compatibility](#-compatibility)
 - [FAQ](#-faq)
+- [Validation](#-validation)
 - [Contributing](#-contributing)
 - [License & Credits](#-license--credits)
 
@@ -42,6 +43,24 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 | **Network Latency** | Disables Nagle's algorithm, maximizes network throttling index, normal autotuning, DNS flush for reduced jitter and competitive ping |
 
 ---
+
+## 🆕 What's New in v5.14
+
+### v5.14 - publish-quality reliability and Windows runtime storage
+
+- Persistent Welcome, context-tool, process-floor and AppX watchdog files are
+  stored together under hidden, ACL-protected `C:\Windows\Z-LAG-OS`, while
+  ProgramData is retained for logs, backups and diagnostics only.
+- Every PowerShell file now passes syntax parsing; all JSON/XML/YAML data and the
+  exact 01–37 task-to-executable graph pass repository validation.
+- Restore-point, power-plan, AppX/Store, Toolbox, AppX watchdog, user-default
+  registry, wallpaper/default-hive, Start Menu, ReTrim and TEMP cleanup paths
+  handle expected missing/disabled resources without noisy first-run failures.
+- Toolbox installation runs in the actual elevated user profile with bounded
+  installer and executable-detection waits.
+- Protected Windows binaries no longer receive a permanent Everyone deny ACE;
+  notification behavior remains policy-driven and reversible.
+- Added `tests/validate_repo.py` and documented the release validation command.
 
 ## 🆕 What's New in v5.12
 
@@ -99,6 +118,12 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   Welcome panel with no boot, process, service, or startup-app status. Its footer
   uses a plain ASCII hyphen (`ZERO LAG - MAX PERFORMANCE`) to prevent garbled
   symbols under Windows PowerShell's legacy script encoding.
+- **Publish-quality first-run hardening**: restore points re-enable VSS with a
+  bounded wait, Ultimate Performance activates the duplicated scheme GUID,
+  harmless AppX/BCDEdit errors stay contained, Toolbox installs in the actual
+  elevated user profile with bounded detection, AppX watchdog commands execute
+  explicitly through `cmd.exe`, default-user registry writes use the correct
+  provider, and Start Menu/ReTrim/TEMP cleanup handles missing resources quietly.
 - **Task filenames now match execution order**: the task directory contains only
   the 37 active tasks, numbered consecutively from `01_powerPlan.yml` through
   `37_deepClean.yml` exactly as referenced by `main.yml`.
@@ -357,6 +382,21 @@ A: Make sure HPET is off, the Ultimate Performance power plan is active, Game Mo
 
 ---
 
+## ✅ Validation
+
+Run the dependency-free repository validator before packaging:
+
+```bash
+python3 tests/validate_repo.py
+```
+
+It checks playbook/version metadata, JSON/XML files, the exact 01–37 task order,
+all task-to-executable references, and persistent runtime destinations. Release
+review also parses every PowerShell file and checks batch structure and Git
+whitespace.
+
+---
+
 ## 🛠️ Contributing
 
 1. Fork repository
@@ -399,4 +439,4 @@ is required for anything outside this limited use permission. All rights reserve
 **Star ⭐ this repo if you get an FPS boost!**
 
 ---
-*Z LAG OS v5.12 - Zero Lag, Max Performance. Built for gamers, by gamers.*
+*Z LAG OS v5.14 - Zero Lag, Max Performance. Built for gamers, by gamers.*

@@ -62,13 +62,12 @@ Set-ItemProperty -Path $PrivacyPath -Name "LetAppsRunInBackground" -Value 2 -Typ
 # ------------------------------------------------------------------------------
 Write-Output "[+] Executing aggressive 1000% notification engine lockdown..."
 
-# Take Ownership and Permanently Kill SecurityHealthSystray Binary Execution
+# Never deny execution on a protected Windows binary. Alert suppression is
+# handled by policy; restore inheritance/remove a deny ACE left by older builds.
 $Sys32Path = "$env:SystemRoot\System32"
 $SystrayFile = "$Sys32Path\SecurityHealthSystray.exe"
-
 if (Test-Path $SystrayFile) {
-    & takeown.exe /f $SystrayFile /a *>$null
-    & icacls.exe $SystrayFile /inheritance:r /grant:r *S-1-5-32-544:F /deny *S-1-1-0:`(X`) *>$null
+    & icacls.exe $SystrayFile /remove:d '*S-1-1-0' /inheritance:e /c /q *>$null
 }
 
 # Policy-Level Defenses (Block Windows Security Center Alerts)
