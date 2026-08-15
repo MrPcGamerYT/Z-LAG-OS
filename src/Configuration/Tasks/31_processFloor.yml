@@ -1,5 +1,5 @@
 title: ULTRA Idle Process + RAM Floor (persistent)
-description: Disables an expanded Windows 10/11 non-gaming service set and removes trigger-start metadata while excluding core services and option-kept hardware dependencies. Bluetooth Keep gets its correct baseline directly inside this floor task; no repair script or Bluetooth watchdog is installed.
+description: Disables an expanded Windows 10/11 non-gaming service set without waiting indefinitely for pending services. Each stop is capped at 1.5 seconds and the enforcement stop pass at 60 seconds; startup is locked first so timed-out services stay disabled next boot. Core and option-kept dependencies remain excluded.
 privilege: TrustedInstaller
 actions:
   - !writeStatus: {status: "Applying ULTRA Idle Process + RAM Floor..."}
@@ -7,7 +7,7 @@ actions:
       wait: true
       exeDir: true
       command: '.\process_floor.ps1'
-  - !writeStatus: {status: "Locking the service floor across later boots and logons..."}
+  - !writeStatus: {status: "Locking service floor (1.5s per service, 60s total stop cap)..."}
   - !powerShell:
       wait: true
       exeDir: true
