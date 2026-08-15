@@ -83,10 +83,12 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   clean spaced names, with RAM Trim/Clean first, Temp Clean second, then recycle
   cleanup, DNS flush, Explorer restart and classic sound tools. The former
   visible Classic Sound Start Menu folder is removed.
-- **Targeted runtime corrections**: AppX watchdog updates now temporarily restore
+- **Targeted runtime corrections**: AppX watchdog updates temporarily restore
   write access to an already locked Windows core folder and invoke the generated
-  CMD through `cmd.exe`; native Welcome compilation now includes the required
-  `System.Xaml` assembly path on Windows 10.
+  CMD through `cmd.exe`. Welcome compilation now uses universally available
+  .NET Framework WinForms instead of WPF/System.Xaml, resolves full assembly
+  paths, validates the PE header and product identity, and installs only a fully
+  verified `ZLAGOptiServices.exe`.
 - **Stable sequential pipeline**: the task directory contains exactly 37 active
   tasks, numbered in the same `01` through `37` order used by `main.yml`.
 

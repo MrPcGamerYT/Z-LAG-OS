@@ -41,49 +41,150 @@ $welcomeExe = Join-Path $coreDir 'ZLAGOptiServices.exe'
 $tempExe = Join-Path $env:TEMP 'ZLAGOptiServices.exe'
 Remove-Item -LiteralPath $tempExe -Force -ErrorAction SilentlyContinue
 
-# Compile a native WPF WindowsApplication. Source exists only while the playbook
-# runs; the permanent artifact is the executable in the protected Windows folder.
+# Compile a native WinForms WindowsApplication. Source exists only while the
+# playbook runs; the permanent artifact is the verified executable.
 $welcomeSource = @'
 using System;
 using System.Diagnostics;
-using System.Linq;
+using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Effects;
-using System.Windows.Threading;
+using System.Windows.Forms;
 
 [assembly: AssemblyTitle("Z LAG Opti Services")]
 [assembly: AssemblyProduct("Z LAG Optimization Services")]
 [assembly: AssemblyDescription("Native Z LAG post-boot Welcome host")]
 [assembly: AssemblyCompany("Z LAG Community")]
-[assembly: AssemblyVersion("5.12.0.0")]
+[assembly: AssemblyVersion("5.13.0.0")]
+[assembly: AssemblyFileVersion("5.13.0.0")]
 
 namespace ZLagOS
 {
-    public static class OptiServicesHost
+    internal sealed class WelcomeForm : Form
     {
-        private static SolidColorBrush Brush(string value)
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr CreateRoundRectRgn(int left, int top, int right, int bottom, int width, int height);
+
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr handle);
+
+        private readonly System.Windows.Forms.Timer animationTimer;
+        private int phase;
+        private int holdTicks;
+        private bool closing;
+
+        internal WelcomeForm()
         {
-            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
+            Text = "Z LAG Opti Services";
+            ClientSize = new Size(640, 290);
+            StartPosition = FormStartPosition.CenterScreen;
+            FormBorderStyle = FormBorderStyle.None;
+            ShowInTaskbar = false;
+            TopMost = true;
+            BackColor = Color.FromArgb(17, 17, 21);
+            Opacity = 0.0;
+            KeyPreview = true;
+            AutoScaleMode = AutoScaleMode.Dpi;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
+
+            AddLabel("WELCOME TO", 14f, FontStyle.Bold, Color.FromArgb(169, 163, 199), 28, 34);
+            AddLabel("Z LAG OS", 46f, FontStyle.Bold, Color.White, 72, 68);
+
+            var separator = new Panel
+            {
+                BackColor = Color.FromArgb(108, 92, 231),
+                Size = new Size(250, 2),
+                Location = new Point(195, 145)
+            };
+            Controls.Add(separator);
+
+            AddLabel("Welcome, " + Environment.UserName, 18f, FontStyle.Regular, Color.FromArgb(232, 230, 242), 170, 40);
+            AddLabel("ZERO LAG - MAX PERFORMANCE", 11f, FontStyle.Bold, Color.FromArgb(142, 136, 168), 228, 28);
+
+            KeyDown += delegate(object sender, KeyEventArgs args) { if (args.KeyCode == Keys.Escape) BeginClose(); };
+            MouseDown += delegate { BeginClose(); };
+            foreach (Control control in Controls) control.MouseDown += delegate { BeginClose(); };
+
+            animationTimer = new System.Windows.Forms.Timer { Interval = 25 };
+            animationTimer.Tick += Animate;
+            Shown += delegate
+            {
+                IntPtr regionHandle = CreateRoundRectRgn(0, 0, Width + 1, Height + 1, 26, 26);
+                Region = Region.FromHrgn(regionHandle);
+                DeleteObject(regionHandle);
+                animationTimer.Start();
+            };
+            Paint += delegate(object sender, PaintEventArgs args)
+            {
+                using (var pen = new Pen(Color.FromArgb(128, 91, 75, 222), 2f))
+                    args.Graphics.DrawRectangle(pen, 1, 1, ClientSize.Width - 3, ClientSize.Height - 3);
+            };
         }
 
-        private static TextBlock Text(string value, double size, string color, FontWeight weight)
+        private void AddLabel(string value, float size, FontStyle style, Color color, int top, int height)
         {
-            return new TextBlock
+            var label = new Label
             {
                 Text = value,
-                FontSize = size,
-                Foreground = Brush(color),
-                FontWeight = weight,
-                FontFamily = new FontFamily("Segoe UI"),
-                TextAlignment = TextAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center
+                ForeColor = color,
+                BackColor = Color.Transparent,
+                Font = new Font("Segoe UI", size, style, GraphicsUnit.Point),
+                TextAlign = ContentAlignment.MiddleCenter,
+                AutoSize = false,
+                Location = new Point(20, top),
+                Size = new Size(600, height)
             };
+            Controls.Add(label);
+        }
+
+        private void BeginClose()
+        {
+            if (closing) return;
+            closing = true;
+            phase = 2;
+        }
+
+        private void Animate(object sender, EventArgs args)
+        {
+            if (phase == 0)
+            {
+                Opacity = Math.Min(1.0, Opacity + 0.08);
+                if (Opacity >= 1.0) phase = 1;
+                return;
+            }
+            if (phase == 1)
+            {
+                holdTicks++;
+                if (holdTicks >= 200) phase = 2;
+                return;
+            }
+            Opacity = Math.Max(0.0, Opacity - 0.08);
+            if (Opacity <= 0.0)
+            {
+                animationTimer.Stop();
+                Close();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && animationTimer != null) animationTimer.Dispose();
+            base.Dispose(disposing);
+        }
+    }
+
+    public static class OptiServicesHost
+    {
+        private static bool ExplorerReady(int session)
+        {
+            foreach (Process process in Process.GetProcessesByName("explorer"))
+            {
+                try { if (process.SessionId == session) return true; }
+                catch { }
+                finally { process.Dispose(); }
+            }
+            return false;
         }
 
         [STAThread]
@@ -94,82 +195,17 @@ namespace ZLagOS
             using (var mutex = new Mutex(true, "Local\\ZLAGOptiServices_" + session, out created))
             {
                 if (!created) return;
-
-                DateTime deadline = DateTime.Now.AddSeconds(30);
-                bool desktopReady = false;
-                while (DateTime.Now < deadline)
+                try
                 {
-                    desktopReady = Process.GetProcessesByName("explorer").Any(p => p.SessionId == session);
-                    if (desktopReady) break;
-                    Thread.Sleep(250);
+                    DateTime deadline = DateTime.Now.AddSeconds(30);
+                    while (!ExplorerReady(session) && DateTime.Now < deadline) Thread.Sleep(250);
+                    if (!ExplorerReady(session)) return;
+                    Thread.Sleep(1400);
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    Application.Run(new WelcomeForm());
                 }
-                if (!desktopReady) return;
-                Thread.Sleep(1400);
-
-                var app = new Application { ShutdownMode = ShutdownMode.OnMainWindowClose };
-                var window = new Window
-                {
-                    Title = "Welcome to Z LAG OS",
-                    Width = 640,
-                    Height = 290,
-                    Opacity = 0,
-                    WindowStyle = WindowStyle.None,
-                    ResizeMode = ResizeMode.NoResize,
-                    ShowInTaskbar = false,
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                    Topmost = true,
-                    AllowsTransparency = true,
-                    Background = Brushes.Transparent
-                };
-
-                var border = new Border
-                {
-                    CornerRadius = new CornerRadius(18),
-                    Background = Brush("#F0111115"),
-                    BorderBrush = Brush("#805B4BDE"),
-                    BorderThickness = new Thickness(1.4),
-                    Padding = new Thickness(34),
-                    Effect = new DropShadowEffect { Color = (Color)ColorConverter.ConvertFromString("#AA6C5CE7"), BlurRadius = 28, ShadowDepth = 0, Opacity = 0.45 }
-                };
-                var grid = new Grid();
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-
-                var welcome = Text("WELCOME TO", 14, "#FFA9A3C7", FontWeights.SemiBold);
-                Grid.SetRow(welcome, 0); grid.Children.Add(welcome);
-                var title = Text("Z LAG OS", 46, "#FFFFFFFF", FontWeights.Bold);
-                title.Margin = new Thickness(0, 5, 0, 0); Grid.SetRow(title, 1); grid.Children.Add(title);
-                var line = new Border { Width = 250, Height = 2, CornerRadius = new CornerRadius(1), Margin = new Thickness(0, 15, 0, 15), Background = Brush("#FF6C5CE7"), HorizontalAlignment = HorizontalAlignment.Center };
-                Grid.SetRow(line, 2); grid.Children.Add(line);
-                var greeting = Text("Welcome, " + Environment.UserName, 18, "#FFE8E6F2", FontWeights.Normal);
-                Grid.SetRow(greeting, 3); grid.Children.Add(greeting);
-                var footer = Text("ZERO LAG - MAX PERFORMANCE", 11, "#FF8E88A8", FontWeights.SemiBold);
-                footer.Margin = new Thickness(0, 18, 0, 0); footer.VerticalAlignment = VerticalAlignment.Bottom;
-                Grid.SetRow(footer, 4); grid.Children.Add(footer);
-
-                border.Child = grid;
-                window.Content = border;
-                bool closing = false;
-                Action close = () =>
-                {
-                    if (closing) return;
-                    closing = true;
-                    var fade = new DoubleAnimation(window.Opacity, 0, TimeSpan.FromMilliseconds(550));
-                    fade.Completed += (s, e) => window.Close();
-                    window.BeginAnimation(Window.OpacityProperty, fade);
-                };
-                window.Loaded += (s, e) => window.BeginAnimation(Window.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(450)));
-                window.KeyDown += (s, e) => { if (e.Key == Key.Escape) close(); };
-                window.MouseLeftButtonDown += (s, e) => close();
-                var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
-                timer.Tick += (s, e) => { timer.Stop(); close(); };
-                window.Closed += (s, e) => timer.Stop();
-                timer.Start();
-                app.Run(window);
-                mutex.ReleaseMutex();
+                finally { mutex.ReleaseMutex(); }
             }
         }
     }
@@ -177,23 +213,38 @@ namespace ZLagOS
 '@
 
 try {
-    # Resolve full GAC paths first; bare WindowsBase.dll names are not reliably
-    # resolved by CodeDOM on Windows 10.
-    Add-Type -AssemblyName @('WindowsBase', 'PresentationCore', 'PresentationFramework', 'System.Xaml') -ErrorAction Stop
+    # WinForms is part of every supported Windows 10/11 .NET Framework image and
+    # avoids WPF/System.Xaml reference-resolution failures entirely.
+    Add-Type -AssemblyName @('System.Windows.Forms', 'System.Drawing') -ErrorAction Stop
     $references = @(
         [System.Diagnostics.Process].Assembly.Location,
-        [System.Linq.Enumerable].Assembly.Location,
-        [System.Xaml.XamlReader].Assembly.Location,
-        [System.Windows.Threading.Dispatcher].Assembly.Location,
-        [System.Windows.Media.Brush].Assembly.Location,
-        [System.Windows.Application].Assembly.Location
-    ) | Where-Object { $_ } | Select-Object -Unique
-    Add-Type -TypeDefinition $welcomeSource -Language CSharp -ReferencedAssemblies $references -OutputAssembly $tempExe -OutputType WindowsApplication -ErrorAction Stop
+        [System.Windows.Forms.Form].Assembly.Location,
+        [System.Drawing.Color].Assembly.Location
+    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -Unique
+    if ($references.Count -lt 3) { throw 'Required .NET Framework WinForms assemblies were not resolved.' }
+
+    Add-Type -TypeDefinition $welcomeSource -Language CSharp -ReferencedAssemblies $references -CompilerOptions '/optimize+ /platform:anycpu' -OutputAssembly $tempExe -OutputType WindowsApplication -IgnoreWarnings -ErrorAction Stop
+    if (-not (Test-Path -LiteralPath $tempExe -PathType Leaf)) { throw 'Compiler did not create the Welcome executable.' }
+    $bytes = [IO.File]::ReadAllBytes($tempExe)
+    if ($bytes.Length -lt 8192 -or $bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { throw 'Compiled Welcome executable failed PE validation.' }
+    $assembly = [Reflection.AssemblyName]::GetAssemblyName($tempExe)
+    $versionInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo($tempExe)
+    if ($assembly.Name -ne 'ZLAGOptiServices' -or $versionInfo.ProductName -ne 'Z LAG Optimization Services') { throw 'Compiled Welcome executable failed identity validation.' }
+
+    # Unlock the existing core only after a fully verified replacement exists.
+    & attrib.exe -h -s $coreRoot 2>$null
+    & takeown.exe /f $coreRoot /a /r /d y 2>$null | Out-Null
+    $currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $currentGrant = '*' + $currentSid + ':(OI)(CI)F'
+    & icacls.exe $coreRoot /inheritance:e /grant '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' $currentGrant /t /c /q 2>$null | Out-Null
+    Stop-Process -Name 'ZLAGOptiServices' -Force -ErrorAction SilentlyContinue
     Copy-Item -LiteralPath $tempExe -Destination $welcomeExe -Force -ErrorAction Stop
-    Remove-Item -LiteralPath $tempExe -Force -ErrorAction SilentlyContinue
+    Write-ZLagLog ('Compiled and verified native host: ' + $versionInfo.ProductName + ' v' + $versionInfo.FileVersion)
 } catch {
-    Write-ZLagLog ('ERROR: Could not compile native Welcome panel: ' + $_.Exception.Message)
+    Write-ZLagLog ('ERROR: Native Welcome host compilation failed: ' + $_.Exception.Message)
     exit 2
+} finally {
+    Remove-Item -LiteralPath $tempExe -Force -ErrorAction SilentlyContinue
 }
 
 # Remove every former scripted launcher/copy from both old locations.
