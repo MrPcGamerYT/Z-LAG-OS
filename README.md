@@ -66,7 +66,9 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 - **Persistent service/process floor**: Windows trigger-start and per-user service
   instances can return after the first logon and push a lean boot from under 50
   toward 60+ processes. A brief non-resident SYSTEM task now re-locks the floor
-  at boot, logon and every 15 minutes. It explicitly disables VSS/SwPrv, RPC
+  at boot, logon and every 15 minutes. It never waits for a pending service to
+  finish starting: each stop is capped at 1.5 seconds and the stop pass at 60
+  seconds, with startup disabled first. It explicitly disables VSS/SwPrv, RPC
   Locator (not core RPC), SNMP Trap, Virtual Disk, WMP Network Sharing,
   ssh-agent, MSDTC, Windows Backup and their safe per-user/background peers.
   The expanded floor also covers unused RDP, WSL/Hyper-V guest integration,
