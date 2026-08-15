@@ -153,4 +153,11 @@ Set-ItemProperty -Path $ZlagKey -Name "StoreRemoved" -Value 1 -Type DWord -Force
 Get-ChildItem -Path "$env:ProgramData\Microsoft\Windows\Start Menu\Programs" -Filter "*Store*" -Recurse -ErrorAction SilentlyContinue |
     Remove-Item -Force -ErrorAction SilentlyContinue
 
+# --- 7. Clear the Start Menu cache so the Store stops showing ghost tiles ---
+try {
+    & (Join-Path $PSScriptRoot "clear_start_menu_cache.ps1")
+} catch {
+    Write-Output "[Z-LAG] Start Menu cache clear failed (non-fatal)."
+}
+
 Write-Output "[Z-LAG] Microsoft Store & Microsoft services fully removed (shell AppX stack preserved for stability)."
