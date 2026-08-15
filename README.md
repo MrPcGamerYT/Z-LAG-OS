@@ -63,20 +63,15 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   The correct baseline is applied inside the floor task only when Bluetooth Keep
   is selected. There is no Bluetooth repair script or recurring Bluetooth task;
   only the explicit Bluetooth Disable option can turn the stack off.
-- **Protected Windows core storage**: persistent Z-LAG code moved out of
-  ProgramData/Program Files into hidden, ACL-protected
-  `C:\Windows\Z-LAG-OS\Core`. SYSTEM, Administrators and TrustedInstaller can
-  write it; Built-in Users, Authenticated Users and Interactive logons receive
-  read/execute access only. The files receive Medium integrity for the interactive
-  WScript/PowerShell host, and the installer validates read/execute permissions
-  before registering Startup. Hidden/System attributes only affect visibility.
-  ProgramData is now
-  limited to logs, markers and backups, and obsolete code copies are deleted.
-- **Reliable VBS Welcome launcher**: runtime C# compilation was removed. The
-  proven PowerShell panel is launched hidden through `Z LAG Services.vbs`, and
-  the Startup entry is clearly named **Z LAG Services**. `wscript.exe` exits
-  immediately; the hidden PowerShell panel host exists only for the five-second
-  Welcome display.
+- **Protected Windows core storage**: persistent Z-LAG code lives in hidden,
+  ACL-protected `C:\Windows\Z-LAG-OS\Core`; ProgramData contains logs, markers
+  and backups only. Obsolete script/launcher copies are removed automatically.
+- **Verified native Opti Services host**: the panel is compiled with the standard
+  .NET Framework WinForms/System.Drawing stack available on Windows 10/11—no
+  WPF, System.Xaml, VBS or PowerShell panel process. Before installation the host
+  must pass assembly-path, PE-header, assembly-name, product-name and version
+  checks, three isolated pre-install launch self-tests and one installed-file
+  self-test; there is no alternate compiler or launcher fallback.
 - **Welcome behavior corrected**: Windows-native `VerboseStatus` remains on the
   secure Welcome/Please wait screen only. After Explorer is ready, the native
   panel shows a static Welcome message and exits after five seconds—no process,
@@ -89,8 +84,8 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   visible Classic Sound Start Menu folder is removed.
 - **Targeted runtime correction**: AppX watchdog updates temporarily restore
   write access to an already locked Windows core folder and invoke the generated
-  CMD through `cmd.exe`. The failed native compiler path was removed completely
-  in favor of the previously working VBS/PowerShell Welcome panel.
+  CMD through `cmd.exe`. The Welcome host uses WinForms specifically to eliminate
+  the previously observed WPF/System.Xaml compiler failures.
 - **Stable sequential pipeline**: the task directory contains exactly 37 active
   tasks, numbered in the same `01` through `37` order used by `main.yml`.
 
@@ -344,7 +339,7 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
 
 **Q: Where are permanent Z-LAG files stored, and can the Welcome process be hidden from Task Manager?**
-A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes. SYSTEM, Administrators and TrustedInstaller can write; Users, Authenticated Users and Interactive logons have read/execute permission. ProgramData contains only logs/backups. The Startup entry is named **Z LAG Services**. The VBS launcher exits immediately, while Task Manager may briefly show `powershell.exe` during the five-second panel because Windows cannot safely rename or conceal that host process.
+A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes and protected ACLs. ProgramData contains only logs/backups. The Welcome host is the verified native `ZLAGOptiServices.exe`, visible in Task Manager for its five-second run. It is not concealed, and no VBS or PowerShell panel process is used.
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
