@@ -93,8 +93,7 @@ actions:
   - !status: {status: 'Configuring small auto-hide taskbar'}
   - !task: {path: 'Tasks\\27_smallTaskbar.yml'}
 
-  # The old standalone service-purge task is legacy/unwired; step 31 performs
-  # the consolidated guarded service and process-floor pass.
+  # Service purging is consolidated into the guarded process-floor pass below.
 
   # ===== LIMIT PUSH - FEATURE STRIPPER =====
   - !status: {status: 'Stripping unnecessary Windows features'}

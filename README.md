@@ -73,10 +73,9 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   processes and configured startup apps in real time. Windows does not allow
   ordinary apps to draw over the secure LogonUI desktop, so app names appear in
   the post-authentication overlay rather than being injected into LogonUI.
-- **Task filenames now match execution order**: active tasks are numbered
-  consecutively from `01_powerPlan.yml` through `37_deepClean.yml`, exactly as
-  referenced by `main.yml`. The two files not wired into the playbook are named
-  `legacy_*` so they cannot be mistaken for active numbered steps.
+- **Task filenames now match execution order**: the task directory contains only
+  the 37 active tasks, numbered consecutively from `01_powerPlan.yml` through
+  `37_deepClean.yml` exactly as referenced by `main.yml`.
 
 ## 🆕 What's New in v5.11
 
