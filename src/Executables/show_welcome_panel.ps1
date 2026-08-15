@@ -14,8 +14,8 @@ $mutex = [System.Threading.Mutex]::new($true, $mutexName, [ref]$createdNew)
 if (-not $createdNew) { exit 0 }
 
 try {
-    # HKLM Run can fire while Explorer is still being created. Do not show the
-    # custom panel until the actual user desktop exists; if it never appears,
+    # A logon trigger can fire while Explorer is still being created. Do not show
+    # the custom panel until the actual user desktop exists; if it never appears,
     # silently exit instead of presenting a misleading post-boot panel.
     $deadline = (Get-Date).AddSeconds(30)
     $desktopReady = $false

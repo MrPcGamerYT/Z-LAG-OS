@@ -4,7 +4,8 @@
 # Windows' supported VerboseStatus policy supplies loading text only while the
 # secure Welcome/Please wait screen is active. After Explorer has fully started,
 # a short custom Z LAG welcome panel appears with no process/app/service status.
-# A hidden WScript launcher prevents a PowerShell console from flashing at logon.
+# An interactive logon task invokes the protected VBS with wscript.exe, avoiding
+# a console flash while leaving the temporary script-host processes observable.
 # ==============================================================================
 
 $ErrorActionPreference = 'Continue'
@@ -52,7 +53,8 @@ $currentGrant = '*' + $currentSid + ':(OI)(CI)F'
 Copy-Item -LiteralPath $panelSource -Destination $panelDestination -Force -ErrorAction Stop
 
 # WScript starts Windows PowerShell with window style 0, so after boot the custom
-# panel is the only visible window - there is no console and no startup-status UI.
+# panel is the only window. Both script-host processes remain visible to normal
+# Windows administration while the panel runs.
 $escapedPanelPath = $panelDestination.Replace('"', '""')
 $launcher = @"
 Option Explicit
@@ -69,35 +71,121 @@ Set-Content -LiteralPath $launcherDestination -Value $launcher -Encoding Unicode
 & icacls.exe $installDir /setintegritylevel '(OI)(CI)M' /t /c /q 2>$null | Out-Null
 & attrib.exe +h +s $installDir 2>$null
 
-# Remove the previous live startup-status implementation and its permanent copy.
+# Remove every legacy Run/Startup entry. Scheduled Task is used so the panel is
+# not listed under Task Manager > Startup apps.
 $runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+$approvalKeys = @(
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run',
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run32'
+)
+$legacyValueNames = @('ZLAGStartupStatus', 'ZLAGWelcomePanel', 'Z LAG Services', 'Z LAG Opti Services')
 New-Item -Path $runKey -Force -ErrorAction SilentlyContinue | Out-Null
-Remove-ItemProperty -Path $runKey -Name 'ZLAGStartupStatus' -Force -ErrorAction SilentlyContinue
+foreach ($valueName in $legacyValueNames) {
+    Remove-ItemProperty -Path $runKey -Name $valueName -Force -ErrorAction SilentlyContinue
+    foreach ($approvalKey in $approvalKeys) {
+        Remove-ItemProperty -Path $approvalKey -Name $valueName -Force -ErrorAction SilentlyContinue
+    }
+}
+$remainingStartupValues = @()
+foreach ($startupKey in @($runKey) + $approvalKeys) {
+    if (-not (Test-Path -LiteralPath $startupKey)) { continue }
+    try {
+        $propertyNames = (Get-ItemProperty -LiteralPath $startupKey -ErrorAction Stop).PSObject.Properties.Name
+        foreach ($valueName in $legacyValueNames) {
+            if ($propertyNames -contains $valueName) { $remainingStartupValues += ($startupKey + '::' + $valueName) }
+        }
+    } catch {
+        Write-ZLagLog ('ERROR: Could not inspect legacy startup values in ' + $startupKey + ': ' + $_.Exception.Message)
+        exit 4
+    }
+}
+if ($remainingStartupValues.Count -gt 0) {
+    Write-ZLagLog ('ERROR: Legacy startup values remain: ' + ($remainingStartupValues -join ', '))
+    exit 4
+}
 Remove-Item -LiteralPath (Join-Path $installDir 'show_startup_status.ps1') -Force -ErrorAction SilentlyContinue
 foreach ($oldFile in @('show_startup_status.ps1', 'show_welcome_panel.ps1', 'launch_welcome_panel.vbs')) {
     Remove-Item -LiteralPath (Join-Path $dataDir $oldFile) -Force -ErrorAction SilentlyContinue
 }
 
-# Register the silent launcher after all startup-purge tasks have already run.
-$runCommand = '"' + (Join-Path $env:SystemRoot 'System32\wscript.exe') + '" "' + $launcherDestination + '"'
-New-ItemProperty -Path $runKey -Name 'ZLAGWelcomePanel' -Value $runCommand -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
-
-# Remove stale StartupApproved blocks for both the old and new value names.
-foreach ($approvalKey in @(
-    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run',
-    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run32'
-)) {
-    foreach ($valueName in @('ZLAGStartupStatus', 'ZLAGWelcomePanel')) {
-        Remove-ItemProperty -Path $approvalKey -Name $valueName -Force -ErrorAction SilentlyContinue
+function Get-ZLagInteractiveUserSid {
+    $accounts = @()
+    try {
+        $computerUser = (Get-CimInstance Win32_ComputerSystem -ErrorAction Stop).UserName
+        if ($computerUser) { $accounts += $computerUser }
+    } catch { }
+    Get-CimInstance Win32_Process -Filter "Name='explorer.exe'" -ErrorAction SilentlyContinue | ForEach-Object {
+        try {
+            $owner = Invoke-CimMethod -InputObject $_ -MethodName GetOwner -ErrorAction Stop
+            if ($owner.User) {
+                if ($owner.Domain) { $accounts += ($owner.Domain + '\' + $owner.User) }
+                else { $accounts += $owner.User }
+            }
+        } catch { }
     }
+    foreach ($account in ($accounts | Where-Object { $_ } | Select-Object -Unique)) {
+        try {
+            $sid = ([Security.Principal.NTAccount]$account).Translate([Security.Principal.SecurityIdentifier]).Value
+            # Accept classic local/domain identities and Microsoft Entra identities.
+            if ($sid -match '^S-1-(?:5-21|12-1)-') { return $sid }
+        } catch { }
+    }
+    return $null
+}
+
+$interactiveSid = Get-ZLagInteractiveUserSid
+if (-not $interactiveSid) {
+    Write-ZLagLog 'ERROR: No interactive user SID was found for the Welcome task.'
+    exit 5
+}
+
+$taskName = 'Z LAG Services - Welcome'
+Unregister-ScheduledTask -TaskName 'Custom Welcome Panel' -Confirm:$false -ErrorAction SilentlyContinue
+$wscriptPath = Join-Path $env:SystemRoot 'System32\wscript.exe'
+$xmlWscript = [Security.SecurityElement]::Escape($wscriptPath)
+$xmlLauncher = [Security.SecurityElement]::Escape($launcherDestination)
+$taskXml = @"
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>Z LAG post-boot Welcome panel</Description></RegistrationInfo>
+  <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>$interactiveSid</UserId><Delay>PT2S</Delay></LogonTrigger></Triggers>
+  <Principals><Principal id="Author"><UserId>$interactiveSid</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings><StopOnIdleEnd>false</StopOnIdleEnd><RestartOnIdle>false</RestartOnIdle></IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT1M</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="Author"><Exec><Command>$xmlWscript</Command><Arguments>&quot;$xmlLauncher&quot;</Arguments></Exec></Actions>
+</Task>
+"@
+try {
+    Register-ScheduledTask -TaskName $taskName -Xml $taskXml -Force -ErrorAction Stop | Out-Null
+} catch {
+    Write-ZLagLog ('ERROR: Could not register interactive Welcome task: ' + $_.Exception.Message)
+    exit 6
 }
 
 $marker = 'HKLM:\SOFTWARE\Z-LAG-OS'
 New-Item -Path $marker -Force -ErrorAction SilentlyContinue | Out-Null
 New-ItemProperty -Path $marker -Name 'VerboseBootStatus' -Value 1 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
 New-ItemProperty -Path $marker -Name 'PostBootWelcomePanel' -Value 1 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
+New-ItemProperty -Path $marker -Name 'WelcomeTaskName' -Value $taskName -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
+New-ItemProperty -Path $marker -Name 'WelcomeTaskUserSid' -Value $interactiveSid -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
 New-ItemProperty -Path $marker -Name 'BootWelcomeInstalledDate' -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
 Remove-ItemProperty -Path $marker -Name 'VerboseStartupStatus' -ErrorAction SilentlyContinue
 Remove-ItemProperty -Path $marker -Name 'StartupStatusInstalledDate' -ErrorAction SilentlyContinue
 
-Write-ZLagLog 'Native lock-screen loading status and post-boot Welcome-only panel configured.'
+Write-ZLagLog ('Scheduled interactive Welcome panel configured: ' + $taskName + ' for ' + $interactiveSid)

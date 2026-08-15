@@ -80,15 +80,44 @@ def validate_runtime_layout() -> None:
                 fail(f"{script} does not install/reference {name}")
 
 
+def validate_welcome_registration() -> None:
+    content = (EXECUTABLES / "configure_boot_welcome.ps1").read_text(encoding="utf-8-sig")
+    required = (
+        "Z LAG Services - Welcome",
+        "<LogonTrigger>",
+        "<LogonType>InteractiveToken</LogonType>",
+        "<RunLevel>LeastPrivilege</RunLevel>",
+        "System32\\wscript.exe",
+        "Register-ScheduledTask",
+    )
+    for value in required:
+        if value not in content:
+            fail(f"Welcome task registration is missing {value!r}")
+    if re.search(r"New-ItemProperty\s+-Path\s+\$runKey", content, re.I):
+        fail("Welcome panel must not be registered through a Registry Run value")
+
+    embedded = re.search(r'\$taskXml\s*=\s*@"\r?\n(.*?)\r?\n"@', content, re.S)
+    if not embedded:
+        fail("Welcome Task Scheduler XML was not found")
+    task_xml = (
+        embedded.group(1)
+        .replace("$interactiveSid", "S-1-5-21-1-2-3-1001")
+        .replace("$xmlWscript", r"C:\Windows\System32\wscript.exe")
+        .replace("$xmlLauncher", r"C:\Windows\Z-LAG-OS\launch_welcome_panel.vbs")
+    )
+    ET.fromstring(task_xml)
+
+
 def main() -> int:
     version = validate_metadata()
     validate_data_files()
     task_count = validate_tasks()
     executable_count = validate_executable_references()
     validate_runtime_layout()
+    validate_welcome_registration()
     print(
         f"PASS: Z LAG OS v{version}; {task_count} sequential tasks; "
-        f"{executable_count} executable references; XML/JSON/runtime layout valid"
+        f"{executable_count} executable references; XML/JSON/runtime/Welcome task valid"
     )
     return 0
 

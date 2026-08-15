@@ -51,6 +51,10 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 - Persistent Welcome, context-tool, process-floor and AppX watchdog files are
   stored together under hidden, ACL-protected `C:\Windows\Z-LAG-OS`, while
   ProgramData is retained for logs, backups and diagnostics only.
+- The Welcome panel now uses an interactive Task Scheduler logon trigger instead
+  of Registry Run/Startup folders, so it is absent from Task Manager Startup apps.
+  The task remains visible in Task Scheduler, and its temporary `wscript.exe` /
+  `powershell.exe` hosts remain observable through normal Windows administration.
 - Every PowerShell file now passes syntax parsing; all JSON/XML/YAML data and the
   exact 01–37 task-to-executable graph pass repository validation.
 - Restore-point, power-plan, AppX/Store, Toolbox, AppX watchdog, user-default
@@ -111,11 +115,12 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   recycle-bin cleanup, DNS flush, Explorer restart, classic Sound Manager and
   the classic Volume Mixer. The compact classic flyout is still selected on
   Windows builds that honor `EnableMtcUvc`.
-- **Native boot status + Welcome-only panel**: Windows' supported `VerboseStatus`
-  policy keeps loading text on the real secure **Welcome / Please wait** screen.
-  The old post-login process/app status list is removed. Once Explorer and the
-  desktop are ready, a hidden launcher shows one short branded **Z LAG OS**
-  Welcome panel with no boot, process, service, or startup-app status. Its footer
+- **Native boot status + scheduled Welcome-only panel**: Windows' supported
+  `VerboseStatus` policy keeps loading text on the secure **Welcome / Please wait**
+  screen. A per-user InteractiveToken logon task invokes the protected VBS with
+  `wscript.exe` after Explorer is ready, without creating a Task Manager
+  Startup-app entry. The panel shows no process, service, app or boot-status
+  feed. Its footer
   uses a plain ASCII hyphen (`ZERO LAG - MAX PERFORMANCE`) to prevent garbled
   symbols under Windows PowerShell's legacy script encoding.
 - **Publish-quality first-run hardening**: restore points re-enable VSS with a
@@ -357,7 +362,7 @@ A: All Microsoft *apps* (Store, Xbox, YourPhone, Bing, Office Hub, etc.) are uni
 A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinstall Microsoft's Evergreen WebView2 Runtime if that app does not ship its own fixed runtime.
 
 **Q: What appears during and after boot?**
-A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
+A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading and Explorer startup, the per-user `Z LAG Services - Welcome` scheduled task starts the five-second panel. It does not create a Registry Run/Startup-folder entry, so Task Manager Startup apps stays clean; `wscript.exe` and `powershell.exe` remain normally visible only while the panel runs.
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
@@ -391,9 +396,9 @@ python3 tests/validate_repo.py
 ```
 
 It checks playbook/version metadata, JSON/XML files, the exact 01–37 task order,
-all task-to-executable references, and persistent runtime destinations. Release
-review also parses every PowerShell file and checks batch structure and Git
-whitespace.
+all task-to-executable references, persistent runtime destinations, and the
+Welcome task's XML/interactive principal/no-Run-key contract. Release review also
+parses every PowerShell file and checks batch structure and Git whitespace.
 
 ---
 
