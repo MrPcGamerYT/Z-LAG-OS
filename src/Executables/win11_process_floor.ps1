@@ -41,8 +41,11 @@ $KeepServices = @(
     # Networking - Wi-Fi / Bluetooth / Ethernet / VPN / firewall (untouchable)
     "Dhcp","Dnscache","NlaSvc","nsi","Tcpip","NetBT","LanmanWorkstation","netprofm",
     "WcmSvc","WlanSvc","vwififlt","vwifibus","vwifimp","bthserv","BTAGService",
-    "bthpriv","BluetoothUserService","RasMan","RasAuto","RemoteAccess","SstpSvc",
-    "IKEEXT","BFE","MpsSvc","EapHost","dot3svc","WwanSvc","RmSvc","PolicyAgent",
+    "bthpriv","BluetoothUserService","BthAvctpSvc","bthHFSrv","RasMan","RasAuto",
+    "RemoteAccess","SstpSvc","IKEEXT","BFE","MpsSvc","EapHost","dot3svc",
+    "WwanSvc","RmSvc","PolicyAgent","CDPSvc","CDPUserSvc","NcbService",
+    "DeviceAssociationService","DeviceAssociationBrokerSvc","DevicePickerUserSvc",
+    "DevicesFlowUserSvc","DeviceInstall","DsmSvc",
 
     # Security / logon / user
     "WinDefend","WdNisSvc","SecurityHealthService","SamSs","ProfSvc","UserManager",
@@ -90,7 +93,7 @@ $Win11Disable = @(
 $Win11PerUser = @(
     "OneSyncSvc_","UnistoreSvc_","PimIndexMaintenanceSvc_","UserDataSvc_",
     "BcastDVRUserService_","MessagingService_","CaptureService_",
-    "CDPUserSvc_","WpnUserService_","AarSvc_","cbdhsvc_","UdkUserSvc_",
+    "WpnUserService_","AarSvc_","cbdhsvc_","UdkUserSvc_",
     "CloudBackupRestoreSvc_","PrintWorkflowUserSvc_"
 )
 

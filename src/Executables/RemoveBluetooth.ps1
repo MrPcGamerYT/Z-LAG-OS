@@ -4,6 +4,11 @@
 
 Write-Output "[Z-LAG] Disabling Bluetooth services and devices for zero background footprint..."
 
+# Remove the keep-mode self-repair so a later reboot cannot re-enable Bluetooth.
+Unregister-ScheduledTask -TaskName 'ZLAG-RepairBluetooth' -Confirm:$false -ErrorAction SilentlyContinue
+Remove-Item "$env:ProgramData\Z-LAG-OS\repair_bluetooth.ps1" -Force -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Z-LAG-OS' -Name 'BluetoothKeepRepaired' -ErrorAction SilentlyContinue
+
 # 1. Stop and Disable Bluetooth Services
 $BthServices = @("bthserv", "BTAGService", "bthpriv", "BluetoothUserService")
 

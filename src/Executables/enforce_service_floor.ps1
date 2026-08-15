@@ -53,11 +53,11 @@ $targetServices = @(
 
     # Cloud/content/Xbox/phone and safe per-user service templates.
     'OneSyncSvc', 'UserDataSvc', 'UnistoreSvc', 'PimIndexMaintenanceSvc',
-    'MessagingService', 'BcastDVRUserService', 'CaptureService', 'CDPSvc',
-    'CDPUserSvc', 'CloudBackupRestoreSvc', 'AarSvc', 'cbdhsvc', 'WpnService',
+    'MessagingService', 'BcastDVRUserService', 'CaptureService',
+    'CloudBackupRestoreSvc', 'AarSvc', 'cbdhsvc', 'WpnService',
     'WpnUserService', 'UdkUserSvc', 'shpamsvc', 'Ndu', 'DusmSvc',
     'NcdAutoSetup', 'wcncsvc', 'NPSMSvc', 'MapsBroker', 'PhoneSvc',
-    'WalletService', 'NaturalAuthentication', 'lfsvc', 'dcsvc', 'NcbService',
+    'WalletService', 'NaturalAuthentication', 'lfsvc', 'dcsvc',
     'spectrum', 'svsvc', 'XblAuthManager', 'XblGameSave', 'XboxNetApiSvc',
     'XboxGipSvc',
 
@@ -95,8 +95,11 @@ $hardKeep = @(
     'SystemEventsBroker', 'ProfSvc', 'UserManager', 'SamSs', 'gpsvc', 'SENS',
     'Winmgmt', 'msiserver', 'TrustedInstaller', 'CryptSvc', 'KeyIso', 'VaultSvc',
     'Dhcp', 'Dnscache', 'NlaSvc', 'nsi', 'Tcpip', 'NetBT', 'LanmanWorkstation',
-    'netprofm', 'WcmSvc', 'WlanSvc', 'bthserv', 'BTAGService', 'BFE', 'MpsSvc',
-    'EapHost', 'RasMan', 'IKEEXT', 'PolicyAgent',
+    'netprofm', 'WcmSvc', 'WlanSvc', 'bthserv', 'BTAGService', 'bthpriv',
+    'BluetoothUserService', 'BthAvctpSvc', 'bthHFSrv', 'RmSvc', 'BFE', 'MpsSvc',
+    'EapHost', 'RasMan', 'IKEEXT', 'PolicyAgent', 'CDPSvc', 'CDPUserSvc',
+    'NcbService', 'DeviceAssociationService', 'DeviceAssociationBrokerSvc',
+    'DevicePickerUserSvc', 'DevicesFlowUserSvc', 'DeviceInstall', 'DsmSvc',
     'AppXSvc', 'AppReadiness', 'ClipSVC', 'LicenseManager', 'StateRepository',
     'camsvc', 'wlidsvc', 'TokenBroker', 'Audiosrv', 'AudioEndpointBuilder'
 )

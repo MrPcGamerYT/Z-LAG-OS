@@ -73,6 +73,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
   and removes their trigger-start metadata. Core RPC, networking, audio, logon,
   security and AppX launch services remain hard-protected. Final counts still vary with hardware and third-party drivers.
+- **Bluetooth Keep pairing repaired**: the low service floor no longer disables
+  CDPSvc, CDPUserSvc or NcbService. A keep-mode repair restores the full radio,
+  Add Device and per-user pairing chain, re-enables disabled Bluetooth PnP
+  devices, and rechecks at boot/logon. Bluetooth Disable remains gated by its
+  original option.
 - **Z LAG TOOLBOX context menu**: the visible Classic Sound Start Menu folder,
   standalone submenu and old `00_ZLAG.Tools`/`00_ZLAG.TOOLBOX` keys are removed.
   A single first-position **Z LAG TOOLBOX** submenu with only clean spaced labels
@@ -324,6 +329,9 @@ A: During secure Windows loading, native `VerboseStatus` text appears below Welc
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
+
+**Q: Bluetooth Keep is selected but Add Device says "Couldn't connect"?**
+A: This was caused by the aggressive floor disabling pairing dependencies even though the Bluetooth radio services were protected. The late keep-mode repair now restores `bthserv`, `BluetoothUserService`, `CDPSvc`, `CDPUserSvc`, `NcbService`, Device Association services and disabled Bluetooth PnP devices. If the repair log reports zero Bluetooth devices, install the OEM Bluetooth driver because that indicates a driver, BIOS or hardware issue.
 
 **Q: Why did the process count rise again after the first boot?**
 A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `ZLAG-EnforceServiceFloor` now runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.
