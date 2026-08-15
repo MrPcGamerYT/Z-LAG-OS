@@ -1,41 +1,52 @@
 title: Disabling services
+description: Disables resource-hogging background services using AME's native service action (reversible). A backup of the current service configuration is exported first.
+privilege: TrustedInstaller
+onUpgrade: false
 actions:
-  - !powerShell: {command: 'Stop-Service DiagTrack -Force -ErrorAction SilentlyContinue; Set-Service DiagTrack -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service dmwappushservice -Force -ErrorAction SilentlyContinue; Set-Service dmwappushservice -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service WerSvc -Force -ErrorAction SilentlyContinue; Set-Service WerSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service PcaSvc -Force -ErrorAction SilentlyContinue; Set-Service PcaSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service SysMain -Force -ErrorAction SilentlyContinue; Set-Service SysMain -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service WSearch -Force -ErrorAction SilentlyContinue; Set-Service WSearch -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service WbioSrvc -Force -ErrorAction SilentlyContinue; Set-Service WbioSrvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service MapsBroker -Force -ErrorAction SilentlyContinue; Set-Service MapsBroker -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service Fax -Force -ErrorAction SilentlyContinue; Set-Service Fax -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service XblAuthManager -Force -ErrorAction SilentlyContinue; Set-Service XblAuthManager -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service XblGameSave -Force -ErrorAction SilentlyContinue; Set-Service XblGameSave -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service XboxNetApiSvc -Force -ErrorAction SilentlyContinue; Set-Service XboxNetApiSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service RetailDemo -Force -ErrorAction SilentlyContinue; Set-Service RetailDemo -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service RemoteRegistry -Force -ErrorAction SilentlyContinue; Set-Service RemoteRegistry -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service UsoSvc -Force -ErrorAction SilentlyContinue; Set-Service UsoSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service BDESVC -Force -ErrorAction SilentlyContinue; Set-Service BDESVC -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service iphlpsvc -Force -ErrorAction SilentlyContinue; Set-Service iphlpsvc -StartupType Manual -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service ShellHWDetection -Force -ErrorAction SilentlyContinue; Set-Service ShellHWDetection -StartupType Manual -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service CDPSvc -Force -ErrorAction SilentlyContinue; Set-Service CDPSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service PhoneSvc -Force -ErrorAction SilentlyContinue; Set-Service PhoneSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service Spooler -Force -ErrorAction SilentlyContinue; Set-Service Spooler -StartupType Manual -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service TrkWks -Force -ErrorAction SilentlyContinue; Set-Service TrkWks -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service TabletInputService -Force -ErrorAction SilentlyContinue; Set-Service TabletInputService -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service StiSvc -Force -ErrorAction SilentlyContinue; Set-Service StiSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service wisvc -Force -ErrorAction SilentlyContinue; Set-Service wisvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service SensorDataService -Force -ErrorAction SilentlyContinue; Set-Service SensorDataService -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service SensorService -Force -ErrorAction SilentlyContinue; Set-Service SensorService -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service SensrSvc -Force -ErrorAction SilentlyContinue; Set-Service SensrSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service WpnService -Force -ErrorAction SilentlyContinue; Set-Service WpnService -StartupType Manual -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service BcastDVRUserService -Force -ErrorAction SilentlyContinue; Set-Service BcastDVRUserService -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service OneSyncSvc -Force -ErrorAction SilentlyContinue; Set-Service OneSyncSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service UserDataSvc -Force -ErrorAction SilentlyContinue; Set-Service UserDataSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service UnistoreSvc -Force -ErrorAction SilentlyContinue; Set-Service UnistoreSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service PimIndexMaintenanceSvc -Force -ErrorAction SilentlyContinue; Set-Service PimIndexMaintenanceSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service MessagingService -Force -ErrorAction SilentlyContinue; Set-Service MessagingService -StartupType Disabled -ErrorAction SilentlyContinue'}
-  # wlidsvc (Microsoft Account Sign-in Assistant) MUST stay available.
-  # Disabling it makes sideloaded apps fail with "The service has not been started".
-  - !powerShell: {command: 'Stop-Service wuauserv -Force -ErrorAction SilentlyContinue; Set-Service wuauserv -StartupType Disabled -ErrorAction SilentlyContinue'}
-  - !powerShell: {command: 'Stop-Service WaaSMedicSvc -Force -ErrorAction SilentlyContinue; Set-Service WaaSMedicSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  # Back up current service configuration so the change can be reverted.
+  - !writeStatus: {status: "Backing up current service configuration..."}
+  - !powerShell: {command: 'New-Item -ItemType Directory -Force "$env:ProgramData\Z-LAG-OS" -ErrorAction SilentlyContinue | Out-Null; reg export "HKLM\SYSTEM\CurrentControlSet\Services" "$env:ProgramData\Z-LAG-OS\services_backup.reg" /y'}
+
+  # NOTE: wlidsvc (Microsoft Account Sign-in Assistant) is intentionally NOT
+  # touched - disabling it makes sideloaded apps fail with "The service has not
+  # been started".
+
+  # startup: 4 = Disabled, 3 = Manual (available on demand, 0 at idle)
+  - !service: {name: 'DiagTrack', operation: change, startup: 4}
+  - !service: {name: 'dmwappushservice', operation: change, startup: 4}
+  - !service: {name: 'WerSvc', operation: change, startup: 4}
+  - !service: {name: 'PcaSvc', operation: change, startup: 4}
+  - !service: {name: 'SysMain', operation: change, startup: 4}
+  - !service: {name: 'WSearch', operation: change, startup: 4}
+  - !service: {name: 'WbioSrvc', operation: change, startup: 4}
+  - !service: {name: 'MapsBroker', operation: change, startup: 4}
+  - !service: {name: 'Fax', operation: change, startup: 4}
+  - !service: {name: 'XblAuthManager', operation: change, startup: 4}
+  - !service: {name: 'XblGameSave', operation: change, startup: 4}
+  - !service: {name: 'XboxNetApiSvc', operation: change, startup: 4}
+  - !service: {name: 'XboxGipSvc', operation: change, startup: 4}
+  - !service: {name: 'RetailDemo', operation: change, startup: 4}
+  - !service: {name: 'RemoteRegistry', operation: change, startup: 4}
+  - !service: {name: 'UsoSvc', operation: change, startup: 4}
+  - !service: {name: 'BDESVC', operation: change, startup: 4}
+  - !service: {name: 'iphlpsvc', operation: change, startup: 3}
+  - !service: {name: 'ShellHWDetection', operation: change, startup: 3}
+  - !service: {name: 'CDPSvc', operation: change, startup: 4}
+  - !service: {name: 'PhoneSvc', operation: change, startup: 4}
+  - !service: {name: 'Spooler', operation: change, startup: 3}
+  - !service: {name: 'TrkWks', operation: change, startup: 4}
+  - !service: {name: 'TabletInputService', operation: change, startup: 4}
+  - !service: {name: 'StiSvc', operation: change, startup: 4}
+  - !service: {name: 'wisvc', operation: change, startup: 4}
+  - !service: {name: 'SensorDataService', operation: change, startup: 4}
+  - !service: {name: 'SensorService', operation: change, startup: 4}
+  - !service: {name: 'SensrSvc', operation: change, startup: 4}
+  - !service: {name: 'WpnService', operation: change, startup: 3}
+  - !service: {name: 'BcastDVRUserService', operation: change, startup: 4}
+  - !service: {name: 'OneSyncSvc', operation: change, startup: 4}
+  - !service: {name: 'UserDataSvc', operation: change, startup: 4}
+  - !service: {name: 'UnistoreSvc', operation: change, startup: 4}
+  - !service: {name: 'PimIndexMaintenanceSvc', operation: change, startup: 4}
+  - !service: {name: 'MessagingService', operation: change, startup: 4}
+  - !service: {name: 'wuauserv', operation: change, startup: 4}
+  - !service: {name: 'WaaSMedicSvc', operation: change, startup: 4}

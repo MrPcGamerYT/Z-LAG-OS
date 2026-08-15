@@ -4,6 +4,6 @@ actions:
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection', value: 'DoNotShowFeedbackNotifications', type: REG_DWORD, data: '1'}
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications', value: 'DisableNotifications', type: REG_DWORD, data: '1'}
   - !registryValue: {path: 'HKLM\Software\Policies\Microsoft\Windows\Explorer', value: 'DisableNotificationCenter', type: REG_DWORD, data: '1'}
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\PushNotifications', value: 'ToastEnabled', type: REG_DWORD, data: '0', runas: currentUserElevated}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\PushNotifications', value: 'ToastEnabled', type: REG_DWORD, data: '0'}
   - !cmd: {command: 'gpupdate /force'}
   - !powerShell: {command: 'Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue; Start-Process explorer', runas: currentUserElevated}

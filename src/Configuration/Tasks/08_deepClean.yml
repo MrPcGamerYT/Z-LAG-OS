@@ -1,11 +1,11 @@
 title: Deep system clean (temp files, event logs, OneDrive)
 actions:
-  - !taskKill: {name: 'OneDrive'}
-  - !taskKill: {name: 'Cortana'}
-  - !taskKill: {name: 'SearchUI'}
-  - !taskKill: {name: 'GameBar'}
-  - !taskKill: {name: 'XboxApp'}
-  - !taskKill: {name: 'YourPhone'}
+  - !taskKill: {name: 'OneDrive', ignoreErrors: true}
+  - !taskKill: {name: 'Cortana', ignoreErrors: true}
+  - !taskKill: {name: 'SearchUI', ignoreErrors: true}
+  - !taskKill: {name: 'GameBar', ignoreErrors: true}
+  - !taskKill: {name: 'XboxApp', ignoreErrors: true}
+  - !taskKill: {name: 'YourPhone', ignoreErrors: true}
 
   # Uninstall OneDrive
   - !cmd: {command: 'if exist "%SystemRoot%\SysWOW64\OneDriveSetup.exe" start /wait %SystemRoot%\SysWOW64\OneDriveSetup.exe /uninstall'}
@@ -25,10 +25,10 @@ actions:
         }
 
   # UI performance tweaks
-  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'DragFullWindows', type: REG_SZ, data: '0', runas: currentUserElevated}
-  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'FontSmoothing', type: REG_SZ, data: '2', runas: currentUserElevated}
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0', runas: currentUserElevated}
-  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'EnableTransparency', type: REG_DWORD, data: '0', runas: currentUserElevated}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'DragFullWindows', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'FontSmoothing', type: REG_SZ, data: '2'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'EnableTransparency', type: REG_DWORD, data: '0'}
 
     # Clean temp files and prefetch.
     # CRITICAL: never use 'del %TEMP%\*' - AME runs the playbook FROM

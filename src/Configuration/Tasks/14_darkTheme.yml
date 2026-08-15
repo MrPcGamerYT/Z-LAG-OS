@@ -11,14 +11,12 @@ actions:
       value: 'AppsUseLightTheme'
       data: '0'
       type: REG_DWORD
-      runas: currentUserElevated
 
   - !registryValue:
       path: 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize'
       value: 'SystemUsesLightTheme'
       data: '0'
       type: REG_DWORD
-      runas: currentUserElevated
 
   # Also bake dark mode into the Default User template for future accounts.
   - !registryValue:

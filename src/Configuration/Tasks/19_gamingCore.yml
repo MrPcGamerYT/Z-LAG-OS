@@ -56,14 +56,12 @@ actions:
       value: 'GameDVR_DXGIHonorFSEWindowsCompatible'
       type: REG_DWORD
       data: 1
-      runas: currentUserElevated
 
   - !registryValue:
       path: 'HKCU\System\GameConfigStore'
       value: 'GameDVR_HonorUserFSEBehaviorMode'
       type: REG_DWORD
       data: 1
-      runas: currentUserElevated
 
   # =========================
   # INPUT LATENCY REDUCTION
@@ -74,14 +72,12 @@ actions:
       value: 'MouseHoverTime'
       type: REG_SZ
       data: '0'
-      runas: currentUserElevated
 
   - !registryValue:
       path: 'HKCU\Control Panel\Keyboard'
       value: 'KeyboardDelay'
       type: REG_SZ
       data: '0'
-      runas: currentUserElevated
 
   # =========================
   # POWER OPTIMIZATION (REAL IMPACT)
