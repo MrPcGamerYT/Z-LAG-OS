@@ -86,6 +86,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   write access to an already locked Windows core folder and invoke the generated
   CMD through `cmd.exe`. The Welcome host uses WinForms specifically to eliminate
   the previously observed WPF/System.Xaml compiler failures.
+- **Aggressive previous-core reset**: before other tasks run, old Z-LAG
+  processes and scheduled tasks are stopped, Startup entries are removed, ACLs
+  are reclaimed, and former `C:\Windows\Z-LAG-OS` / Program Files executable
+  trees are deleted. ProgramData logs and backups are retained while obsolete
+  executable copies are purged; the current build then recreates a clean core.
 - **Stable sequential pipeline**: the task directory contains exactly 37 active
   tasks, numbered in the same `01` through `37` order used by `main.yml`.
 
