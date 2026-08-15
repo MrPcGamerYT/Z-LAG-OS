@@ -1,0 +1,10 @@
+title: "Small Auto-Hide Taskbar (Universal Win10 + Win11)"
+description: "Version-aware taskbar optimization. On Windows 10: small icons, auto-hide, hidden search/task view/badges. On Windows 11: left-aligned, small taskbar, hidden search/Copilot/task view/badges, auto-hide."
+actions:
+  - !writeStatus: {status: "Configuring small auto-hide taskbar (version-aware)..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\set_small_taskbar.ps1'
+      runas: currentUserElevated
+  - !writeStatus: {status: "Taskbar configured for this Windows version."}
