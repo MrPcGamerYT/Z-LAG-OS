@@ -7,8 +7,8 @@
 #  to demand-only, so they can never spawn processes mid-game.
 #
 #  STILL NEVER TOUCHED: Windows core (no crash / no boot break), Wi-Fi /
-#  Bluetooth / Ethernet, the app-launch stack (so Z-LAG Toolbox apps and the
-#  Start Menu never silently crash), and WebView2.
+#  Bluetooth / Ethernet and the app-launch stack (so Z-LAG Toolbox apps and the
+#  Start Menu never silently crash). Edge/WebView2 are intentionally not protected.
 #
 #  SAFETY: everything below is gated behind a hard "KEEP" list. A service that
 #  matches the keep list (or a GPU/audio vendor) is NEVER stopped or disabled,
@@ -20,7 +20,7 @@
 #      vwifibus, vwifimp, bthserv, BTAGService, bthpriv, BluetoothUserService,
 #      RasMan, RasAuto, RemoteAccess, SstpSvc, IKEEXT, BFE, MpsSvc, EapHost,
 #      dot3svc, WwanSvc, RmSvc, PolicyAgent
-#    * Shell / AppX / WebView2 host: AppXSvc, AppReadiness, ClipSVC,
+#    * Shell / AppX host: AppXSvc, AppReadiness, ClipSVC,
 #      LicenseManager, StateRepository, SystemEventsBroker, CoreMessagingRegistrar,
 #      Themes, camsvc (+ wlidsvc/TokenBroker left to the Store option)
 #    * Audio + display: Audiosrv, AudioEndpointBuilder + NVIDIA/AMD/Intel/GPU
@@ -67,7 +67,7 @@ $KeepServices = @(
     "RpcSs","RpcEptMapper","DcomLaunch","Power","PlugPlay","Schedule","EventLog",
     "EventSystem","BrokerInfrastructure","CoreMessagingRegistrar",
     "SystemEventsBroker","Themes","StorSvc","W32Time","CryptSvc",
-    # Shell / AppX / WebView2 host (untouchable -> no silent app crashes)
+    # Shell / AppX host (untouchable -> no silent app crashes)
     "AppXSvc","AppReadiness","ClipSVC","LicenseManager","StateRepository",
     "camsvc","wlidsvc","TokenBroker",
     # Audio (untouchable)
@@ -134,7 +134,7 @@ $Disable = @(
     # entirely (System Restore / VSS, notifications, network discovery, file
     # sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history, Security Center).
     # These can never spawn a process mid-game now. Core networking, the
-    # AppX/WebView2 stack and boot/system services remain untouched.
+    # AppX shell stack and boot/system services remain untouched.
     "VSS","SwPrv","WpnService","WpnUserService","LanmanServer","SharedAccess",
     "SSDPSRV","upnphost","fdPHost","FDResPub","lltdsvc","WebClient","MSiSCSI",
     "cbdhsvc","wscsvc","Browser","perceptionsimulation","ssh-agent","sshd",
@@ -228,10 +228,9 @@ foreach ($key in $runKeys) {
 }
 Log "Startup Run entries cleared."
 
-# --- 7. Kill resident bloat processes (safe - WebView2 uses msedgewebview2.exe,
-#        not msedge.exe, so WebView2-based apps are untouched) ---
+# --- 7. Kill resident bloat processes, including any surviving WebView2 host ---
 $Ghost = @(
-    "OneDrive","Teams","msedge","MicrosoftEdgeUpdate","WidgetService","SearchHost",
+    "OneDrive","Teams","msedge","msedgewebview2","Win32WebViewHost","MicrosoftEdgeUpdate","WidgetService","SearchHost",
     "YourPhone","SkypeBackgroundHost","GameBarPresenceWriter","GameBar","XboxApp",
     "CrossDevice","SecurityHealthSystray","PhoneExperienceHost","Widgets",
     "GameBarFTServer"
@@ -269,4 +268,4 @@ try {
 #        TrustedInstaller session and leave the user without a desktop.
 Log "ULTRA idle process + RAM floor applied. Reboot for full effect."
 Log "Disabled: VSS/System Restore, notifications, discovery, file sharing, hotspot."
-Log "Protected: Windows core, Wi-Fi / Bluetooth / Ethernet, AppX shell + app launching, WebView2."
+Log "Protected: Windows core, Wi-Fi / Bluetooth / Ethernet and AppX shell + app launching. Edge/WebView2 are removed."

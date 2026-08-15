@@ -1,5 +1,5 @@
 title: Windows 11 Extra Process Floor - ULTRA (brings idle count near Win10 levels)
-description: Windows 11-only ULTRA pass. Disables Win11-only services (AI/Copilot/Recall runtime, data-usage, notifications, clipboard history, per-user bloat), removes Win11-only apps, kills AI/Widgets processes and locks down Copilot/Recall/Chat/Suggestions via policy. WebView2, networking and the AppX shell runtime remain untouched.
+description: Windows 11-only ULTRA pass. Disables Win11-only services (AI/Copilot/Recall runtime, data-usage, notifications, clipboard history, per-user bloat), removes Win11-only apps, kills AI/Widgets processes and locks down Copilot/Recall/Chat/Suggestions via policy. Networking and the AppX shell runtime remain untouched; Edge/WebView2 receive no protection and are removed.
 actions:
   - !writeStatus: {status: "Applying Windows 11 ULTRA extra process floor (AI components + Win11-only services)..."}
   - !powerShell:

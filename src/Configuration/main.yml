@@ -12,78 +12,78 @@ actions:
 
   # ===== OPTIONAL MICROSOFT STORE & SERVICES REMOVAL =====
   - !status: {status: 'Removing Microsoft Store & Microsoft Services...', option: 'store-disable'}
-  - !task: {path: 'Tasks\\32_RemoveStoreServices.yml', option: 'store-disable'}
+  - !task: {path: 'Tasks\\04_RemoveStoreServices.yml', option: 'store-disable'}
 
   # ===== Z-LAG TOOLBOX (official Store replacement + tweaks) =====
   - !status: {status: 'Installing Z-LAG Toolbox...'}
-  - !task: {path: 'Tasks\\33_zlagtoolbox.yml'}
+  - !task: {path: 'Tasks\\05_zlagtoolbox.yml'}
 
   # ===== OPTIONAL DEFENDER REMOVAL =====
   - !status: {status: 'Disabling Windows Defender...', option: 'defender-disable'}
-  - !task: {path: 'Tasks\\18_defenderAggressive.yml', option: 'defender-disable'}
+  - !task: {path: 'Tasks\\06_defenderAggressive.yml', option: 'defender-disable'}
 
   # ===== OPTIONAL BLUETOOTH REMOVAL =====
   - !status: {status: 'Disabling Bluetooth services...', option: 'bluetooth-disable'}
-  - !task: {path: 'Tasks\\31_RemoveBluetooth.yml', option: 'bluetooth-disable'}
+  - !task: {path: 'Tasks\\07_RemoveBluetooth.yml', option: 'bluetooth-disable'}
 
   # ===== OPTIONAL WI-FI REMOVAL =====
   - !status: {status: 'Disabling Wi-Fi services...', option: 'wifi-disable'}
-  - !task: {path: 'Tasks\\30_RemoveWiFi.yml', option: 'wifi-disable'}
+  - !task: {path: 'Tasks\\08_RemoveWiFi.yml', option: 'wifi-disable'}
 
   - !status: {status: 'Disabling resource-hogging services'}
-  - !task: {path: 'Tasks\\04_services.yml'}
+  - !task: {path: 'Tasks\\09_services.yml'}
 
   - !status: {status: 'Disabling telemetry scheduled tasks'}
-  - !task: {path: 'Tasks\\05_scheduledTasks.yml'}
+  - !task: {path: 'Tasks\\10_scheduledTasks.yml'}
 
   - !status: {status: 'Blocking Microsoft telemetry hosts'}
-  - !task: {path: 'Tasks\\06_telemetryHosts.yml'}
+  - !task: {path: 'Tasks\\11_telemetryHosts.yml'}
 
   - !status: {status: 'Blocking Windows Update'}
-  - !task: {path: 'Tasks\\07_blockUpdates.yml'}
+  - !task: {path: 'Tasks\\12_blockUpdates.yml'}
 
   - !status: {status: 'Removing Windows built-in features'}
-  - !task: {path: 'Tasks\\09_removeFeatures.yml'}
+  - !task: {path: 'Tasks\\13_removeFeatures.yml'}
 
   - !status: {status: 'Disabling notifications'}
-  - !task: {path: 'Tasks\\10_notifications.yml'}
+  - !task: {path: 'Tasks\\14_notifications.yml'}
 
   - !status: {status: 'Changing computer name'}
-  - !task: {path: 'Tasks\\11_computerName.yml'}
+  - !task: {path: 'Tasks\\15_computerName.yml'}
 
   - !status: {status: 'Blocking Microsoft account sign-in'}
-  - !task: {path: 'Tasks\\12_removeMSAccount.yml'}
+  - !task: {path: 'Tasks\\16_removeMSAccount.yml'}
 
   - !status: {status: 'Setting Z LAG wallpaper'}
-  - !task: {path: 'Tasks\\13_wallpaper.yml'}
+  - !task: {path: 'Tasks\\17_wallpaper.yml'}
 
   - !status: {status: 'Enabling dark theme'}
-  - !task: {path: 'Tasks\\14_darkTheme.yml'}
+  - !task: {path: 'Tasks\\18_darkTheme.yml'}
 
-  - !status: {status: 'Removing Microsoft Edge'}
-  - !task: {path: 'Tasks\\15_edgeRemoval.yml'}
+  - !status: {status: 'Removing Microsoft Edge and WebView2 (verified setup pass)'}
+  - !task: {path: 'Tasks\\19_edgeRemoval.yml'}
 
   # FIX 1: Secure build check restriction enforced safely on BOTH lines
   - !status: {status: 'Windows 11 specific optimizations', builds: ['>=22000']}
-  - !task: {path: 'Tasks\\16_win11specific.yml', builds: ['>=22000']}
+  - !task: {path: 'Tasks\\20_win11specific.yml', builds: ['>=22000']}
 
   - !status: {status: 'Applying modded OS tweaks'}
-  - !task: {path: 'Tasks\\17_moddedOSTweaks.yml'}
+  - !task: {path: 'Tasks\\21_moddedOSTweaks.yml'}
 
   # ===== ADVANCED PERFORMANCE TWEAKS (BEYOND ATLAS) =====
   - !status: {status: 'Applying advanced performance tweaks'}
-  - !task: {path: 'Tasks\\20_advancedPerf.yml'}
+  - !task: {path: 'Tasks\\22_advancedPerf.yml'}
   
   - !status: {status: 'Setting CPU priority for popular games'}
-  - !task: {path: 'Tasks\\21_cpuPriority.yml'}
+  - !task: {path: 'Tasks\\23_cpuPriority.yml'}
 
   # Extreme network latency reduction (competitive gaming)
   - !status: {status: 'Applying extreme network latency reduction'}
-  - !task: {path: 'Tasks\\22_networkLatency.yml'}
+  - !task: {path: 'Tasks\\24_networkLatency.yml'}
 
   # ===== ZLAG GAMING CORE ENGINE (ULTRA LOW LATENCY) =====
   - !status: {status: 'Activating ZLAG Gaming Core Engine'}
-  - !task: {path: 'Tasks\\19_gamingCore.yml'}
+  - !task: {path: 'Tasks\\25_gamingCore.yml'}
 
   # ===== CLEAN START MENU (ONLY APP LIST - NO PINNED APPS) =====
   - !status: {status: 'Cleaning Start Menu - removing pinned apps'}
@@ -93,45 +93,52 @@ actions:
   - !status: {status: 'Configuring small auto-hide taskbar'}
   - !task: {path: 'Tasks\\27_smallTaskbar.yml'}
 
-  # ===== LIMIT PUSH - SERVICE PURGE =====
+  # The old standalone service-purge task is legacy/unwired; step 31 performs
+  # the consolidated guarded service and process-floor pass.
 
   # ===== LIMIT PUSH - FEATURE STRIPPER =====
   - !status: {status: 'Stripping unnecessary Windows features'}
-  - !task: {path: 'Tasks\\24_featureStripper.yml'}
+  - !task: {path: 'Tasks\\28_featureStripper.yml'}
 
   # ===== LIMIT PUSH - TASK PURGER =====
   - !status: {status: 'Purging telemetry scheduled tasks'}
-  - !task: {path: 'Tasks\\25_taskPurger.yml'}
+  - !task: {path: 'Tasks\\29_taskPurger.yml'}
 
   # ===== CLEAN RIGHT-CLICK CONTEXT MENU =====
   - !status: {status: 'Cleaning right-click context menu'}
-  - !task: {path: 'Tasks\\28_contextMenuCleaner.yml'}
+  - !task: {path: 'Tasks\\30_contextMenuCleaner.yml'}
 
   # ===== ULTRA IDLE PROCESS + RAM FLOOR: crush background processes & RAM =====
   - !status: {status: 'Applying ULTRA Idle Process + RAM Floor (VSS/notifications/discovery off)...'}
-  - !task: {path: 'Tasks\\35_processFloor.yml'}
+  - !task: {path: 'Tasks\\31_processFloor.yml'}
 
   # ===== WINDOWS 11 EXTRA FLOOR: bring Win11 idle count near Win10 levels =====
   - !status: {status: 'Applying Windows 11 ULTRA extra process floor (AI components)...', builds: ['>=22000']}
-  - !task: {path: 'Tasks\\36_win11ProcessFloor.yml', builds: ['>=22000']}
+  - !task: {path: 'Tasks\\32_win11ProcessFloor.yml', builds: ['>=22000']}
 
-  # ===== FINAL WEBVIEW2 GUARANTEE: never leave apps without the runtime =====
-  - !status: {status: 'Guaranteeing WebView2 Runtime...'}
-  - !task: {path: 'Tasks\\37_repairWebView2.yml'}
-
-  # LAST: restore AppX launch stack after every purge (Store UI stays gone,
-  # and Microsoft account services stay removed when the user chose that).
+  # Restore the AppX launch stack after every purge (Store UI stays gone and
+  # Microsoft account services stay removed when selected). This step does NOT
+  # reinstall Edge or WebView2.
   - !status: {status: 'Repairing AppX runtime for sideloaded apps...'}
-  - !task: {path: 'Tasks\\34_repairAppxRuntime.yml'}
+  - !task: {path: 'Tasks\\33_repairAppxRuntime.yml'}
 
   # ===== USER-FACING SETTINGS: apply dark mode / taskbar / start menu / input
   #      to the ACTIVE user (runas: currentUserElevated). =====
   - !status: {status: 'Applying user-facing settings (dark mode / taskbar / start menu)...'}
-  - !task: {path: 'Tasks\\38_userSettings.yml'}
+  - !task: {path: 'Tasks\\34_userSettings.yml'}
+
+  # ===== CLASSIC SOUND: native mmsys.cpl + sndvol workflow =====
+  - !status: {status: 'Configuring classic Sound Manager and Volume Mixer...'}
+  - !task: {path: 'Tasks\\35_classicSound.yml'}
+
+  # ===== STARTUP STATUS: native Welcome messages + live app-start overlay =====
+  # Run after every startup purge so the all-user status entry remains installed.
+  - !status: {status: 'Enabling real-time startup status...'}
+  - !task: {path: 'Tasks\\36_startupStatus.yml'}
 
   # ===== DEEP SYSTEM CLEAN: run ABSOLUTELY LAST so it can never delete any
   #      script before it has executed (extra protection). =====
-  - !status: {status: 'Deep system clean (temp files, event logs, OneDrive)'}
-  - !task: {path: 'Tasks\\08_deepClean.yml'}
+  - !status: {status: 'Deep system clean and complete OneDrive removal'}
+  - !task: {path: 'Tasks\\37_deepClean.yml'}
 
   - !status: {status: '✅ All optimizations applied. System will reboot automatically...'}
