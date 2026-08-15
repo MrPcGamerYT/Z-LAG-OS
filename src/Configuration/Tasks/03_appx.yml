@@ -70,6 +70,14 @@ actions:
   - !appx: {name: 'Microsoft.ScreenSketch*', type: family}
   - !appx: {name: 'Microsoft.Windows.DevHome*', type: family}
 
+  # DEPROVISION the removed packages so Windows can never re-stage them after a
+  # reboot or for a new user (this is the step that stops the apps coming back).
+  - !writeStatus: {status: "Deprovisioning removed AppX packages (so they can't return)..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\deprovision_apps.ps1'
+
   # Xbox Game Bar registry cleanup (only when the Xbox option is chosen)
   - !registryValue: {path: 'HKCR\ms-gamebar', value: '', type: REG_SZ, data: 'URL:ms-gamebar', option: "remove-appx-xbox"}
   - !registryValue: {path: 'HKCR\ms-gamebar', value: 'URL Protocol', type: REG_SZ, data: '', option: "remove-appx-xbox"}
