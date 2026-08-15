@@ -126,8 +126,8 @@ actions:
   - !status: {status: 'Applying user-facing settings (dark mode / taskbar / start menu)...'}
   - !task: {path: 'Tasks\\34_userSettings.yml'}
 
-  # ===== Z LAG CONTEXT TOOLBOX: cleanup tools + native classic sound =====
-  - !status: {status: 'Creating the Z LAG context toolbox (RAM / temp / maintenance)...'}
+  # ===== Z LAG TOOLBOX CONTEXT MENU: cleanup tools + native classic sound =====
+  - !status: {status: 'Creating clean Z LAG TOOLBOX context menu (RAM / temp / maintenance)...'}
   - !task: {path: 'Tasks\\35_zlagContextMenu.yml'}
 
   # ===== BOOT WELCOME: native lock-screen status + Welcome-only desktop panel =====
