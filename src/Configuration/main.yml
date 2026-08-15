@@ -1,7 +1,7 @@
 title: Z LAG OS - Ultimate Optimization (Zero Lag Edition)
 
 actions:
-  - !status: {status: 'Creating restore point & power plan'}
+  - !status: {status: 'Resetting previous Z-LAG core, restore point & power plan'}
   - !task: {path: 'Tasks\\01_powerPlan.yml'}
 
   - !status: {status: 'Applying registry optimizations'}
