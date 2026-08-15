@@ -1,6 +1,6 @@
 # ==============================================================================
 # Z-LAG OS - Context menu actions
-# Installed to the protected Windows Z-LAG-OS Core directory.
+# Installed to C:\ProgramData\Z-LAG-OS by configure_zlag_context_menu.ps1.
 # ==============================================================================
 
 [CmdletBinding()]

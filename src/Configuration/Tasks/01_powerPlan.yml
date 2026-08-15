@@ -1,12 +1,6 @@
-title: Previous-core reset + restore point + performance power plan
-description: Aggressively removes executable artifacts and scheduled tasks from earlier Z-LAG builds before creating the safety restore point and activating the performance power plan. ProgramData logs/backups are retained.
+title: Restore Point + Ultimate Performance power plan
+description: Creates a safety restore point BEFORE any aggressive tweaks run (System Restore/VSS is disabled later by the ULTRA pass), then activates the Ultimate Performance power plan.
 actions:
-  - !writeStatus: {status: "Removing previous Z-LAG executable core..."}
-  - !powerShell:
-      wait: true
-      exeDir: true
-      command: '.\reset_zlag_core.ps1'
-
   - !writeStatus: {status: "Creating system restore point (safety net)..."}
   - !powerShell:
       wait: true

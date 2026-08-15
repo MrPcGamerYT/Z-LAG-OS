@@ -117,25 +117,12 @@ Set-ItemProperty -Path $devUnlock -Name "AllowAllTrustedApps" -Value 1 -Type DWo
 Set-ItemProperty -Path $devUnlock -Name "AllowDevelopmentWithoutDevLicense" -Value 1 -Type DWord -Force
 
 # --- Watchdog: persists the correct startup state across reboots ---
-# Executable scripts live under protected Program Files; ProgramData remains for
-# logs, markers and backups only.
-$dataDir = Join-Path $env:ProgramData "Z-LAG-OS"
-$coreRoot = Join-Path $env:SystemRoot "Z-LAG-OS"
-$coreDir = Join-Path $coreRoot "Core"
-if (-not (Test-Path $dataDir)) { New-Item -Path $dataDir -ItemType Directory -Force | Out-Null }
-if (-not (Test-Path $coreDir)) { New-Item -Path $coreDir -ItemType Directory -Force | Out-Null }
-
-# A previous run may have already locked this folder. Temporarily grant the
-# current elevated/TI token write access before updating watchdog files.
-& attrib.exe -h -s $coreRoot 2>$null
-& takeown.exe /f $coreRoot /a /r /d y 2>$null | Out-Null
-$currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-$currentGrant = '*' + $currentSid + ':(OI)(CI)F'
-& icacls.exe $coreRoot /inheritance:e /grant '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' $currentGrant /t /c /q 2>$null | Out-Null
+$installDir = Join-Path $env:ProgramData "Z-LAG-OS"
+if (-not (Test-Path $installDir)) { New-Item -Path $installDir -ItemType Directory -Force | Out-Null }
 
 # The watchdog honours the StoreRemoved marker: it never re-enables Microsoft
 # account services on a machine where the user chose to remove them.
-$starter = Join-Path $coreDir "start_appx_runtime.cmd"
+$starter = Join-Path $installDir "start_appx_runtime.cmd"
 $starterContent = @"
 @echo off
 rem Z-LAG OS watchdog: keep packaged-app launch stack alive (Store UI not required)
@@ -167,22 +154,13 @@ if not %errorlevel%==0 (
 "@
 Set-Content -Path $starter -Value $starterContent -Encoding ASCII
 
-# Persist a protected copy next to the watchdog and remove old ProgramData code.
+# Persist a copy of this repair script next to the watchdog
 try {
-    Copy-Item -Path $PSCommandPath -Destination (Join-Path $coreDir "repair_appx_runtime.ps1") -Force
+    Copy-Item -Path $PSCommandPath -Destination (Join-Path $installDir "repair_appx_runtime.ps1") -Force
 } catch {}
-foreach ($oldRoot in @($dataDir, (Join-Path $env:ProgramFiles "Z-LAG-OS\Core"))) {
-    foreach ($oldFile in @("start_appx_runtime.cmd", "repair_appx_runtime.ps1")) {
-        Remove-Item -LiteralPath (Join-Path $oldRoot $oldFile) -Force -ErrorAction SilentlyContinue
-    }
-}
-& icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
-& attrib.exe +h +s $coreRoot 2>$null
 
-$taskName = "Z LAG Opti Services - AppX Runtime"
-foreach ($oldTaskName in @("ZLAG-StartAppXRuntime", $taskName)) {
-    Unregister-ScheduledTask -TaskName $oldTaskName -Confirm:$false -ErrorAction SilentlyContinue
-}
+$taskName = "ZLAG-StartAppXRuntime"
+Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
 
 $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$starter`""
 $triggerBoot = New-ScheduledTaskTrigger -AtStartup
@@ -194,7 +172,7 @@ $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerBoot, $triggerLogon, $triggerDelay) -Principal $principal -Settings $settings -Force | Out-Null
 
-& $env:ComSpec /d /c ('"' + $starter + '"') 2>$null | Out-Null
+& $starter
 
 Write-Output "[Z-LAG] AppX runtime is self-healing (task: $taskName)."
 if ($storeRemoved) {

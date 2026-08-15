@@ -17,12 +17,9 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
-$dataDir = Join-Path $env:ProgramData 'Z-LAG-OS'
-$coreRoot = Join-Path $env:SystemRoot 'Z-LAG-OS'
-$coreDir = Join-Path $coreRoot 'Core'
-New-Item -Path $dataDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
-New-Item -Path $coreDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
-$logFile = Join-Path $dataDir 'service_floor_watchdog.log'
+$installDir = Join-Path $env:ProgramData 'Z-LAG-OS'
+New-Item -Path $installDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+$logFile = Join-Path $installDir 'service_floor_watchdog.log'
 
 function Write-ZLagFloorLog {
     param([string]$Message)
@@ -226,18 +223,13 @@ if ($EnforceOnly) {
     exit 0
 }
 
-# Install code under protected Program Files; ProgramData is logs/backups only.
-$installedScript = Join-Path $coreDir 'enforce_service_floor.ps1'
+# Install a protected permanent copy and schedule brief non-resident rechecks.
+$installedScript = Join-Path $installDir 'enforce_service_floor.ps1'
 Copy-Item -LiteralPath $PSCommandPath -Destination $installedScript -Force -ErrorAction Stop
-Remove-Item -LiteralPath (Join-Path $dataDir 'enforce_service_floor.ps1') -Force -ErrorAction SilentlyContinue
-Remove-Item -LiteralPath (Join-Path $env:ProgramFiles 'Z-LAG-OS\Core\enforce_service_floor.ps1') -Force -ErrorAction SilentlyContinue
-& icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
-& attrib.exe +h +s $coreRoot 2>$null
+& icacls.exe $installedScript /inheritance:r /grant:r '*S-1-5-18:F' '*S-1-5-32-544:F' '*S-1-5-32-545:RX' /q 2>$null | Out-Null
 
-$taskName = 'Z LAG Opti Services - Process Floor'
-foreach ($oldTaskName in @('ZLAG-EnforceServiceFloor', $taskName)) {
-    Unregister-ScheduledTask -TaskName $oldTaskName -Confirm:$false -ErrorAction SilentlyContinue
-}
+$taskName = 'ZLAG-EnforceServiceFloor'
+Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
 $powerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $arguments = '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $installedScript + '" -EnforceOnly'
 $action = New-ScheduledTaskAction -Execute $powerShell -Argument $arguments

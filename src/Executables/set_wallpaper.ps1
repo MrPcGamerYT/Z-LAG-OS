@@ -260,11 +260,9 @@ Write-Host "[+] Phase 6: System visual metadata fields cleared." -ForegroundColo
 # ------------------------------------------------------------
 # PHASE 7: COLD BOOT HARD ENFORCEMENT ENGINE Task
 # ------------------------------------------------------------
-$taskName = "Z LAG Opti Services - Lock Screen"
-foreach ($oldTaskName in @("Z-LAG-LockScreen-Enforce", $taskName)) {
-    if (Get-ScheduledTask -TaskName $oldTaskName -ErrorAction SilentlyContinue) {
-        Unregister-ScheduledTask -TaskName $oldTaskName -Confirm:$false | Out-Null
-    }
+$taskName = "Z-LAG-LockScreen-Enforce"
+if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName $taskName -Confirm:$false | Out-Null
 }
 
 $taskPayload = "takeown /f 'C:\Windows\Web\Screen' /r /d y; icacls 'C:\Windows\Web\Screen' /grant 'administrators:(OI)(CI)F' /t; icacls 'C:\Windows\Web\Screen' /grant '*S-1-15-2-1:(OI)(CI)(R)' /t; Remove-Item -Path 'C:\ProgramData\Microsoft\Windows\SystemData\*\ReadOnly\LockScreen_*\*.*' -Force -Recurse -ErrorAction SilentlyContinue; Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP' -Name LockScreenImageStatus -Value 1 -Force"

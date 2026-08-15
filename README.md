@@ -3,7 +3,7 @@
 [![License: Use Only](https://img.shields.io/badge/License-Proprietary%20%2F%20Use--Only-red.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078d7.svg)](https://www.microsoft.com/windows)
 [![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://amelabs.net/)
-[![Version: 5.13](https://img.shields.io/badge/Version-5.13-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
+[![Version: 5.12](https://img.shields.io/badge/Version-5.12-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
 [![Build: Stable](https://img.shields.io/badge/Build-Stable-brightgreen.svg)]()
 
 > **Maximum FPS. Zero Lag. No Bloat.** A performance-driven AME Wizard playbook engineered for competitive gaming, Android emulators (BlueStacks / MSI App Player / LDPlayer), and low-end hardware.
@@ -19,7 +19,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ## 📚 Table of Contents
 - [Core Objectives](#-core-objectives)
-- [What's New in v5.13](#-whats-new-in-v513)
+- [What's New in v5.12](#-whats-new-in-v512)
 - [Optimization Matrix](#️-optimization-matrix)
 - [Optional Performance Profiles](#-optional-performance-profiles)
 - [Expected Performance Gains](#-expected-performance-gains)
@@ -43,74 +43,60 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ---
 
-## 🆕 What's New in v5.13
-
-### v5.13 - persistent low-process hardening, root-cause compatibility and native Z-LAG UX
-
-- **Bounded service-floor execution**: service shutdown can no longer stall the
-  playbook on `START_PENDING` or `STOP_PENDING`. Startup is locked first,
-  `sc.exe` calls are capped at 750 ms, each service stop at 1.5 seconds, and the
-  main stop pass at 60 seconds. Timed-out services remain disabled for the next
-  boot while the playbook continues immediately.
-- **Expanded persistent Windows 10/11 floor**: 160 explicit non-gaming service
-  families are covered, including VSS/SwPrv, RPC Locator (not core RPC), SNMP
-  Trap, Virtual Disk, WMP sharing, OpenSSH agent, MSDTC, Backup, RDP, WSL/Hyper-V
-  guest integration, diagnostics, enterprise, printing, sensors and safe
-  suffixed per-user instances. The non-resident SYSTEM task rechecks briefly at
-  boot, logon and every 15 minutes; it is not another idle process.
-- **Bluetooth Keep fixed at the source**: radio, CDP/Ncb and Device Association
-  dependencies are excluded from all global disable lists and hard-protected.
-  The correct baseline is applied inside the floor task only when Bluetooth Keep
-  is selected. There is no Bluetooth repair script or recurring Bluetooth task;
-  only the explicit Bluetooth Disable option can turn the stack off.
-- **Protected Windows core storage**: persistent Z-LAG code lives in hidden,
-  ACL-protected `C:\Windows\Z-LAG-OS\Core`; ProgramData contains logs, markers
-  and backups only. Obsolete script/launcher copies are removed automatically.
-- **Verified native Opti Services host**: the panel is compiled with the standard
-  .NET Framework WinForms/System.Drawing stack available on Windows 10/11—no
-  WPF, System.Xaml, VBS or PowerShell panel process. Before installation the host
-  must pass assembly-path, PE-header, assembly-name, product-name and version
-  checks, three isolated pre-install launch self-tests and one installed-file
-  self-test; there is no alternate compiler or launcher fallback.
-- **Welcome behavior corrected**: Windows-native `VerboseStatus` remains on the
-  secure Welcome/Please wait screen only. After Explorer is ready, the native
-  panel shows a static Welcome message and exits after five seconds—no process,
-  app, service or boot-status feed after login. Visible text uses plain ASCII to
-  avoid garbled symbols (`ZERO LAG - MAX PERFORMANCE`).
-- **Clean Z LAG TOOLBOX menu**: old `00_ZLAG.Tools`, `00_ZLAG.TOOLBOX`, dotted
-  and underscored keys are removed. The desktop/folder menu and CommandStore use
-  clean spaced names, with RAM Trim/Clean first, Temp Clean second, then recycle
-  cleanup, DNS flush, Explorer restart and classic sound tools. The former
-  visible Classic Sound Start Menu folder is removed.
-- **Targeted runtime correction**: AppX watchdog updates temporarily restore
-  write access to an already locked Windows core folder and invoke the generated
-  CMD through `cmd.exe`. The Welcome host uses WinForms specifically to eliminate
-  the previously observed WPF/System.Xaml compiler failures.
-- **Aggressive previous-core reset**: before other tasks run, old Z-LAG
-  processes and scheduled tasks are stopped, Startup entries are removed, ACLs
-  are reclaimed, and former `C:\Windows\Z-LAG-OS` / Program Files executable
-  trees are deleted. ProgramData logs and backups are retained while obsolete
-  executable copies are purged; the current build then recreates a clean core.
-- **Stable sequential pipeline**: the task directory contains exactly 37 active
-  tasks, numbered in the same `01` through `37` order used by `main.yml`.
-
-> **Compatibility note:** v5.13 remains an intentionally aggressive fresh-install
-> gaming profile. WebView2, OneDrive local sync folders, printing, RDP, WSL,
-> Hyper-V helpers and many enterprise/consumer services are removed or disabled.
-> Hardware and third-party driver processes can still affect the final idle count.
-
 ## 🆕 What's New in v5.12
 
-### v5.12 - complete Edge/WebView2 and OneDrive removal foundation
-
-- Added verified ShadowWhisperer Edge/WebView2 removal followed by authoritative
-  all-user PowerShell cleanup and Edge Update blocking.
-- Added complete OneDrive uninstall/deprovisioning, offline-user-hive cleanup,
-  known-folder reset and future-user prevention.
-- Introduced the first persistent service/process floor, initial Z-LAG context
-  tools, native boot status, post-login Welcome UI and sequential task numbering.
-- Preserved the guarded Windows core, networking, audio and AppX launch chain
-  while establishing the v5.13 hardening baseline.
+### v5.12 - complete WebView2/OneDrive removal, Z LAG tools and custom boot Welcome
+- **WebView2 protection removed**: the repair/guarantee task and installer were
+  deleted. The supplied ShadowWhisperer removal pass now downloads `setup.exe`
+  only after its pinned SHA-256 is verified, force-uninstalls Edge/WebView2, and
+  then `remove_edge.ps1` performs the authoritative all-user cleanup. Both
+  products' AppX/provisioned packages, files, update clients, tasks, services
+  and registry entries are removed and blocked from Edge Update. The
+  process-floor passes no longer exempt WebView packages or processes.
+- **Compatibility warning**: removing WebView2 can break applications that embed
+  it, including some versions of Teams, Discord, Office add-ins and third-party
+  launchers. This is intentional; reinstall WebView2 manually if one of your
+  required applications does not bundle a fixed runtime.
+- **OneDrive removal fixed for every user**: `remove_onedrive.ps1` runs every
+  detected machine/per-user uninstaller, deprovisions the inbox package, mounts
+  offline user hives, resets OneDrive known-folder redirection, removes startup
+  entries/tasks/sync roots/Explorer namespaces/installers/caches, and prevents
+  setup for future users. The playbook's fresh-install mode also removes local
+  `OneDrive` and `OneDrive - *` sync folders.
+- **Persistent service/process floor**: Windows trigger-start and per-user service
+  instances can return after the first logon and push a lean boot from under 50
+  toward 60+ processes. A brief non-resident SYSTEM task now re-locks the floor
+  at boot, logon and every 15 minutes. It never waits for a pending service to
+  finish starting: each stop is capped at 1.5 seconds and the stop pass at 60
+  seconds, with startup disabled first. It explicitly disables VSS/SwPrv, RPC
+  Locator (not core RPC), SNMP Trap, Virtual Disk, WMP Network Sharing,
+  ssh-agent, MSDTC, Windows Backup and their safe per-user/background peers.
+  The expanded floor also covers unused RDP, WSL/Hyper-V guest integration,
+  BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
+  and removes their trigger-start metadata. Core RPC, networking, audio, logon,
+  security and AppX launch services remain hard-protected. Final counts still vary with hardware and third-party drivers.
+- **Bluetooth Keep fixed at the source**: Bluetooth radio, CDP/Ncb and Device
+  Association dependencies are removed from every global disable list and added
+  to the hard keep-list. There is no Bluetooth repair script or watchdog. Only
+  the explicit Bluetooth Disable option can disable pairing services and PnP
+  devices.
+- **Z LAG TOOLBOX context menu**: the visible Classic Sound Start Menu folder,
+  standalone submenu and old `00_ZLAG.Tools`/`00_ZLAG.TOOLBOX` keys are removed.
+  A single first-position **Z LAG TOOLBOX** submenu with only clean spaced labels
+  now provides **RAM Trim / Clean** first, **Temp Clean** second, then
+  recycle-bin cleanup, DNS flush, Explorer restart, classic Sound Manager and
+  the classic Volume Mixer. The compact classic flyout is still selected on
+  Windows builds that honor `EnableMtcUvc`.
+- **Native boot status + Welcome-only panel**: Windows' supported `VerboseStatus`
+  policy keeps loading text on the real secure **Welcome / Please wait** screen.
+  The old post-login process/app status list is removed. Once Explorer and the
+  desktop are ready, a hidden launcher shows one short branded **Z LAG OS**
+  Welcome panel with no boot, process, service, or startup-app status. Its footer
+  uses a plain ASCII hyphen (`ZERO LAG - MAX PERFORMANCE`) to prevent garbled
+  symbols under Windows PowerShell's legacy script encoding.
+- **Task filenames now match execution order**: the task directory contains only
+  the 37 active tasks, numbered consecutively from `01_powerPlan.yml` through
+  `37_deepClean.yml` exactly as referenced by `main.yml`.
 
 ## 🆕 What's New in v5.11
 
@@ -198,7 +184,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ### v5.8 - Self-healing AppX services (no Store required)
 - If the “service has not been started” error comes back after reboot, the OS now **fixes itself**.
-- Boot + logon + repeating watchdog (`Z LAG Opti Services - AppX Runtime`) keeps the Windows shell's AppX launch stack alive.
+- Boot + logon + repeating watchdog (`ZLAG-StartAppXRuntime`) keeps the Windows shell's AppX launch stack alive.
 - Repair runs **last** in the playbook so later purges cannot leave those services disabled.
 
 ---
@@ -343,9 +329,6 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 **Q: What appears during and after boot?**
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
 
-**Q: Where are permanent Z-LAG files stored, and can the Welcome process be hidden from Task Manager?**
-A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes and protected ACLs. ProgramData contains only logs/backups. The Welcome host is the verified native `ZLAGOptiServices.exe`, visible in Task Manager for its five-second run. It is not concealed, and no VBS or PowerShell panel process is used.
-
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
 
@@ -353,7 +336,7 @@ A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RA
 A: The root cause was the global floor disabling `CDPSvc`, `CDPUserSvc` and `NcbService` even though radio services were protected. Those pairing dependencies and Device Association services are now globally protected and are never disabled in Keep mode. If Device Manager has no Bluetooth adapter or shows Code 10/43 afterward, that remaining problem is the OEM driver, BIOS or hardware.
 
 **Q: Why did the process count rise again after the first boot?**
-A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `Z LAG Opti Services - Process Floor` runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.
+A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `ZLAG-EnforceServiceFloor` now runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.
 
 **Q: Will Windows Update break this?**
 A: The hosts file blocks updates and the update service is disabled. If you later want updates, restore the hosts file first.
@@ -411,4 +394,4 @@ is required for anything outside this limited use permission. All rights reserve
 **Star ⭐ this repo if you get an FPS boost!**
 
 ---
-*Z LAG OS v5.13 - Zero Lag, Max Performance. Built for gamers, by gamers.*
+*Z LAG OS v5.12 - Zero Lag, Max Performance. Built for gamers, by gamers.*
