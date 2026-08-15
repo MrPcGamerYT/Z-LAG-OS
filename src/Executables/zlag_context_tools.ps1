@@ -1,6 +1,6 @@
 # ==============================================================================
 # Z-LAG OS - Context menu actions
-# Installed to the protected Program Files Z-LAG-OS Core directory.
+# Installed to the protected Windows Z-LAG-OS Core directory.
 # ==============================================================================
 
 [CmdletBinding()]

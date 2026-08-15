@@ -120,7 +120,7 @@ Set-ItemProperty -Path $devUnlock -Name "AllowDevelopmentWithoutDevLicense" -Val
 # Executable scripts live under protected Program Files; ProgramData remains for
 # logs, markers and backups only.
 $dataDir = Join-Path $env:ProgramData "Z-LAG-OS"
-$coreRoot = Join-Path $env:ProgramFiles "Z-LAG-OS"
+$coreRoot = Join-Path $env:SystemRoot "Z-LAG-OS"
 $coreDir = Join-Path $coreRoot "Core"
 if (-not (Test-Path $dataDir)) { New-Item -Path $dataDir -ItemType Directory -Force | Out-Null }
 if (-not (Test-Path $coreDir)) { New-Item -Path $coreDir -ItemType Directory -Force | Out-Null }
@@ -163,8 +163,10 @@ Set-Content -Path $starter -Value $starterContent -Encoding ASCII
 try {
     Copy-Item -Path $PSCommandPath -Destination (Join-Path $coreDir "repair_appx_runtime.ps1") -Force
 } catch {}
-foreach ($oldFile in @("start_appx_runtime.cmd", "repair_appx_runtime.ps1")) {
-    Remove-Item -LiteralPath (Join-Path $dataDir $oldFile) -Force -ErrorAction SilentlyContinue
+foreach ($oldRoot in @($dataDir, (Join-Path $env:ProgramFiles "Z-LAG-OS\Core"))) {
+    foreach ($oldFile in @("start_appx_runtime.cmd", "repair_appx_runtime.ps1")) {
+        Remove-Item -LiteralPath (Join-Path $oldRoot $oldFile) -Force -ErrorAction SilentlyContinue
+    }
 }
 & icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
 & attrib.exe +h +s $coreRoot 2>$null
