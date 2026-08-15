@@ -132,7 +132,7 @@ actions:
 
   # ===== BOOT WELCOME: native lock-screen status + compiled Welcome app =====
   # Run after every startup purge so the all-user Welcome entry remains installed.
-  - !status: {status: 'Compiling native Z LAG Welcome app and configuring boot status...'}
+  - !status: {status: 'Compiling Z LAG Opti Services host and configuring boot status...'}
   - !task: {path: 'Tasks\\36_bootWelcome.yml'}
 
   # ===== DEEP SYSTEM CLEAN: run ABSOLUTELY LAST so it can never delete any

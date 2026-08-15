@@ -37,8 +37,8 @@ New-ItemProperty -Path $systemPolicy -Name 'VerboseStatus' -Value 1 -PropertyTyp
 New-ItemProperty -Path $systemPolicy -Name 'DisableStatusMessages' -Value 0 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
 New-ItemProperty -Path $systemPolicy -Name 'EnableFirstLogonAnimation' -Value 0 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
 
-$welcomeExe = Join-Path $coreDir 'ZLagWelcome.exe'
-$tempExe = Join-Path $env:TEMP 'ZLagWelcome.exe'
+$welcomeExe = Join-Path $coreDir 'ZLAGOptiServices.exe'
+$tempExe = Join-Path $env:TEMP 'ZLAGOptiServices.exe'
 Remove-Item -LiteralPath $tempExe -Force -ErrorAction SilentlyContinue
 
 # Compile a native WPF WindowsApplication. Source exists only while the playbook
@@ -57,14 +57,15 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 
-[assembly: AssemblyTitle("Z LAG Welcome")]
-[assembly: AssemblyProduct("Z LAG OS")]
+[assembly: AssemblyTitle("Z LAG Opti Services")]
+[assembly: AssemblyProduct("Z LAG Optimization Services")]
+[assembly: AssemblyDescription("Native Z LAG post-boot Welcome host")]
 [assembly: AssemblyCompany("Z LAG Community")]
 [assembly: AssemblyVersion("5.12.0.0")]
 
 namespace ZLagOS
 {
-    public static class WelcomeProgram
+    public static class OptiServicesHost
     {
         private static SolidColorBrush Brush(string value)
         {
@@ -90,7 +91,7 @@ namespace ZLagOS
         {
             int session = Process.GetCurrentProcess().SessionId;
             bool created;
-            using (var mutex = new Mutex(true, "Local\\ZLAGWelcomePanel_" + session, out created))
+            using (var mutex = new Mutex(true, "Local\\ZLAGOptiServices_" + session, out created))
             {
                 if (!created) return;
 
@@ -188,7 +189,7 @@ try {
 # Remove every former scripted launcher/copy from both old locations.
 $oldRoots = @((Join-Path $env:ProgramData 'Z-LAG-OS'), (Join-Path $env:ProgramFiles 'Z-LAG-OS\Core'), $coreDir)
 foreach ($oldRoot in ($oldRoots | Select-Object -Unique)) {
-    foreach ($oldFile in @('show_startup_status.ps1', 'show_welcome_panel.ps1', 'launch_welcome_panel.vbs')) {
+    foreach ($oldFile in @('show_startup_status.ps1', 'show_welcome_panel.ps1', 'launch_welcome_panel.vbs', 'ZLagWelcome.exe')) {
         Remove-Item -LiteralPath (Join-Path $oldRoot $oldFile) -Force -ErrorAction SilentlyContinue
     }
 }
@@ -206,12 +207,13 @@ Remove-Item -LiteralPath (Join-Path $env:ProgramFiles 'Z-LAG-OS') -Recurse -Forc
 $runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
 New-Item -Path $runKey -Force -ErrorAction SilentlyContinue | Out-Null
 Remove-ItemProperty -Path $runKey -Name 'ZLAGStartupStatus' -Force -ErrorAction SilentlyContinue
-New-ItemProperty -Path $runKey -Name 'ZLAGWelcomePanel' -Value ('"' + $welcomeExe + '"') -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
+Remove-ItemProperty -Path $runKey -Name 'ZLAGWelcomePanel' -Force -ErrorAction SilentlyContinue
+New-ItemProperty -Path $runKey -Name 'Z LAG Opti Services' -Value ('"' + $welcomeExe + '"') -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
 foreach ($approvalKey in @(
     'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run',
     'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run32'
 )) {
-    foreach ($valueName in @('ZLAGStartupStatus', 'ZLAGWelcomePanel')) {
+    foreach ($valueName in @('ZLAGStartupStatus', 'ZLAGWelcomePanel', 'Z LAG Opti Services')) {
         Remove-ItemProperty -Path $approvalKey -Name $valueName -Force -ErrorAction SilentlyContinue
     }
 }
@@ -220,9 +222,10 @@ $marker = 'HKLM:\SOFTWARE\Z-LAG-OS'
 New-Item -Path $marker -Force -ErrorAction SilentlyContinue | Out-Null
 New-ItemProperty -Path $marker -Name 'VerboseBootStatus' -Value 1 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
 New-ItemProperty -Path $marker -Name 'PostBootWelcomePanel' -Value 1 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
-New-ItemProperty -Path $marker -Name 'WelcomePanelHost' -Value $welcomeExe -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
+New-ItemProperty -Path $marker -Name 'OptiServicesHost' -Value $welcomeExe -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
+Remove-ItemProperty -Path $marker -Name 'WelcomePanelHost' -ErrorAction SilentlyContinue
 New-ItemProperty -Path $marker -Name 'BootWelcomeInstalledDate' -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
 Remove-ItemProperty -Path $marker -Name 'VerboseStartupStatus' -ErrorAction SilentlyContinue
 Remove-ItemProperty -Path $marker -Name 'StartupStatusInstalledDate' -ErrorAction SilentlyContinue
 
-Write-ZLagLog 'Native Windows-folder Welcome executable configured.'
+Write-ZLagLog 'Z LAG Opti Services native Welcome host configured.'

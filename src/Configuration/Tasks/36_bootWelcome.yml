@@ -1,5 +1,5 @@
 title: Native boot status and post-boot Welcome panel
-description: Keeps status text on the secure Windows Welcome screen, then runs a compiled native Z LAG Welcome executable after Explorer loads. No VBS, PowerShell panel script, process list or post-login boot status is used.
+description: Keeps status text on the secure Windows Welcome screen, then runs the compiled native Z LAG Opti Services host after Explorer loads. No VBS, PowerShell panel script, process list or post-login boot status is used.
 privilege: TrustedInstaller
 actions:
   - !writeStatus: {status: "Configuring lock-screen loading status and Welcome-only post-boot panel..."}
@@ -7,4 +7,4 @@ actions:
       wait: true
       exeDir: true
       command: '.\configure_boot_welcome.ps1'
-  - !writeStatus: {status: "Native boot status and compiled Z LAG Welcome application configured."}
+  - !writeStatus: {status: "Native boot status and Z LAG Opti Services host configured."}

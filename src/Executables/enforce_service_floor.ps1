@@ -234,8 +234,10 @@ Remove-Item -LiteralPath (Join-Path $env:ProgramFiles 'Z-LAG-OS\Core\enforce_ser
 & icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
 & attrib.exe +h +s $coreRoot 2>$null
 
-$taskName = 'ZLAG-EnforceServiceFloor'
-Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+$taskName = 'Z LAG Opti Services - Process Floor'
+foreach ($oldTaskName in @('ZLAG-EnforceServiceFloor', $taskName)) {
+    Unregister-ScheduledTask -TaskName $oldTaskName -Confirm:$false -ErrorAction SilentlyContinue
+}
 $powerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $arguments = '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $installedScript + '" -EnforceOnly'
 $action = New-ScheduledTaskAction -Execute $powerShell -Argument $arguments

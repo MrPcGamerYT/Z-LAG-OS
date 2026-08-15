@@ -79,9 +79,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   context-tool scripts now live in hidden, ACL-protected
   `C:\Windows\Z-LAG-OS\Core`. `C:\ProgramData\Z-LAG-OS` remains only for logs,
   markers and backups; old ProgramData/Program Files code copies are deleted.
-  The Welcome panel is compiled as `ZLagWelcome.exe`, so no VBS or PowerShell
-  panel script runs at logon. Its five-second process remains visible to Task
-  Manager because legitimate user-mode processes cannot be safely concealed.
+  The Welcome panel is compiled as `ZLAGOptiServices.exe` with product name
+  **Z LAG Opti Services**, so no VBS or PowerShell panel script runs at logon.
+  Related non-resident tasks use the same family label for AppX, process-floor
+  and lock-screen maintenance. The five-second Welcome process remains visible
+  because legitimate user-mode processes cannot be safely concealed.
 - **Bluetooth Keep fixed at the source**: Bluetooth radio, CDP/Ncb and Device
   Association dependencies are removed from every global disable list and added
   to the hard keep-list. There is no Bluetooth repair script or watchdog. Only
@@ -191,7 +193,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ### v5.8 - Self-healing AppX services (no Store required)
 - If the “service has not been started” error comes back after reboot, the OS now **fixes itself**.
-- Boot + logon + repeating watchdog (`ZLAG-StartAppXRuntime`) keeps the Windows shell's AppX launch stack alive.
+- Boot + logon + repeating watchdog (`Z LAG Opti Services - AppX Runtime`) keeps the Windows shell's AppX launch stack alive.
 - Repair runs **last** in the playbook so later purges cannot leave those services disabled.
 
 ---
@@ -337,7 +339,7 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
 
 **Q: Where are permanent Z-LAG files stored, and can the Welcome process be hidden from Task Manager?**
-A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes and write access limited to SYSTEM, Administrators and TrustedInstaller. ProgramData contains only logs/backups. The Welcome panel is a compiled native Windows application with no VBS or PowerShell launcher, but `ZLagWelcome.exe` must remain visible in Task Manager during its five-second run. Hiding a running process would require unsafe rootkit-style behavior and is intentionally not implemented.
+A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes and write access limited to SYSTEM, Administrators and TrustedInstaller. ProgramData contains only logs/backups. The native host is `ZLAGOptiServices.exe`, with matching product metadata and clearly named scheduled tasks. It is not one persistent service: watchdog jobs remain brief scheduled actions to preserve the low process floor. The five-second Welcome host stays visible in Task Manager because hiding it would require unsafe rootkit-style behavior.
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
@@ -346,7 +348,7 @@ A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RA
 A: The root cause was the global floor disabling `CDPSvc`, `CDPUserSvc` and `NcbService` even though radio services were protected. Those pairing dependencies and Device Association services are now globally protected and are never disabled in Keep mode. If Device Manager has no Bluetooth adapter or shows Code 10/43 afterward, that remaining problem is the OEM driver, BIOS or hardware.
 
 **Q: Why did the process count rise again after the first boot?**
-A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `ZLAG-EnforceServiceFloor` now runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.
+A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `Z LAG Opti Services - Process Floor` runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.
 
 **Q: Will Windows Update break this?**
 A: The hosts file blocks updates and the update service is disabled. If you later want updates, restore the hosts file first.
