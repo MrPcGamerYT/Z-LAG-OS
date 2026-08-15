@@ -1,9 +1,0 @@
-title: Installing Z-LAG Toolbox
-description: Downloads and installs the latest Z-LAG Toolbox from GitHub Releases (our own Store alternative). Verifies the download and smoke-tests the install so it can never fail silently. Does not install Alt App Installer.
-actions:
-  - !writeStatus: {status: "Installing Z-LAG Toolbox from GitHub Releases..."}
-  - !powerShell:
-      wait: true
-      exeDir: true
-      command: '.\install_toolbox.ps1'
-  - !writeStatus: {status: "Z-LAG Toolbox deployment finished (see C:\\ProgramData\\Z-LAG-OS\\toolbox_install.log)."}

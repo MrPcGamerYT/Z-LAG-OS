@@ -1,6 +1,0 @@
-title: Removing Bluetooth
-actions:
-  - !powerShell:
-      wait: true
-      exeDir: true
-      command: '.\RemoveBluetooth.ps1'

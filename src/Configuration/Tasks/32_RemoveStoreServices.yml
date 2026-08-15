@@ -1,9 +1,0 @@
-title: Removing Microsoft Store & All Microsoft Services
-description: Total removal of Microsoft Store, Xbox, MS account/cloud apps and services. Keeps only the Windows shell's own AppX runtime (Start Menu/Search + app launching) so Z-LAG Toolbox installed apps never crash.
-actions:
-  - !writeStatus: {status: "Removing Microsoft Store & Microsoft services (total removal)..."}
-  - !powerShell:
-      wait: true
-      exeDir: true
-      command: '.\RemoveStoreServices.ps1'
-  - !writeStatus: {status: "Microsoft Store & Microsoft services fully removed."}
