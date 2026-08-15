@@ -130,10 +130,10 @@ actions:
   - !status: {status: 'Creating the Z LAG context toolbox (RAM / temp / maintenance)...'}
   - !task: {path: 'Tasks\\35_zlagContextMenu.yml'}
 
-  # ===== STARTUP STATUS: native Welcome messages + live app-start overlay =====
-  # Run after every startup purge so the all-user status entry remains installed.
-  - !status: {status: 'Enabling real-time startup status...'}
-  - !task: {path: 'Tasks\\36_startupStatus.yml'}
+  # ===== BOOT WELCOME: native lock-screen status + Welcome-only desktop panel =====
+  # Run after every startup purge so the all-user Welcome entry remains installed.
+  - !status: {status: 'Configuring native boot status and custom Z LAG Welcome panel...'}
+  - !task: {path: 'Tasks\\36_bootWelcome.yml'}
 
   # ===== DEEP SYSTEM CLEAN: run ABSOLUTELY LAST so it can never delete any
   #      script before it has executed (extra protection). =====
