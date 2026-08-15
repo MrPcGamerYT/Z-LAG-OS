@@ -1,0 +1,10 @@
+title: Classic Sound Manager
+description: Restores the native Win32 sound workflow with mmsys.cpl tabs, sndvol.exe, an all-user Start Menu folder, a desktop classic-sound submenu and the classic compact volume UI on Windows builds that support it.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Configuring classic Sound Manager and Volume Mixer..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\configure_classic_sound.ps1'
+  - !writeStatus: {status: "Classic Sound Manager configured (Ctrl+Alt+V opens Volume Mixer)."}

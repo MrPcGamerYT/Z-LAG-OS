@@ -1,0 +1,10 @@
+title: Real-time startup status
+description: Enables Windows native verbose status below Welcome/Please wait and installs a short all-user overlay that reports actual user-session processes and configured startup apps as they launch.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Enabling verbose Welcome screen and real-time startup status..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\configure_startup_status.ps1'
+  - !writeStatus: {status: "Startup status enabled for the next boot and sign-in."}
