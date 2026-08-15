@@ -63,6 +63,17 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   entries/tasks/sync roots/Explorer namespaces/installers/caches, and prevents
   setup for future users. The playbook's fresh-install mode also removes local
   `OneDrive` and `OneDrive - *` sync folders.
+- **Persistent service/process floor**: Windows trigger-start and per-user service
+  instances can return after the first logon and push a lean boot from under 50
+  toward 60+ processes. A brief non-resident SYSTEM task now re-locks the floor
+  at boot, logon and every 15 minutes. It explicitly disables VSS/SwPrv, RPC
+  Locator (not core RPC), SNMP Trap, Virtual Disk, WMP Network Sharing,
+  ssh-agent, MSDTC, Windows Backup and their safe per-user/background peers.
+  The expanded floor also covers unused RDP, WSL/Hyper-V guest integration,
+  BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
+  and removes their trigger-start metadata. Core RPC, networking, audio, logon,
+  security and AppX launch services remain
+  hard-protected. Final counts still vary with hardware and third-party drivers.
 - **Z LAG context toolbox**: the visible Classic Sound Start Menu folder and its
   standalone context submenu are removed. A single first-position **Z LAG**
   submenu now provides **RAM Trim / Clean** first, **Temp Clean** second, then
@@ -174,7 +185,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 | Category | What Gets Tuned | Benefit |
 | :--- | :--- | :--- |
 | **Kernel & CPU** | Ultimate Performance power plan, core parking disabled, power throttling off | Eliminates downclocking and frequency-scaling lag |
-| **Process Management** | Svchost consolidation, suspension policy, fewer background processes | Lower idle RAM and fewer processes |
+| **Process Management** | Svchost consolidation plus a non-resident boot/logon/15-minute service-floor enforcer | Prevents trigger-start and per-user services from causing idle process creep |
 | **Graphics Pipeline** | Forces HAGS, MSI mode on GPU, disables fullscreen optimizations | Stabilizes 1% lows, reduces frame-time variance |
 | **Input & Timer** | Disabled dynamic tick, high-resolution timer, instant key/mouse response | Lower DPC latency, snappier input |
 | **Networking** | Global + per-interface TCP no-delay, offload tuning, DNS flush | Reduced jitter, competitive ping |
@@ -221,7 +232,7 @@ Optimization achieves: less background CPU, more CPU cycles to game threads via 
 
 ### Removed / Disabled
 - Built-in apps: People, Maps, Alarms, Camera, 3D Viewer, Sticky Notes, Mail, Calendar, Feedback, GetStarted, PowerAutomate, Clipchamp, Office Hub, Xbox layers (optional), YourPhone, and more
-- Services: DiagTrack, dmwappush, WerSvc, SysMain, WSearch, MapsBroker, Fax, Xbox networking, RetailDemo, RemoteRegistry, and many others
+- Services: DiagTrack, dmwappush, WerSvc, SysMain, WSearch, VSS/SwPrv, RpcLocator, SNMPTRAP, vds, WMPNetworkSvc, ssh-agent, MSDTC, Windows Backup, MapsBroker, Xbox networking, RemoteRegistry, and many per-user service instances
 - ULTRA (v5.11): System Restore/VSS, notifications, network discovery, file sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history are now fully disabled for gaming (see the v5.11 notes before applying)
 - Optional removals: Defender, Bluetooth stack, Wi-Fi stack, Store + MS identity/gaming services (all gated behind options)
 - Telemetry: CEIP tasks, appraiser, 43 hosts-file entries, update-host blocking
@@ -311,6 +322,9 @@ A: During secure Windows loading, native `VerboseStatus` text appears below Welc
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
+
+**Q: Why did the process count rise again after the first boot?**
+A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `ZLAG-EnforceServiceFloor` now runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.
 
 **Q: Will Windows Update break this?**
 A: The hosts file blocks updates and the update service is disabled. If you later want updates, restore the hosts file first.
