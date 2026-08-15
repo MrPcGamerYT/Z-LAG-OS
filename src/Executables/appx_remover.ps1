@@ -7,137 +7,112 @@ param (
     [switch]$Unregister = $false
 )
 
-# ==============================================================================
-# Z-LAG OS - AppX Bloat Remover  (universal Win10 + Win11, no skips, no errors)
-# ------------------------------------------------------------------------------
-# Removes the given AppX packages for ALL users, DEPROVISIONS them so they can
-# never come back after reboot, and clears the Start Menu cache so removed apps
-# stop showing "ghost" tiles.
-#
-#   * Never skips a package just because it is flagged NonRemovable.
-#   * Never errors on a package that only exists on one OS version (it is
-#     simply not present -> nothing to do).
-#   * GPU drivers, the Windows shell, WebView2 and critical system apps are
-#     protected by the keep-list.
-# ==============================================================================
-
-$ErrorActionPreference = "Continue"
-
-# --- 0. Logging ---
-$logDir = Join-Path $env:ProgramData "Z-LAG-OS"
-if (-not (Test-Path $logDir)) { New-Item -Path $logDir -ItemType Directory -Force | Out-Null }
-$logFile = Join-Path $logDir "appx_remover.log"
-function Log([string]$m) {
-    Write-Host "[Z-LAG-APPX] $m"
-    Add-Content -Path $logFile -Value $m -Encoding ASCII -ErrorAction SilentlyContinue
-}
-
-# CRITICAL: Apps to KEEP (GPU vendors, essential system apps, WebView2 runtime)
+# CRITICAL: Apps to KEEP (ONLY NVIDIA, AMD, Intel, and ABSOLUTELY ESSENTIAL system apps)
 $KeepApps = @(
     # NVIDIA
-    'NVIDIA','NVIDIACorp','NVIDIA.ControlPanel','NVIDIA.GraphicsDriver','NVIDIA.Display',
-    'Nvidia','NvContainer','NvTelemetry',
+    'NVIDIA', 'NVIDIACorp', 'NVIDIA.ControlPanel', 'NVIDIA.GraphicsDriver', 'NVIDIA.Display',
+    'Nvidia', 'NvContainer', 'NvTelemetry',
+    
     # AMD
-    'AMD','AMDRadeon','AMD.RadeonSoftware','AMD.ChipsetDriver','Amd','AmdRyzenMaster',
+    'AMD', 'AMDRadeon', 'AMD.RadeonSoftware', 'AMD.ChipsetDriver', 'Amd', 'AmdRyzenMaster',
+    
     # Intel
-    'Intel','IntelCorp','Intel.GraphicsCommandCenter','Intel.Driver','Intc','IntelGraphics',
-    # Absolutely essential (DO NOT REMOVE - breaks Windows)
+    'Intel', 'IntelCorp', 'Intel.GraphicsCommandCenter', 'Intel.Driver', 'Intc', 'IntelGraphics',
+    
+    # ABSOLUTELY ESSENTIAL (DO NOT REMOVE - breaks Windows)
     'Microsoft.Windows.Explorer',
     'Microsoft.Windows.ShellExperienceHost',
     'Microsoft.Windows.StartMenuExperienceHost',
     'Microsoft.Windows.Search',
     'Microsoft.VCLibs',
     'Microsoft.UI.Xaml',
-    'Microsoft.NET.Native',
-    # WebView2 / WebView components (PRESERVED so apps never break)
-    'Microsoft.WebView2',
-    'Microsoft.MicrosoftEdgeWebView2Runtime',
-    'Microsoft.Win32WebViewHost',
-    'Microsoft.WebWebView2',
-    'EdgeWebView'
+    'Microsoft.NET.Native'
+    # NOTE: Microsoft.WindowsStore, Microsoft.WindowsCalculator, Microsoft.Windows.Photos, 
+    # Microsoft.Xbox*, Microsoft.GamingApp, Microsoft.YourPhone, Microsoft.SkypeApp, 
+    # Microsoft.Bing*, Microsoft.Zune*, Clipchamp, Disney, Spotify, Netflix, Teams, Copilot
+    # are NOT protected and WILL BE REMOVED
 )
 
-function Test-Protected([string]$Name) {
+# Filter out packages to keep
+$FilteredPackages = @()
+foreach ($package in $Packages) {
+    $shouldKeep = $false
     foreach ($keep in $KeepApps) {
-        if ($Name -like "*$keep*") { return $true }
-    }
-    return $false
-}
-
-# --- 1. Deprovision matching provisioned packages (so they never come back) ---
-$depKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore\Deprovisioned"
-if (-not (Test-Path $depKey)) { New-Item -Path $depKey -Force | Out-Null }
-
-foreach ($pattern in $Packages) {
-    if (Test-Protected $pattern) {
-        Log "Skipping protected app: $pattern"
-        continue
-    }
-
-    # (a) Remove from the image store (provisioned packages)
-    $prov = Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue |
-        Where-Object { $_.DisplayName -like "*$pattern*" -and -not (Test-Protected $_.DisplayName) }
-    foreach ($p in $prov) {
-        try {
-            Log "Deprovisioning: $($p.DisplayName)"
-            Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction Stop | Out-Null
-
-            # (b) Mark the family as deprovisioned (belt-and-suspenders)
-            $parts = $p.PackageName -split '_'
-            if ($parts.Count -ge 2) {
-                $family = $parts[0] + '_' + $parts[-1]
-                New-Item -Path (Join-Path $depKey $family) -Force -ErrorAction SilentlyContinue | Out-Null
-            }
-        } catch {
-            Log "  deprovision failed: $($p.DisplayName) -> $($_.Exception.Message)"
+        if ($package -like "*$keep*") {
+            $shouldKeep = $true
+            Write-Host "Skipping protected app: $package"
+            break
         }
     }
+    if (-not $shouldKeep) {
+        $FilteredPackages += $package
+    }
 }
 
-# --- 2. Remove installed packages for all users (never skip NonRemovable) ---
-$allPackages = Get-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+$baseRegistryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore"
+$allPackages = Get-AppxPackage -AllUsers | Select-Object PackageFullName, PackageFamilyName, PackageUserInformation, NonRemovable
 
-foreach ($pattern in $Packages) {
-    if (Test-Protected $pattern) { continue }
-
-    $matches = $allPackages | Where-Object { $_.PackageFullName -like "*$pattern*" }
-
+foreach ($package in $FilteredPackages) {
+    $filteredPackages = $allPackages | Where-Object { $_.PackageFullName -like "*$package*" }
+    
     if ($ExcludePackages.Count -gt 0) {
-        $matches = $matches | Where-Object {
-            $fn = $_.PackageFullName
-            -not ($ExcludePackages | Where-Object { $fn -like "*$_*" })
+        $filteredPackages = $filteredPackages | Where-Object {
+            $fullPackageName = $_.PackageFullName
+            -not ($ExcludePackages | Where-Object { $fullPackageName -like "*$_*" })
         }
     }
 
-    foreach ($pkg in $matches) {
-        $full = $pkg.PackageFullName
-        if (Test-Protected $full) {
-            Log "Protected package skipped: $full"
+    foreach ($pkg in $filteredPackages) {
+        $fullPackageName = $pkg.PackageFullName
+        $packageFamilyName = $pkg.PackageFamilyName
+
+        # Double-check we're not removing critical apps
+        $isProtected = $false
+        foreach ($keep in $KeepApps) {
+            if ($fullPackageName -like "*$keep*" -or $packageFamilyName -like "*$keep*") {
+                $isProtected = $true
+                Write-Host "Protected package skipped: $fullPackageName"
+                break
+            }
+        }
+        
+        if ($isProtected) { continue }
+
+        Write-Host "Removing package: $($fullPackageName)"
+
+        $deprovisionedPath = "$baseRegistryPath\Deprovisioned\$packageFamilyName"
+        if (-not (Test-Path -Path $deprovisionedPath)) {
+            New-Item -Path $deprovisionedPath -Force | Out-Null
+        }
+
+        $inboxAppsPath = "$baseRegistryPath\InboxApplications\$fullPackageName"
+        if (Test-Path $inboxAppsPath) {
+            Remove-Item -Path $inboxAppsPath -Force -ErrorAction SilentlyContinue
+        }
+        
+        if ($pkg.NonRemovable -eq 1) {
+            Write-Host "Non-removable package detected: $packageFamilyName - skipping"
             continue
         }
 
-        Log "Removing package: $full"
+        foreach ($userInfo in $pkg.PackageUserInformation) {
+            $userSid = $userInfo.UserSecurityID.SID
+            $endOfLifePath = "$baseRegistryPath\EndOfLife\$userSid\$fullPackageName"
+            New-Item -Path $endOfLifePath -Force | Out-Null
 
-        # Per-user removal (reliable from a SYSTEM / TrustedInstaller context)
-        $sids = @($pkg.PackageUserInformation | ForEach-Object { $_.UserSecurityID.SID } | Select-Object -Unique)
-        foreach ($sid in $sids) {
-            try { Remove-AppxPackage -Package $full -User $sid -ErrorAction Stop } catch { }
+            if ($Unregister) {
+                Remove-AppxPackage -Package $fullPackageName -User $userSid -PreserveRoamableApplicationData -ErrorAction SilentlyContinue
+            } else {
+                Remove-AppxPackage -Package $fullPackageName -User $userSid -ErrorAction SilentlyContinue
+            }
         }
 
-        # All-users sweep to catch stragglers
-        try {
-            if ($Unregister) {
-                Remove-AppxPackage -Package $full -AllUsers -PreserveRoamableApplicationData -ErrorAction Stop
-            } else {
-                Remove-AppxPackage -Package $full -AllUsers -ErrorAction Stop
-            }
-        } catch { }
+        if ($Unregister) {
+            Remove-AppxPackage -Package $fullPackageName -AllUsers -PreserveRoamableApplicationData -ErrorAction SilentlyContinue
+        } else {
+            Remove-AppxPackage -Package $fullPackageName -AllUsers -ErrorAction SilentlyContinue
+        }
     }
 }
 
-# --- 3. Clear the Start Menu cache so removed apps stop showing ghost tiles ---
-try {
-    & (Join-Path $PSScriptRoot "clear_start_menu_cache.ps1")
-} catch { }
-
-Log "AppX removal completed! Protected apps (NVIDIA, AMD, Intel, essential system apps, WebView2) kept intact."
+Write-Host "AppX removal completed! Protected apps (NVIDIA, AMD, Intel, essential system apps) kept intact."
