@@ -8,9 +8,12 @@
 # ==============================================================================
 
 $ErrorActionPreference = 'Continue'
-$installDir = Join-Path $env:ProgramData 'Z-LAG-OS'
-New-Item -Path $installDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
-$logFile = Join-Path $installDir 'boot_welcome_install.log'
+$dataDir = Join-Path $env:ProgramData 'Z-LAG-OS'
+$coreRoot = Join-Path $env:ProgramFiles 'Z-LAG-OS'
+$coreDir = Join-Path $coreRoot 'Core'
+New-Item -Path $dataDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+New-Item -Path $coreDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+$logFile = Join-Path $dataDir 'boot_welcome_install.log'
 
 function Write-ZLagLog {
     param([Parameter(Mandatory = $true)][string]$Message)
@@ -36,8 +39,8 @@ New-ItemProperty -Path $systemPolicy -Name 'DisableStatusMessages' -Value 0 -Pro
 New-ItemProperty -Path $systemPolicy -Name 'EnableFirstLogonAnimation' -Value 0 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
 
 $panelSource = Join-Path $PSScriptRoot 'show_welcome_panel.ps1'
-$panelDestination = Join-Path $installDir 'show_welcome_panel.ps1'
-$launcherDestination = Join-Path $installDir 'launch_welcome_panel.vbs'
+$panelDestination = Join-Path $coreDir 'show_welcome_panel.ps1'
+$launcherDestination = Join-Path $coreDir 'launch_welcome_panel.vbs'
 if (-not (Test-Path -LiteralPath $panelSource -PathType Leaf)) {
     Write-ZLagLog ('ERROR: Welcome panel source was not found: ' + $panelSource)
     exit 2
@@ -53,19 +56,24 @@ Dim shell, command
 Set shell = CreateObject("WScript.Shell")
 command = "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -STA -File ""$escapedPanelPath"""
 shell.Run command, 0, False
+Set shell = Nothing
+WScript.Quit 0
 "@
 Set-Content -LiteralPath $launcherDestination -Value $launcher -Encoding Unicode -Force
 
-# Standard users may read/execute the installed files but cannot replace them.
-foreach ($file in @($panelDestination, $launcherDestination)) {
-    & icacls.exe $file /inheritance:r /grant:r '*S-1-5-18:F' '*S-1-5-32-544:F' '*S-1-5-32-545:RX' /q 2>$null | Out-Null
-}
+# Program Files is the protected code location; ProgramData now contains logs
+# only. Users can execute these files but cannot replace them.
+& icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+& attrib.exe +h +s $coreRoot 2>$null
+& attrib.exe +h $dataDir 2>$null
 
-# Remove the previous live startup-status implementation and its permanent copy.
+# Remove previous ProgramData script copies and the live status implementation.
 $runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
 New-Item -Path $runKey -Force -ErrorAction SilentlyContinue | Out-Null
 Remove-ItemProperty -Path $runKey -Name 'ZLAGStartupStatus' -Force -ErrorAction SilentlyContinue
-Remove-Item -LiteralPath (Join-Path $installDir 'show_startup_status.ps1') -Force -ErrorAction SilentlyContinue
+foreach ($oldFile in @('show_startup_status.ps1', 'show_welcome_panel.ps1', 'launch_welcome_panel.vbs')) {
+    Remove-Item -LiteralPath (Join-Path $dataDir $oldFile) -Force -ErrorAction SilentlyContinue
+}
 
 # Register the silent launcher after all startup-purge tasks have already run.
 $runCommand = '"' + (Join-Path $env:SystemRoot 'System32\wscript.exe') + '" "' + $launcherDestination + '"'

@@ -117,12 +117,17 @@ Set-ItemProperty -Path $devUnlock -Name "AllowAllTrustedApps" -Value 1 -Type DWo
 Set-ItemProperty -Path $devUnlock -Name "AllowDevelopmentWithoutDevLicense" -Value 1 -Type DWord -Force
 
 # --- Watchdog: persists the correct startup state across reboots ---
-$installDir = Join-Path $env:ProgramData "Z-LAG-OS"
-if (-not (Test-Path $installDir)) { New-Item -Path $installDir -ItemType Directory -Force | Out-Null }
+# Executable scripts live under protected Program Files; ProgramData remains for
+# logs, markers and backups only.
+$dataDir = Join-Path $env:ProgramData "Z-LAG-OS"
+$coreRoot = Join-Path $env:ProgramFiles "Z-LAG-OS"
+$coreDir = Join-Path $coreRoot "Core"
+if (-not (Test-Path $dataDir)) { New-Item -Path $dataDir -ItemType Directory -Force | Out-Null }
+if (-not (Test-Path $coreDir)) { New-Item -Path $coreDir -ItemType Directory -Force | Out-Null }
 
 # The watchdog honours the StoreRemoved marker: it never re-enables Microsoft
 # account services on a machine where the user chose to remove them.
-$starter = Join-Path $installDir "start_appx_runtime.cmd"
+$starter = Join-Path $coreDir "start_appx_runtime.cmd"
 $starterContent = @"
 @echo off
 rem Z-LAG OS watchdog: keep packaged-app launch stack alive (Store UI not required)
@@ -154,10 +159,15 @@ if not %errorlevel%==0 (
 "@
 Set-Content -Path $starter -Value $starterContent -Encoding ASCII
 
-# Persist a copy of this repair script next to the watchdog
+# Persist a protected copy next to the watchdog and remove old ProgramData code.
 try {
-    Copy-Item -Path $PSCommandPath -Destination (Join-Path $installDir "repair_appx_runtime.ps1") -Force
+    Copy-Item -Path $PSCommandPath -Destination (Join-Path $coreDir "repair_appx_runtime.ps1") -Force
 } catch {}
+foreach ($oldFile in @("start_appx_runtime.cmd", "repair_appx_runtime.ps1")) {
+    Remove-Item -LiteralPath (Join-Path $dataDir $oldFile) -Force -ErrorAction SilentlyContinue
+}
+& icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+& attrib.exe +h +s $coreRoot 2>$null
 
 $taskName = "ZLAG-StartAppXRuntime"
 Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue

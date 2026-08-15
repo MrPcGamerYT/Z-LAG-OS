@@ -75,6 +75,13 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
   and removes their trigger-start metadata. Core RPC, networking, audio, logon,
   security and AppX launch services remain hard-protected. Final counts still vary with hardware and third-party drivers.
+- **Protected core script storage**: permanent watchdog, AppX, context-tool and
+  Welcome-panel files now live in hidden, ACL-protected
+  `C:\Program Files\Z-LAG-OS\Core`. `C:\ProgramData\Z-LAG-OS` remains only for
+  logs, markers and backups; old executable script copies are deleted. The VBS
+  launcher exits immediately after starting the panel host. The panel's brief
+  process remains visible to Task Manager by design because Windows does not
+  safely support hiding running processes from it.
 - **Bluetooth Keep fixed at the source**: Bluetooth radio, CDP/Ncb and Device
   Association dependencies are removed from every global disable list and added
   to the hard keep-list. There is no Bluetooth repair script or watchdog. Only
@@ -328,6 +335,9 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 
 **Q: What appears during and after boot?**
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
+
+**Q: Where are permanent Z-LAG scripts stored, and can the Welcome process be hidden from Task Manager?**
+A: Executable scripts are stored under `C:\Program Files\Z-LAG-OS\Core` with hidden/system attributes and write access limited to SYSTEM, Administrators and TrustedInstaller. ProgramData contains only logs/backups. The VBS launcher exits immediately, but the five-second panel host cannot and should not be hidden from Task Manager; any running user-mode panel must have a visible process entry.
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
