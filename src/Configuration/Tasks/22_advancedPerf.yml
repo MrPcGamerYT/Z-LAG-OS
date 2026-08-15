@@ -1,0 +1,17 @@
+title: Advanced Performance Tweaks (Beyond Atlas)
+actions:
+  - !powerShell: {command: 'Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force'}
+  - !powerShell: {command: 'if (Get-Command Disable-MMAgent -ErrorAction SilentlyContinue) { try { Disable-MMAgent -MemoryCompression -ErrorAction SilentlyContinue } catch {} }; exit 0'}
+  - !cmd: {command: 'fsutil behavior set disablelastaccess 1'}
+  - !cmd: {command: 'fsutil behavior set disable8dot3 1'}
+  - !powerShell: {command: 'Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object { Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue }'}
+  - !cmd: {command: 'netsh int tcp set global autotuninglevel=normal'}
+  
+  - !powerShell:
+      exeDir: true
+      command: '.\set_smooth_mouse.ps1'
+      runas: currentUserElevated
+  
+  - !powerShell: {command: 'try { Optimize-Volume -DriveLetter C -ReTrim -ErrorAction Stop | Out-Null } catch {}; exit 0'}
+  - !cmd: {command: 'ipconfig /flushdns'}
+  - !cmd: {command: 'ipconfig /registerdns'}
