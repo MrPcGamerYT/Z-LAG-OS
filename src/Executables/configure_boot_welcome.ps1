@@ -177,7 +177,16 @@ namespace ZLagOS
 '@
 
 try {
-    $references = @('System.dll', 'System.Core.dll', 'WindowsBase.dll', 'PresentationCore.dll', 'PresentationFramework.dll')
+    # Resolve full GAC paths first; bare WindowsBase.dll names are not reliably
+    # resolved by CodeDOM on Windows 10.
+    Add-Type -AssemblyName @('WindowsBase', 'PresentationCore', 'PresentationFramework') -ErrorAction Stop
+    $references = @(
+        [System.Diagnostics.Process].Assembly.Location,
+        [System.Linq.Enumerable].Assembly.Location,
+        [System.Windows.Threading.Dispatcher].Assembly.Location,
+        [System.Windows.Media.Brush].Assembly.Location,
+        [System.Windows.Application].Assembly.Location
+    ) | Where-Object { $_ } | Select-Object -Unique
     Add-Type -TypeDefinition $welcomeSource -Language CSharp -ReferencedAssemblies $references -OutputAssembly $tempExe -OutputType WindowsApplication -ErrorAction Stop
     Copy-Item -LiteralPath $tempExe -Destination $welcomeExe -Force -ErrorAction Stop
     Remove-Item -LiteralPath $tempExe -Force -ErrorAction SilentlyContinue
