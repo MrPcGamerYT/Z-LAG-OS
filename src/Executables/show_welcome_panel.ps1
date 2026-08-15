@@ -60,7 +60,7 @@ try {
             <TextBlock Grid.Row="3" Name="UserGreeting" Foreground="#FFE8E6F2"
                        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="18"
                        TextAlignment="Center" HorizontalAlignment="Center"/>
-            <TextBlock Grid.Row="4" Text="ZERO LAG  •  MAX PERFORMANCE" Foreground="#FF8E88A8"
+            <TextBlock Grid.Row="4" Text="ZERO LAG - MAX PERFORMANCE" Foreground="#FF8E88A8"
                        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="11"
                        FontWeight="SemiBold" Margin="0,18,0,0"
                        VerticalAlignment="Bottom" HorizontalAlignment="Center"/>

@@ -45,7 +45,7 @@ if (-not (Test-Path -LiteralPath $panelSource -PathType Leaf)) {
 Copy-Item -LiteralPath $panelSource -Destination $panelDestination -Force -ErrorAction Stop
 
 # WScript starts Windows PowerShell with window style 0, so after boot the custom
-# panel is the only visible window—there is no console and no startup-status UI.
+# panel is the only visible window - there is no console and no startup-status UI.
 $escapedPanelPath = $panelDestination.Replace('"', '""')
 $launcher = @"
 Option Explicit

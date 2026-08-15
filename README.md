@@ -72,11 +72,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   The expanded floor also covers unused RDP, WSL/Hyper-V guest integration,
   BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
   and removes their trigger-start metadata. Core RPC, networking, audio, logon,
-  security and AppX launch services remain
-  hard-protected. Final counts still vary with hardware and third-party drivers.
-- **Z LAG context toolbox**: the visible Classic Sound Start Menu folder and its
-  standalone context submenu are removed. A single first-position **Z LAG**
-  submenu now provides **RAM Trim / Clean** first, **Temp Clean** second, then
+  security and AppX launch services remain hard-protected. Final counts still vary with hardware and third-party drivers.
+- **Z LAG TOOLBOX context menu**: the visible Classic Sound Start Menu folder,
+  standalone submenu and old `00_ZLAG.Tools`/`00_ZLAG.TOOLBOX` keys are removed.
+  A single first-position **Z LAG TOOLBOX** submenu with only clean spaced labels
+  now provides **RAM Trim / Clean** first, **Temp Clean** second, then
   recycle-bin cleanup, DNS flush, Explorer restart, classic Sound Manager and
   the classic Volume Mixer. The compact classic flyout is still selected on
   Windows builds that honor `EnableMtcUvc`.
@@ -84,7 +84,9 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   policy keeps loading text on the real secure **Welcome / Please wait** screen.
   The old post-login process/app status list is removed. Once Explorer and the
   desktop are ready, a hidden launcher shows one short branded **Z LAG OS**
-  Welcome panel with no boot, process, service, or startup-app status.
+  Welcome panel with no boot, process, service, or startup-app status. Its footer
+  uses a plain ASCII hyphen (`ZERO LAG - MAX PERFORMANCE`) to prevent garbled
+  symbols under Windows PowerShell's legacy script encoding.
 - **Task filenames now match execution order**: the task directory contains only
   the 37 active tasks, numbered consecutively from `01_powerPlan.yml` through
   `37_deepClean.yml` exactly as referenced by `main.yml`.
@@ -190,7 +192,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 | **Input & Timer** | Disabled dynamic tick, high-resolution timer, instant key/mouse response | Lower DPC latency, snappier input |
 | **Networking** | Global + per-interface TCP no-delay, offload tuning, DNS flush | Reduced jitter, competitive ping |
 | **Privacy & Telemetry** | Telemetry blocked at host + task level, update hosts blocked | Zero background upload |
-| **UI/UX** | Transparency & animations off, forced dark theme, small taskbar, clean Start layout, first-position Z LAG maintenance submenu, classic sound tools, native lock-screen loading status and Welcome-only panel | Less RAM usage, cleaner workflow and visible boot progress |
+| **UI/UX** | Transparency & animations off, forced dark theme, clean Start layout, first-position Z LAG TOOLBOX submenu, classic sound tools, native loading status and Welcome-only panel | Less RAM usage, clean labels and visible boot progress |
 
 ---
 
@@ -321,7 +323,7 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
 
 **Q: Where are the cleanup and classic sound tools?**
-A: Right-click the desktop or a folder background and open **Z LAG**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
+A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
 
 **Q: Why did the process count rise again after the first boot?**
 A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `ZLAG-EnforceServiceFloor` now runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.

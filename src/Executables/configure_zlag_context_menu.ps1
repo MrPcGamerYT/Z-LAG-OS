@@ -55,7 +55,14 @@ $legacyCommandIds = @(
     'ZLAG.Sound.Recording',
     'ZLAG.Sound.Sounds',
     'ZLAG.Sound.Communications',
-    'ZLAG.Sound.Mixer'
+    'ZLAG.Sound.Mixer',
+    'ZLAG.Tools.RamTrim',
+    'ZLAG.Tools.TempClean',
+    'ZLAG.Tools.RecycleBin',
+    'ZLAG.Tools.FlushDns',
+    'ZLAG.Tools.RestartExplorer',
+    'ZLAG.Tools.Sound',
+    'ZLAG.Tools.Mixer'
 )
 Remove-Item -Path 'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell\ZLAG.ClassicSound' -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -Path 'HKLM:\SOFTWARE\Classes\Directory\Background\shell\ZLAG.ClassicSound' -Recurse -Force -ErrorAction SilentlyContinue
@@ -120,6 +127,9 @@ function New-ZLagToolCommand {
 
     $entryRoot = Join-Path $commandStore $Id
     Remove-Item -Path $entryRoot -Recurse -Force -ErrorAction SilentlyContinue
+    # Set both the unnamed value and MUIVerb so every Explorer build uses the
+    # clean user-facing label. CommandStore key names also contain spaces only.
+    Set-ZLagRegistryValue -Path $entryRoot -Name '' -Value $Label -Type String
     Set-ZLagRegistryValue -Path $entryRoot -Name 'MUIVerb' -Value $Label -Type String
     Set-ZLagRegistryValue -Path $entryRoot -Name 'Icon' -Value $Icon -Type ExpandString
     $command = '"' + $powerShell + '" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -STA -File "' + $toolDestination + '" -Action ' + $Action
@@ -128,38 +138,46 @@ function New-ZLagToolCommand {
 
 # SubCommands preserves this exact order. RAM and Temp are intentionally first.
 $toolEntries = @(
-    [pscustomobject]@{ Id = 'ZLAG.Tools.RamTrim'; Label = 'RAM Trim / Clean'; Action = 'RamTrim'; Icon = '%SystemRoot%\System32\taskmgr.exe' },
-    [pscustomobject]@{ Id = 'ZLAG.Tools.TempClean'; Label = 'Temp Clean'; Action = 'TempClean'; Icon = '%SystemRoot%\System32\cleanmgr.exe' },
-    [pscustomobject]@{ Id = 'ZLAG.Tools.RecycleBin'; Label = 'Recycle Bin Clean'; Action = 'RecycleBin'; Icon = '%SystemRoot%\System32\imageres.dll,-55' },
-    [pscustomobject]@{ Id = 'ZLAG.Tools.FlushDns'; Label = 'Flush DNS Cache'; Action = 'FlushDns'; Icon = '%SystemRoot%\System32\ipconfig.exe' },
-    [pscustomobject]@{ Id = 'ZLAG.Tools.RestartExplorer'; Label = 'Restart Explorer'; Action = 'RestartExplorer'; Icon = '%SystemRoot%\explorer.exe' },
-    [pscustomobject]@{ Id = 'ZLAG.Tools.Sound'; Label = 'Sound Manager (Classic)'; Action = 'SoundManager'; Icon = '%SystemRoot%\System32\mmsys.cpl' },
-    [pscustomobject]@{ Id = 'ZLAG.Tools.Mixer'; Label = 'Volume Mixer (Classic)'; Action = 'VolumeMixer'; Icon = '%SystemRoot%\System32\sndvol.exe' }
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX RAM TRIM'; Label = 'RAM Trim / Clean'; Action = 'RamTrim'; Icon = '%SystemRoot%\System32\taskmgr.exe' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX TEMP CLEAN'; Label = 'Temp Clean'; Action = 'TempClean'; Icon = '%SystemRoot%\System32\cleanmgr.exe' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX RECYCLE BIN'; Label = 'Recycle Bin Clean'; Action = 'RecycleBin'; Icon = '%SystemRoot%\System32\imageres.dll,-55' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX FLUSH DNS'; Label = 'Flush DNS Cache'; Action = 'FlushDns'; Icon = '%SystemRoot%\System32\ipconfig.exe' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX RESTART EXPLORER'; Label = 'Restart Explorer'; Action = 'RestartExplorer'; Icon = '%SystemRoot%\explorer.exe' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX SOUND MANAGER'; Label = 'Sound Manager (Classic)'; Action = 'SoundManager'; Icon = '%SystemRoot%\System32\mmsys.cpl' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX VOLUME MIXER'; Label = 'Volume Mixer (Classic)'; Action = 'VolumeMixer'; Icon = '%SystemRoot%\System32\sndvol.exe' }
 )
 foreach ($entry in $toolEntries) {
     New-ZLagToolCommand -Id $entry.Id -Label $entry.Label -Action $entry.Action -Icon $entry.Icon
 }
 
 # ------------------------------------------------------------------------------
-# 4. Add one first-position "Z LAG" submenu to desktop and folder backgrounds.
+# 4. Add one first-position "Z LAG TOOLBOX" submenu to desktop/folder backgrounds.
 # ------------------------------------------------------------------------------
-Write-ZLagLog 'Creating the first-position Z LAG context submenu...'
+Write-ZLagLog 'Creating the first-position Z LAG TOOLBOX context submenu...'
 $subCommands = ($toolEntries | ForEach-Object { $_.Id }) -join ';'
-# The 00_ registry key plus Position=Top keeps Z LAG ahead of other custom
-# entries while MUIVerb controls the clean user-visible label.
-foreach ($oldMenuRoot in @(
-    'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell\ZLAG.Tools',
-    'HKLM:\SOFTWARE\Classes\Directory\Background\shell\ZLAG.Tools'
-)) {
-    Remove-Item -Path $oldMenuRoot -Recurse -Force -ErrorAction SilentlyContinue
-}
-$menuRoots = @(
-    'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell\00_ZLAG.Tools',
-    'HKLM:\SOFTWARE\Classes\Directory\Background\shell\00_ZLAG.Tools'
+$backgroundShellRoots = @(
+    'HKLM:\SOFTWARE\Classes\DesktopBackground\Shell',
+    'HKLM:\SOFTWARE\Classes\Directory\Background\shell'
 )
-foreach ($menuRoot in $menuRoots) {
-    Remove-Item -Path $menuRoot -Recurse -Force -ErrorAction SilentlyContinue
-    Set-ZLagRegistryValue -Path $menuRoot -Name 'MUIVerb' -Value 'Z LAG' -Type String
+
+# Delete every key name used by previous builds, including the internal-looking
+# 00_ZLAG.Tools / 00_ZLAG.TOOLBOX names reported by users.
+$oldMenuNames = @(
+    'ZLAG.Tools', '00_ZLAG.Tools', 'ZLAG.Toolbox', 'ZLAG.TOOLBOX',
+    '00_ZLAG.Toolbox', '00_ZLAG.TOOLBOX', 'Z LAG', 'Z LAG TOOLBOX'
+)
+foreach ($shellRoot in $backgroundShellRoots) {
+    foreach ($oldName in $oldMenuNames) {
+        Remove-Item -Path (Join-Path $shellRoot $oldName) -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# The registry key itself also uses the clean spaced name. Both the default value
+# and MUIVerb are set so Explorer can never fall back to dots or underscores.
+foreach ($shellRoot in $backgroundShellRoots) {
+    $menuRoot = Join-Path $shellRoot 'Z LAG TOOLBOX'
+    Set-ZLagRegistryValue -Path $menuRoot -Name '' -Value 'Z LAG TOOLBOX' -Type String
+    Set-ZLagRegistryValue -Path $menuRoot -Name 'MUIVerb' -Value 'Z LAG TOOLBOX' -Type String
     Set-ZLagRegistryValue -Path $menuRoot -Name 'Icon' -Value '%SystemRoot%\System32\taskmgr.exe' -Type ExpandString
     Set-ZLagRegistryValue -Path $menuRoot -Name 'Position' -Value 'Top' -Type String
     Set-ZLagRegistryValue -Path $menuRoot -Name 'SubCommands' -Value $subCommands -Type String
@@ -170,4 +188,4 @@ Set-ZLagRegistryValue -Path $marker -Name 'ClassicSoundManager' -Value 1 -Type D
 Set-ZLagRegistryValue -Path $marker -Name 'ZLagContextMenu' -Value 1 -Type DWord
 Set-ZLagRegistryValue -Path $marker -Name 'ZLagContextMenuDate' -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -Type String
 
-Write-ZLagLog 'Z LAG context menu configured; visible Classic Sound Start Menu folder removed.'
+Write-ZLagLog 'Z LAG TOOLBOX context menu configured with clean spaced labels; visible Classic Sound Start Menu folder removed.'
