@@ -93,6 +93,55 @@ function Test-CriticalStart {
     return $false
 }
 
+# Never let ServiceController wait indefinitely for START_PENDING/STOP_PENDING.
+# Registry startup state is written first, sc.exe gets a 750 ms command timeout,
+# and a running service gets at most 1.5 seconds to report Stopped.
+function Invoke-ZLagScBounded {
+    param([string[]]$Arguments, [int]$TimeoutMilliseconds = 750)
+    try {
+        $process = Start-Process -FilePath "$env:SystemRoot\System32\sc.exe" -ArgumentList $Arguments -WindowStyle Hidden -PassThru -ErrorAction Stop
+        if (-not $process.WaitForExit($TimeoutMilliseconds)) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            return $false
+        }
+        return $true
+    } catch { return $false }
+}
+
+function Disable-ZLagServiceBounded {
+    param([string]$Name, [datetime]$PassDeadline)
+    $regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$Name"
+    if (Test-Path $regPath) {
+        New-ItemProperty -Path $regPath -Name Start -Value 4 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    if ((Get-Date) -lt $PassDeadline) {
+        [void](Invoke-ZLagScBounded -Arguments @('config', $Name, 'start=', 'disabled'))
+    }
+
+    $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
+    if (-not $service -or $service.Status -eq 'Stopped') { return $true }
+    if ((Get-Date) -ge $PassDeadline) { return $false }
+
+    [void](Invoke-ZLagScBounded -Arguments @('stop', $Name))
+    $stopDeadline = (Get-Date).AddMilliseconds(1500)
+    if ($stopDeadline -gt $PassDeadline) { $stopDeadline = $PassDeadline }
+    do {
+        $status = (Get-Service -Name $Name -ErrorAction SilentlyContinue).Status
+        if ($status -eq 'Stopped' -or $null -eq $status) { return $true }
+        Start-Sleep -Milliseconds 100
+    } while ((Get-Date) -lt $stopDeadline)
+    return $false
+}
+
+function Set-ZLagServiceDemandBounded {
+    param([string]$Name)
+    $regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$Name"
+    if (Test-Path $regPath) {
+        New-ItemProperty -Path $regPath -Name Start -Value 3 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    [void](Invoke-ZLagScBounded -Arguments @('config', $Name, 'start=', 'demand'))
+}
+
 # --- 3. Disable safe-to-remove background services ---
 $Disable = @(
     # Cloud / identity / content (Store install services are handled ONLY by the
@@ -150,6 +199,8 @@ $Disable = @(
 )
 
 $disabledCount = 0
+$timedOutServiceCount = 0
+$servicePassDeadline = (Get-Date).AddSeconds(60)
 foreach ($name in $Disable) {
     Get-Service -Name "$name*" -ErrorAction SilentlyContinue | ForEach-Object {
         $svc = $_
@@ -158,13 +209,15 @@ foreach ($name in $Disable) {
         } elseif (Test-CriticalStart -Name $svc.Name) {
             Log ("  skip (boot/system service): " + $svc.Name)
         } else {
-            Stop-Service -Name $svc.Name -Force -ErrorAction SilentlyContinue
-            Set-Service -Name $svc.Name -StartupType Disabled -ErrorAction SilentlyContinue
+            if (-not (Disable-ZLagServiceBounded -Name $svc.Name -PassDeadline $servicePassDeadline)) {
+                $script:timedOutServiceCount++
+                Log ("  timeout (disabled for next boot, did not wait): " + $svc.Name)
+            }
             $script:disabledCount++
         }
     }
 }
-Log ("Disabled " + $script:disabledCount + " background services (kept all protected services).")
+Log ("Disabled " + $script:disabledCount + " background services; bounded-stop timeouts=" + $script:timedOutServiceCount + ".")
 
 # --- 4. Demand-only services (available if an app needs them, 0 at idle) ---
 $Manual = @(
@@ -175,7 +228,7 @@ $Manual = @(
 # state is decided by the Store option and locked in by repair_appx_runtime.ps1.
 foreach ($name in $Manual) {
     Get-Service -Name "$name*" -ErrorAction SilentlyContinue | ForEach-Object {
-        Set-Service -Name $_.Name -StartupType Manual -ErrorAction SilentlyContinue
+        Set-ZLagServiceDemandBounded -Name $_.Name
     }
 }
 Log "Demand-only (no idle footprint) set for compatibility services."

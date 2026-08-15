@@ -78,6 +78,37 @@ function Test-CriticalStart {
     return $false
 }
 
+function Invoke-ZLagScBounded {
+    param([string[]]$Arguments, [int]$TimeoutMilliseconds = 750)
+    try {
+        $process = Start-Process -FilePath "$env:SystemRoot\System32\sc.exe" -ArgumentList $Arguments -WindowStyle Hidden -PassThru -ErrorAction Stop
+        if (-not $process.WaitForExit($TimeoutMilliseconds)) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            return $false
+        }
+        return $true
+    } catch { return $false }
+}
+
+function Disable-ZLagServiceBounded {
+    param([string]$Name)
+    $regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$Name"
+    if (Test-Path $regPath) {
+        New-ItemProperty -Path $regPath -Name Start -Value 4 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    [void](Invoke-ZLagScBounded -Arguments @('config', $Name, 'start=', 'disabled'))
+    $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
+    if (-not $service -or $service.Status -eq 'Stopped') { return $true }
+    [void](Invoke-ZLagScBounded -Arguments @('stop', $Name))
+    $deadline = (Get-Date).AddMilliseconds(1500)
+    do {
+        $status = (Get-Service -Name $Name -ErrorAction SilentlyContinue).Status
+        if ($status -eq 'Stopped' -or $null -eq $status) { return $true }
+        Start-Sleep -Milliseconds 100
+    } while ((Get-Date) -lt $deadline)
+    return $false
+}
+
 # --- 2. Disable Win11-only background services (only truly safe-to-disable) ---
 $Win11Disable = @(
     # Shared PC account manager + UWP disk/storage telemetry (safe to disable)
@@ -105,8 +136,9 @@ foreach ($name in $Win11Disable) {
         } elseif (Test-CriticalStart -Name $_.Name) {
             Log ("  skip (boot/system service): " + $_.Name)
         } else {
-            Stop-Service -Name $_.Name -Force -ErrorAction SilentlyContinue
-            Set-Service -Name $_.Name -StartupType Disabled -ErrorAction SilentlyContinue
+            if (-not (Disable-ZLagServiceBounded -Name $_.Name)) {
+                Log ("  timeout (disabled for next boot, did not wait): " + $_.Name)
+            }
             $script:disabledCount++
         }
     }
@@ -118,8 +150,9 @@ foreach ($prefix in $Win11PerUser) {
         } elseif (Test-CriticalStart -Name $_.Name) {
             Log ("  skip (boot/system service): " + $_.Name)
         } else {
-            Stop-Service -Name $_.Name -Force -ErrorAction SilentlyContinue
-            Set-Service -Name $_.Name -StartupType Disabled -ErrorAction SilentlyContinue
+            if (-not (Disable-ZLagServiceBounded -Name $_.Name)) {
+                Log ("  timeout (disabled for next boot, did not wait): " + $_.Name)
+            }
             $script:disabledCount++
         }
     }

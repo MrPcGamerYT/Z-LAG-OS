@@ -110,11 +110,45 @@ function Get-ZLagBaseServiceName {
     return ($Name -replace '_[0-9A-Fa-f]{5,}$', '')
 }
 
+# sc.exe and service state transitions are explicitly bounded. A service stuck in
+# START_PENDING is marked disabled immediately and gets at most 1.5 seconds to
+# stop; the floor never waits for it to finish starting.
+function Invoke-ZLagScBounded {
+    param([string[]]$Arguments, [int]$TimeoutMilliseconds = 750)
+    try {
+        $process = Start-Process -FilePath "$env:SystemRoot\System32\sc.exe" -ArgumentList $Arguments -WindowStyle Hidden -PassThru -ErrorAction Stop
+        if (-not $process.WaitForExit($TimeoutMilliseconds)) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            return $false
+        }
+        return $true
+    } catch { return $false }
+}
+
+function Stop-ZLagServiceBounded {
+    param([string]$Name, [datetime]$PassDeadline)
+    $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
+    if (-not $service -or $service.Status -eq 'Stopped') { return $true }
+    if ((Get-Date) -ge $PassDeadline) { return $false }
+
+    [void](Invoke-ZLagScBounded -Arguments @('stop', $Name))
+    $deadline = (Get-Date).AddMilliseconds(1500)
+    if ($deadline -gt $PassDeadline) { $deadline = $PassDeadline }
+    do {
+        $status = (Get-Service -Name $Name -ErrorAction SilentlyContinue).Status
+        if ($status -eq 'Stopped' -or $null -eq $status) { return $true }
+        Start-Sleep -Milliseconds 100
+    } while ((Get-Date) -lt $deadline)
+    return $false
+}
+
 function Invoke-ZLagFloorEnforcement {
     $changedStartup = 0
     $stopped = 0
+    $stopTimedOut = 0
     $removedTriggers = 0
     $skippedCritical = 0
+    $passDeadline = (Get-Date).AddSeconds(60)
     $serviceRoot = 'HKLM:\SYSTEM\CurrentControlSet\Services'
     $allKeys = Get-ChildItem -Path $serviceRoot -ErrorAction SilentlyContinue
 
@@ -142,19 +176,25 @@ function Invoke-ZLagFloorEnforcement {
                 if (-not (Test-Path -LiteralPath $triggerPath)) { $removedTriggers++ }
             }
 
-            $service = Get-Service -Name $name -ErrorAction SilentlyContinue
-            if ($service -and $service.Status -ne 'Stopped') {
-                Stop-Service -Name $name -Force -ErrorAction SilentlyContinue
-                Start-Sleep -Milliseconds 40
-                if ((Get-Service -Name $name -ErrorAction SilentlyContinue).Status -eq 'Stopped') {
-                    $stopped++
-                }
-            }
-
+            # Lock startup first so the service cannot start again even if its
+            # current START_PENDING transition exceeds the bounded stop window.
             if ($null -eq $properties.Start -or [int]$properties.Start -ne 4) {
-                & sc.exe config $name start= disabled 2>$null | Out-Null
                 New-ItemProperty -Path $key.PSPath -Name Start -Value 4 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
                 $changedStartup++
+            }
+            if ((Get-Date) -lt $passDeadline) {
+                [void](Invoke-ZLagScBounded -Arguments @('config', $name, 'start=', 'disabled'))
+            }
+
+            $service = Get-Service -Name $name -ErrorAction SilentlyContinue
+            $wasRunning = $service -and $service.Status -ne 'Stopped'
+            if ($wasRunning) {
+                if (Stop-ZLagServiceBounded -Name $name -PassDeadline $passDeadline) {
+                    $stopped++
+                } else {
+                    $stopTimedOut++
+                    Write-ZLagFloorLog ('Stop timeout for ' + $name + '; startup is disabled and enforcement continued.')
+                }
             }
         }
     }
@@ -175,7 +215,7 @@ function Invoke-ZLagFloorEnforcement {
     New-ItemProperty -Path $marker -Name 'ServiceFloorLastRun' -Value (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
     New-ItemProperty -Path $marker -Name 'ServiceFloorTargetCount' -Value $targetServices.Count -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
 
-    Write-ZLagFloorLog ('Enforced {0} target families: startup corrected={1}, running stopped={2}, triggers removed={3}, boot/system skipped={4}.' -f $targetServices.Count, $changedStartup, $stopped, $removedTriggers, $skippedCritical)
+    Write-ZLagFloorLog ('Enforced {0} target families: startup corrected={1}, stopped={2}, stop timeouts={3}, triggers removed={4}, boot/system skipped={5}; pass cap=60s.' -f $targetServices.Count, $changedStartup, $stopped, $stopTimedOut, $removedTriggers, $skippedCritical)
 }
 
 if ($EnforceOnly) {
