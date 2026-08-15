@@ -3,7 +3,7 @@
 [![License: Use Only](https://img.shields.io/badge/License-Proprietary%20%2F%20Use--Only-red.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078d7.svg)](https://www.microsoft.com/windows)
 [![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://amelabs.net/)
-[![Version: 5.11](https://img.shields.io/badge/Version-5.11-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
+[![Version: 5.12](https://img.shields.io/badge/Version-5.12-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
 [![Build: Stable](https://img.shields.io/badge/Build-Stable-brightgreen.svg)]()
 
 > **Maximum FPS. Zero Lag. No Bloat.** A performance-driven AME Wizard playbook engineered for competitive gaming, Android emulators (BlueStacks / MSI App Player / LDPlayer), and low-end hardware.
@@ -13,13 +13,13 @@
 ---
 
 ### ⚠️ CRITICAL DISCLAIMER
-This playbook applies **aggressive system-wide modifications**: disables telemetry, strips built-in apps, blocks updates, removes OneDrive/Cortana/Widgets, purges services, and modifies kernel power & scheduler policies. It is designed for **performance-critical gaming environments only**. Create a restore point and use on a **Local Offline Account**.
+This playbook applies **aggressive system-wide modifications**: disables telemetry, strips built-in apps, blocks updates, removes OneDrive (including local sync folders), Edge/WebView2, Cortana/Widgets, purges services, and modifies kernel power & scheduler policies. It is designed for **performance-critical gaming environments only**. Create a restore point and use on a **Local Offline Account**.
 
 ---
 
 ## 📚 Table of Contents
 - [Core Objectives](#-core-objectives)
-- [What's New in v5.11](#-whats-new-in-v511)
+- [What's New in v5.12](#-whats-new-in-v512)
 - [Optimization Matrix](#️-optimization-matrix)
 - [Optional Performance Profiles](#-optional-performance-profiles)
 - [Expected Performance Gains](#-expected-performance-gains)
@@ -43,6 +43,41 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ---
 
+## 🆕 What's New in v5.12
+
+### v5.12 - complete WebView2/OneDrive removal, classic sound and live startup status
+- **WebView2 protection removed**: the repair/guarantee task and installer were
+  deleted. The supplied ShadowWhisperer removal pass now downloads `setup.exe`
+  only after its pinned SHA-256 is verified, force-uninstalls Edge/WebView2, and
+  then `remove_edge.ps1` performs the authoritative all-user cleanup. Both
+  products' AppX/provisioned packages, files, update clients, tasks, services
+  and registry entries are removed and blocked from Edge Update. The
+  process-floor passes no longer exempt WebView packages or processes.
+- **Compatibility warning**: removing WebView2 can break applications that embed
+  it, including some versions of Teams, Discord, Office add-ins and third-party
+  launchers. This is intentional; reinstall WebView2 manually if one of your
+  required applications does not bundle a fixed runtime.
+- **OneDrive removal fixed for every user**: `remove_onedrive.ps1` runs every
+  detected machine/per-user uninstaller, deprovisions the inbox package, mounts
+  offline user hives, resets OneDrive known-folder redirection, removes startup
+  entries/tasks/sync roots/Explorer namespaces/installers/caches, and prevents
+  setup for future users. The playbook's fresh-install mode also removes local
+  `OneDrive` and `OneDrive - *` sync folders.
+- **Classic Sound Manager**: native `mmsys.cpl` tabs and `sndvol.exe` now have an
+  all-user Start Menu folder, a desktop-background submenu, and **Ctrl+Alt+V**
+  opens the classic Volume Mixer. The classic compact volume flyout is selected
+  on Windows builds that still honor `EnableMtcUvc`.
+- **Real startup status**: Windows' supported `VerboseStatus` policy now shows
+  real system-phase text below **Welcome / Please wait**. As soon as the secure
+  sign-in desktop hands off to the user session, a short overlay reports actual
+  processes and configured startup apps in real time. Windows does not allow
+  ordinary apps to draw over the secure LogonUI desktop, so app names appear in
+  the post-authentication overlay rather than being injected into LogonUI.
+- **Task filenames now match execution order**: active tasks are numbered
+  consecutively from `01_powerPlan.yml` through `37_deepClean.yml`, exactly as
+  referenced by `main.yml`. The two files not wired into the playbook are named
+  `legacy_*` so they cannot be mistaken for active numbered steps.
+
 ## 🆕 What's New in v5.11
 
 ### v5.11 - ULTRA process & RAM floor (VSS, notifications & discovery now off)
@@ -56,8 +91,8 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   Diagnostic, WER queue, Location, SettingSync, Defrag, Diagnosis, Feedback)
   are disabled.
 - **Still hard-protected**: Windows core (no boot break / no crash), Wi-Fi /
-  Bluetooth / Ethernet, WebView2, and the AppX app-launch stack (Toolbox apps +
-  Start Menu never silently crash). The boot/system-service guard (Start ≤ 1)
+  Bluetooth / Ethernet and the AppX app-launch stack (Toolbox apps + Start Menu
+  never silently crash). **Superseded in v5.12:** WebView2 is now removed. The boot/system-service guard (Start ≤ 1)
   is untouched.
 - **Win11 ULTRA pass**: Win11-only `AarSvc`, `Ndu`, `WpnService` and `cbdhsvc`
   are now fully disabled instead of demand-only.
@@ -75,10 +110,9 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   `setup.exe --uninstall --system-level --force-uninstall`, AppX + provisioned
   package removal, services/tasks/registry cleanup, and shortcut + Start-tile
   removal from **every** user profile. The `Edge.lnk` leftovers are gone.
-- **WebView2 is now guaranteed, never broken**: `repair_webview2.ps1` verifies
-  the WebView2 Runtime after Edge removal and at the end of the playbook, and
-  silently reinstalls the official Evergreen runtime if it is missing — so the
-  "WebView2 runtime missing" error cannot happen.
+- **Historical v5.11 behavior (superseded):** WebView2 was previously repaired
+  after Edge removal. v5.12 deliberately removes that protection and deletes the
+  runtime instead.
 - **First-run bloat removal fixed**: `appx_remover.ps1` now *deprovisions*
   inbox apps (they can no longer come back for new users) and no longer skips
   packages flagged `NonRemovable`, so all listed bloat is removed in a single
@@ -96,7 +130,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 - **Universal Windows 10 + Windows 11**: version-aware taskbar and power plan
   scripts, correct Ultimate Performance GUID with High Performance fallback, and
   tolerant app/service removal so the same playbook works perfectly on both OSes.
-- **Windows 11 extra floor**: a `builds: >=22000`-gated pass (`36_win11ProcessFloor.yml`
+- **Windows 11 extra floor**: a `builds: >=22000`-gated pass (`32_win11ProcessFloor.yml`
   + `win11_process_floor.ps1`) disables Win11-only services and AI components so
   Windows 11 lands nearly the same idle process count as Windows 10.
 - **Idle Process + RAM Floor**: new `process_floor.ps1` engine consolidates every
@@ -104,8 +138,9 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   turns off prefetch/Superfetch and trims working sets, pushing **idle background
   processes down to ~40–55** and idle RAM to its floor.
 - **Hard-protected by a keep-list**: Wi-Fi, Bluetooth, Ethernet, the AppX shell
-  / app-launch stack and WebView2 are *never* touched, so networking keeps working
-  and Toolbox-installed apps never silently crash.
+  / app-launch stack are *never* touched, so networking keeps working and
+  Toolbox-installed apps never silently crash. **WebView2 is no longer protected
+  as of v5.12.**
 - **Break-proofing**: boot/system-critical services are never disabled (a Start
   value ≤ 1 guard on top of the keep-list). *(Superseded in v5.11 ULTRA: the
   on-demand features — file sharing, hotspot/ICS, network discovery, System
@@ -144,7 +179,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 | **Input & Timer** | Disabled dynamic tick, high-resolution timer, instant key/mouse response | Lower DPC latency, snappier input |
 | **Networking** | Global + per-interface TCP no-delay, offload tuning, DNS flush | Reduced jitter, competitive ping |
 | **Privacy & Telemetry** | Telemetry blocked at host + task level, update hosts blocked | Zero background upload |
-| **UI/UX** | Transparency & animations off, forced dark theme, small taskbar, clean Start layout | Less RAM usage, cleaner workflow |
+| **UI/UX** | Transparency & animations off, forced dark theme, small taskbar, clean Start layout, classic Sound Manager, verbose/live startup status | Less RAM usage, cleaner workflow and visible boot progress |
 
 ---
 
@@ -190,10 +225,10 @@ Optimization achieves: less background CPU, more CPU cycles to game threads via 
 - ULTRA (v5.11): System Restore/VSS, notifications, network discovery, file sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history are now fully disabled for gaming (see the v5.11 notes before applying)
 - Optional removals: Defender, Bluetooth stack, Wi-Fi stack, Store + MS identity/gaming services (all gated behind options)
 - Telemetry: CEIP tasks, appraiser, 43 hosts-file entries, update-host blocking
-- Features: OneDrive setup, Widgets, Edge, Transparency, Animations, Search highlights, News/Feeds, Cortana hotkey
+- Features: OneDrive client/setup/sync integration and local sync folders, Widgets, Edge, WebView2 Runtime, Transparency, Animations, Search highlights, News/Feeds, Cortana hotkey
 
 ### Preserved (for stability)
-- **WebView2 Runtime** - kept (v5.0 fix) since many apps (Discord, Teams v2, etc.) need it
+- **WebView2 is not preserved in v5.12** - it is deliberately removed; apps that require it must supply or reinstall their own runtime
 - **NVIDIA / AMD / Intel GPU driver packages** - never removed
 - **Critical System apps**: desktop backbone and security-health UI
 - **VC++ Runtimes 2015+** - installed fresh (x86 + x64 + ARM64 where applicable)
@@ -225,7 +260,7 @@ build and applies the correct tweak, so the same `.apbx` works perfectly on both
 - **Power plan**: uses the real Ultimate Performance GUID and falls back to High
   Performance on editions where Ultimate is unavailable; tunes both AC and DC so
   laptops match desktops.
-- **Windows 11 extra process floor** (`36_win11ProcessFloor.yml`, gated
+- **Windows 11 extra process floor** (`32_win11ProcessFloor.yml`, gated
   `builds: >=22000`): disables Win11-only services (AI/Copilot/Recall runtime,
   data-usage, notifications, per-user bloat), removes Win11-only apps, kills
   AI/Widgets processes and locks Copilot/Recall/Chat/Suggestions via policy — so
@@ -233,7 +268,7 @@ build and applies the correct tweak, so the same `.apbx` works perfectly on both
 - **AppX / bloat removal**: all package/service removals are tolerant
   (`-ErrorAction SilentlyContinue`), so packages that only exist on one OS are
   simply skipped on the other.
-- **Start menu, Edge removal, wallpaper, AppX repair**: all build-safe.
+- **Start menu, Edge/WebView2 removal, OneDrive removal, wallpaper, classic sound, startup status and AppX repair**: all build-safe.
 
 ---
 
@@ -267,6 +302,15 @@ Reboot and open the app. You still have no Microsoft Store.
 
 **Q: I chose "Remove Microsoft Store & All MS Services" — is *everything* Microsoft gone?**
 A: All Microsoft *apps* (Store, Xbox, YourPhone, Bing, Office Hub, etc.) are uninstalled and deprovisioned, and all Microsoft *account/cloud/identity/telemetry* services are disabled so they cannot run. Four tiny services (`AppXSvc`, `StateRepository`, `LicenseManager`, `ClipSVC`) are kept on purpose: they are the Windows desktop shell's own runtime (Start Menu/Search/app launching), not Store bloat — removing them is what used to make apps crash with "The service has not been started".
+
+**Q: An app says WebView2 is missing after applying v5.12. Is that expected?**
+A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinstall Microsoft's Evergreen WebView2 Runtime if that app does not ship its own fixed runtime.
+
+**Q: Why do app names appear just after sign-in instead of directly inside the secure lock screen?**
+A: Windows blocks normal applications from drawing over the secure LogonUI desktop. The supported `VerboseStatus` text appears below Welcome/Please wait; the Z-LAG overlay takes over immediately after authentication and reports real user-session process starts. It does not patch or replace security-sensitive Winlogon binaries.
+
+**Q: How do I open the classic sound tools?**
+A: Open **Start > Z-LAG OS > Classic Sound Manager**, use the desktop right-click **Sound Manager (Classic)** submenu, or press **Ctrl+Alt+V** for `sndvol.exe`. New Windows 11 taskbars may ignore the legacy compact-flyout registry value, but these native Win32 tools always remain available.
 
 **Q: Will Windows Update break this?**
 A: The hosts file blocks updates and the update service is disabled. If you later want updates, restore the hosts file first.
@@ -324,4 +368,4 @@ is required for anything outside this limited use permission. All rights reserve
 **Star ⭐ this repo if you get an FPS boost!**
 
 ---
-*Z LAG OS v5.11 - Zero Lag, Max Performance. Built for gamers, by gamers.*
+*Z LAG OS v5.12 - Zero Lag, Max Performance. Built for gamers, by gamers.*
