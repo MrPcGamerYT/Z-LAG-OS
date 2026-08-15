@@ -58,7 +58,7 @@ $KeepServices = @(
     "WcmSvc","WlanSvc","vwififlt","vwifibus","vwifimp","bthserv","BTAGService",
     "bthpriv","BluetoothUserService","RasMan","RasAuto","RemoteAccess","SstpSvc",
     "IKEEXT","BFE","MpsSvc","EapHost","dot3svc","WwanSvc","RmSvc","PolicyAgent",
-    "NcdAutoSetup","DusmSvc","wcncsvc",
+
     # Security / logon / user (untouchable)
     "WinDefend","WdNisSvc","SecurityHealthService","SamSs","ProfSvc","UserManager",
     "seclogon","KeyIso","VaultSvc","gpsvc","SENS","Winmgmt","msiserver",
@@ -96,12 +96,13 @@ $Disable = @(
     # Store-removal path so "keep the Store" users can still install apps)
     "OneSyncSvc","UserDataSvc","UnistoreSvc","PimIndexMaintenanceSvc",
     "MessagingService","BcastDVRUserService","CDPSvc","CDPUserSvc","WSearch",
-    "MapsBroker","wisvc",
+    "CloudBackupRestoreSvc","MapsBroker","wisvc",
     # Xbox
     "XblAuthManager","XblGameSave","XboxNetApiSvc","XboxGipSvc",
     # Telemetry / errors / diagnostics / compatibility
     "DiagTrack","dmwappushservice","WerSvc","WEPHOSTSVC","wercplsupport","PcaSvc",
     "DPS","WdiServiceHost","WdiSystemHost","TroubleshootingSvc","DcpSvc","UhsSvc",
+    "diagsvc","diagnosticshub.standardcollector.service","InventorySvc",
     # Updates / delivery (Windows Update is already blocked)
     "UsoSvc","WaaSMedicSvc","wuauserv","DoSvc",
     # Edge / Office updaters
@@ -109,27 +110,31 @@ $Disable = @(
     # Superfetch / RAM hogs
     "SysMain",
     # Printing / imaging / biometrics / sensors
-    "Spooler","PrintNotify","StiSvc","WiaRpc","WbioSrvc","SensorService",
+    "Spooler","PrintNotify","PrintWorkflowUserSvc","StiSvc","WiaRpc","WbioSrvc","SensorService",
     "SensorDataService","SensrSvc","FrameServer","WPDBusEnum",
     # Media / misc bloat
     "WMPNetworkSvc","WalletService","NaturalAuthentication","WpcMonSvc",
-    "RetailDemo","RemoteRegistry","PhoneSvc","Fax","TabletInputService",
+    "RpcLocator","RetailDemo","RemoteRegistry","PhoneSvc","Fax","TabletInputService",
     "GraphicsPerfSvc","MixedRealityOpenXRSvc",
     # P2P / remote management (NOT core connectivity - safe to disable)
     "p2pimsvc","p2psvc","PNRPsvc","Wecsvc","WinRM","NetTcpPortSharing","lmhosts",
+    "TermService","SessionEnv","UmRdpService","PeerDistSvc","icssvc","WFDSConMgrSvc",
     # Network extras (safe - not needed for normal Wi-Fi/Bluetooth/Ethernet)
     "IpxlatCfgSvc",
     # Smart card / NFC / embedded / Hyper-V
     "SCardSvc","ScDeviceEnum","SCPolicySvc","NfcSvc","SEMgrSvc","embeddedmode",
     "vmcompute","HvHost","vmms","hns","AJRouter",
+    "vmicguestinterface","vmicheartbeat","vmickvpexchange","vmicrdv",
+    "vmicshutdown","vmictimesync","vmicvmsession","vmicvss",
+    "LxssManager","WslService","LxssManagerUser","P9RdrService",
     # Data usage / misc safe kills
-    "Ndu","AarSvc","dcsvc","shpamsvc",
+    "Ndu","AarSvc","dcsvc","shpamsvc","DusmSvc","NcdAutoSetup","wcncsvc","NPSMSvc",
     "NetTcpActivator","NetPipeActivator","NetMsmqActivator",
     "ALG","AeLookupSvc","AppVClient","AssignedAccessManagerSvc","AxInstSV",
     "CaptureService","CscService","defragsvc","EntAppSvc","fhsvc",
     "lfsvc","MSDTC","NcbService","pla","QWAVE","SNMPTRAP","spectrum","svsvc",
     "TapiSrv","TieringEngineService","TrkWks","UevAgentService","vds",
-    "wbengine","wmiApSrv","workfolderssvc","autotimesvc",
+    "wbengine","SDRSVC","smphost","wmiApSrv","workfolderssvc","autotimesvc",
     # ULTRA: on-demand features that are NOT needed for gaming are disabled
     # entirely (System Restore / VSS, notifications, network discovery, file
     # sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history, Security Center).
