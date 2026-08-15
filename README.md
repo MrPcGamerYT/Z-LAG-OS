@@ -66,7 +66,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 - **Protected Windows core storage**: persistent Z-LAG code moved out of
   ProgramData/Program Files into hidden, ACL-protected
   `C:\Windows\Z-LAG-OS\Core`. SYSTEM, Administrators and TrustedInstaller can
-  write it; standard users receive read/execute access only. ProgramData is now
+  write it; Built-in Users, Authenticated Users and Interactive logons receive
+  read/execute access only. The files receive Medium integrity for the interactive
+  WScript/PowerShell host, and the installer validates read/execute permissions
+  before registering Startup. Hidden/System attributes only affect visibility.
+  ProgramData is now
   limited to logs, markers and backups, and obsolete code copies are deleted.
 - **Reliable VBS Welcome launcher**: runtime C# compilation was removed. The
   proven PowerShell panel is launched hidden through `Z LAG Services.vbs`, and
@@ -340,7 +344,7 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
 
 **Q: Where are permanent Z-LAG files stored, and can the Welcome process be hidden from Task Manager?**
-A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes and write access limited to SYSTEM, Administrators and TrustedInstaller. ProgramData contains only logs/backups. The Startup entry is named **Z LAG Services**. The VBS launcher exits immediately, while Task Manager may briefly show `powershell.exe` during the five-second panel because Windows cannot safely rename or conceal that host process.
+A: Core files are stored under `C:\Windows\Z-LAG-OS\Core` with hidden/system attributes. SYSTEM, Administrators and TrustedInstaller can write; Users, Authenticated Users and Interactive logons have read/execute permission. ProgramData contains only logs/backups. The Startup entry is named **Z LAG Services**. The VBS launcher exits immediately, while Task Manager may briefly show `powershell.exe` during the five-second panel because Windows cannot safely rename or conceal that host process.
 
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.

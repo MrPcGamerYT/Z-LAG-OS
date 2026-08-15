@@ -71,9 +71,37 @@ Set-Content -LiteralPath $launcherDestination -Value $launcher -Encoding Unicode
 
 # The Windows core folder is the protected code location; ProgramData contains logs
 # only. Users can execute these files but cannot replace them.
-& icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+$aclResult = & icacls.exe $coreRoot /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-ZLagLog ('ERROR: Could not apply executable core permissions: ' + ($aclResult -join ' '))
+    exit 3
+}
+$integrityResult = & icacls.exe $coreRoot /setintegritylevel '(OI)(CI)M' /t /c /q 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-ZLagLog ('ERROR: Could not apply interactive integrity level: ' + ($integrityResult -join ' '))
+    exit 3
+}
 & attrib.exe +h +s $coreRoot 2>$null
 & attrib.exe +h $dataDir 2>$null
+
+# Validate the exact account class used by an interactive logon before creating
+# the startup entry. Hidden/system attributes do not affect execution rights.
+foreach ($file in @($launcherDestination, $panelDestination)) {
+    $hasReadExecute = $false
+    $acl = Get-Acl -LiteralPath $file -ErrorAction SilentlyContinue
+    foreach ($rule in $acl.Access) {
+        try { $ruleSid = $rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value } catch { $ruleSid = '' }
+        $requiredRights = [Security.AccessControl.FileSystemRights]::ReadAndExecute
+        if ($ruleSid -eq 'S-1-5-11' -and $rule.AccessControlType -eq [Security.AccessControl.AccessControlType]::Allow -and (($rule.FileSystemRights -band $requiredRights) -eq $requiredRights)) {
+            $hasReadExecute = $true
+            break
+        }
+    }
+    if (-not $hasReadExecute) {
+        Write-ZLagLog ('ERROR: Interactive read/execute permission validation failed: ' + $file)
+        exit 4
+    }
+}
 
 # Remove previous ProgramData script copies and the live status implementation.
 $runKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
