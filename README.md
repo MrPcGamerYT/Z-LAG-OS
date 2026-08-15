@@ -45,7 +45,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ## 🆕 What's New in v5.12
 
-### v5.12 - complete WebView2/OneDrive removal, classic sound and live startup status
+### v5.12 - complete WebView2/OneDrive removal, Z LAG tools and custom boot Welcome
 - **WebView2 protection removed**: the repair/guarantee task and installer were
   deleted. The supplied ShadowWhisperer removal pass now downloads `setup.exe`
   only after its pinned SHA-256 is verified, force-uninstalls Edge/WebView2, and
@@ -63,20 +63,20 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   entries/tasks/sync roots/Explorer namespaces/installers/caches, and prevents
   setup for future users. The playbook's fresh-install mode also removes local
   `OneDrive` and `OneDrive - *` sync folders.
-- **Classic Sound Manager**: native `mmsys.cpl` tabs and `sndvol.exe` now have an
-  all-user Start Menu folder, a desktop-background submenu, and **Ctrl+Alt+V**
-  opens the classic Volume Mixer. The classic compact volume flyout is selected
-  on Windows builds that still honor `EnableMtcUvc`.
-- **Real startup status**: Windows' supported `VerboseStatus` policy now shows
-  real system-phase text below **Welcome / Please wait**. As soon as the secure
-  sign-in desktop hands off to the user session, a short overlay reports actual
-  processes and configured startup apps in real time. Windows does not allow
-  ordinary apps to draw over the secure LogonUI desktop, so app names appear in
-  the post-authentication overlay rather than being injected into LogonUI.
-- **Task filenames now match execution order**: active tasks are numbered
-  consecutively from `01_powerPlan.yml` through `37_deepClean.yml`, exactly as
-  referenced by `main.yml`. The two files not wired into the playbook are named
-  `legacy_*` so they cannot be mistaken for active numbered steps.
+- **Z LAG context toolbox**: the visible Classic Sound Start Menu folder and its
+  standalone context submenu are removed. A single first-position **Z LAG**
+  submenu now provides **RAM Trim / Clean** first, **Temp Clean** second, then
+  recycle-bin cleanup, DNS flush, Explorer restart, classic Sound Manager and
+  the classic Volume Mixer. The compact classic flyout is still selected on
+  Windows builds that honor `EnableMtcUvc`.
+- **Native boot status + Welcome-only panel**: Windows' supported `VerboseStatus`
+  policy keeps loading text on the real secure **Welcome / Please wait** screen.
+  The old post-login process/app status list is removed. Once Explorer and the
+  desktop are ready, a hidden launcher shows one short branded **Z LAG OS**
+  Welcome panel with no boot, process, service, or startup-app status.
+- **Task filenames now match execution order**: the task directory contains only
+  the 37 active tasks, numbered consecutively from `01_powerPlan.yml` through
+  `37_deepClean.yml` exactly as referenced by `main.yml`.
 
 ## 🆕 What's New in v5.11
 
@@ -179,7 +179,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 | **Input & Timer** | Disabled dynamic tick, high-resolution timer, instant key/mouse response | Lower DPC latency, snappier input |
 | **Networking** | Global + per-interface TCP no-delay, offload tuning, DNS flush | Reduced jitter, competitive ping |
 | **Privacy & Telemetry** | Telemetry blocked at host + task level, update hosts blocked | Zero background upload |
-| **UI/UX** | Transparency & animations off, forced dark theme, small taskbar, clean Start layout, classic Sound Manager, verbose/live startup status | Less RAM usage, cleaner workflow and visible boot progress |
+| **UI/UX** | Transparency & animations off, forced dark theme, small taskbar, clean Start layout, first-position Z LAG maintenance submenu, classic sound tools, native lock-screen loading status and Welcome-only panel | Less RAM usage, cleaner workflow and visible boot progress |
 
 ---
 
@@ -268,7 +268,7 @@ build and applies the correct tweak, so the same `.apbx` works perfectly on both
 - **AppX / bloat removal**: all package/service removals are tolerant
   (`-ErrorAction SilentlyContinue`), so packages that only exist on one OS are
   simply skipped on the other.
-- **Start menu, Edge/WebView2 removal, OneDrive removal, wallpaper, classic sound, startup status and AppX repair**: all build-safe.
+- **Start menu, Edge/WebView2 removal, OneDrive removal, wallpaper, classic sound, boot Welcome and AppX repair**: all build-safe.
 
 ---
 
@@ -306,11 +306,11 @@ A: All Microsoft *apps* (Store, Xbox, YourPhone, Bing, Office Hub, etc.) are uni
 **Q: An app says WebView2 is missing after applying v5.12. Is that expected?**
 A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinstall Microsoft's Evergreen WebView2 Runtime if that app does not ship its own fixed runtime.
 
-**Q: Why do app names appear just after sign-in instead of directly inside the secure lock screen?**
-A: Windows blocks normal applications from drawing over the secure LogonUI desktop. The supported `VerboseStatus` text appears below Welcome/Please wait; the Z-LAG overlay takes over immediately after authentication and reports real user-session process starts. It does not patch or replace security-sensitive Winlogon binaries.
+**Q: What appears during and after boot?**
+A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading finishes and Explorer is ready, a short custom Z LAG OS Welcome panel appears by itself and closes automatically. It does not show process, service, app, or boot-status text after the desktop loads.
 
-**Q: How do I open the classic sound tools?**
-A: Open **Start > Z-LAG OS > Classic Sound Manager**, use the desktop right-click **Sound Manager (Classic)** submenu, or press **Ctrl+Alt+V** for `sndvol.exe`. New Windows 11 taskbars may ignore the legacy compact-flyout registry value, but these native Win32 tools always remain available.
+**Q: Where are the cleanup and classic sound tools?**
+A: Right-click the desktop or a folder background and open **Z LAG**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
 
 **Q: Will Windows Update break this?**
 A: The hosts file blocks updates and the update service is disabled. If you later want updates, restore the hosts file first.
