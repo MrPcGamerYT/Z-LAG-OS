@@ -211,11 +211,15 @@ Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction Silent
 $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$starter`""
 $triggerBoot = New-ScheduledTaskTrigger -AtStartup
 $triggerLogon = New-ScheduledTaskTrigger -AtLogOn
-# Re-arm a few minutes after boot in case something disabled the services during apply
-$triggerDelay = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) -RepetitionInterval (New-TimeSpan -Minutes 10) -RepetitionDuration (New-TimeSpan -Days 3650)
+# One delayed re-arm ~3 minutes after boot in case something disabled the
+# services during apply. The old version repeated every 10 minutes FOREVER,
+# spawning cmd.exe + net.exe processes in the middle of gaming sessions and
+# contributing to periodic FPS stutter. Boot/logon + one recheck is enough.
+$triggerDelay = New-ScheduledTaskTrigger -AtStartup
+try { $triggerDelay.Delay = 'PT3M' } catch { }
 
 $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 2) -Priority 7
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerBoot, $triggerLogon, $triggerDelay) -Principal $principal -Settings $settings -Force | Out-Null
 
 & $env:ComSpec /d /c ('"' + $starter + '"') 2>$null | Out-Null

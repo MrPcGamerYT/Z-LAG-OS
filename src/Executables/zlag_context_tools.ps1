@@ -6,7 +6,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('RamTrim', 'TempClean', 'RecycleBin', 'FlushDns', 'RestartExplorer', 'SoundManager', 'VolumeMixer')]
+    [ValidateSet('RamTrim', 'TempClean', 'RecycleBin', 'FlushDns', 'RestartExplorer', 'SoundManager', 'VolumeMixer',
+                 'GameBoost', 'StandbyClear', 'PingTest', 'SystemInfo', 'PowerMaxFps')]
     [string]$Action
 )
 
@@ -176,12 +177,212 @@ function Invoke-ZLagRestartExplorer {
     Start-Process (Join-Path $env:SystemRoot 'explorer.exe') -ErrorAction SilentlyContinue
 }
 
+function Invoke-ZLagGameBoost {
+    # One-click pre-game boost: kill common background bloat processes that may
+    # have respawned, trim RAM, and flush DNS. Never touches games, launchers
+    # (Steam/Epic/Riot/Battle.net), drivers or Windows core processes.
+    if (-not (Test-ZLagAdministrator)) {
+        [void](Start-ZLagElevatedAction -RequestedAction GameBoost)
+        return
+    }
+
+    $bloat = @(
+        'OneDrive', 'msedge', 'msedgewebview2', 'MicrosoftEdgeUpdate', 'Widgets',
+        'WidgetService', 'Copilot', 'YourPhone', 'PhoneExperienceHost', 'Teams',
+        'ms-teams', 'SkypeBackgroundHost', 'GameBarPresenceWriter', 'GameBar',
+        'GameBarFTServer', 'SearchHost', 'SecurityHealthSystray', 'mobsync'
+    )
+    $killed = 0
+    foreach ($name in $bloat) {
+        $procs = Get-Process -Name $name -ErrorAction SilentlyContinue
+        if ($procs) {
+            $procs | Stop-Process -Force -ErrorAction SilentlyContinue
+            $killed += @($procs).Count
+        }
+    }
+
+    # Flush DNS for a clean resolver before the match.
+    & ipconfig.exe /flushdns 2>&1 | Out-Null
+
+    # RAM trim pass (same safe working-set trim technique as RamTrim).
+    $source = @'
+using System;
+using System.Runtime.InteropServices;
+public static class ZLagBoostRamTrim {
+    [DllImport("psapi.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EmptyWorkingSet(IntPtr process);
+}
+'@
+    try { Add-Type -TypeDefinition $source -ErrorAction Stop } catch { }
+    $trimmed = 0
+    foreach ($process in Get-Process -ErrorAction SilentlyContinue) {
+        try {
+            if ($process.Id -eq $PID) { continue }
+            if ([ZLagBoostRamTrim]::EmptyWorkingSet($process.Handle)) { $trimmed++ }
+        } catch { }
+    }
+
+    $message = 'GAME BOOST complete. Closed {0} background bloat processes, trimmed {1} working sets and flushed DNS. Start your game now for maximum FPS.' -f $killed, $trimmed
+    Show-ZLagResult -Title 'Z LAG - GAME BOOST' -Message $message
+}
+
+function Invoke-ZLagStandbyClear {
+    # Clears the Windows standby memory list (cached file pages). Games that
+    # allocate large blocks mid-match can hitch while the kernel drops standby
+    # pages on demand; clearing between sessions prevents that stutter.
+    # Works identically on Windows 10 and Windows 11.
+    if (-not (Test-ZLagAdministrator)) {
+        [void](Start-ZLagElevatedAction -RequestedAction StandbyClear)
+        return
+    }
+
+    $source = @'
+using System;
+using System.Runtime.InteropServices;
+public static class ZLagStandbyList {
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern int NtSetSystemInformation(int infoClass, IntPtr info, int length);
+}
+'@
+    try { Add-Type -TypeDefinition $source -ErrorAction Stop } catch { }
+
+    $cleared = $false
+    try {
+        # SystemMemoryListInformation = 80; MemoryPurgeStandbyList = 4.
+        $pCmd = [Runtime.InteropServices.Marshal]::AllocHGlobal(4)
+        [Runtime.InteropServices.Marshal]::WriteInt32($pCmd, 4)
+        $status = [ZLagStandbyList]::NtSetSystemInformation(80, $pCmd, 4)
+        [Runtime.InteropServices.Marshal]::FreeHGlobal($pCmd)
+        if ($status -eq 0) { $cleared = $true }
+    } catch { }
+
+    if ($cleared) {
+        Show-ZLagResult -Title 'Z LAG - Clear Standby Memory' -Message 'The standby memory list was cleared. Freed RAM is instantly available to your game - no mid-match allocation stutter.'
+    } else {
+        Show-ZLagResult -Title 'Z LAG - Clear Standby Memory' -Message 'Windows refused the standby-list purge on this system. RAM Trim / Clean can be used instead.' -Kind Warning
+    }
+}
+
+function Invoke-ZLagPingTest {
+    # Network health check before queueing into a match: router + public DNS
+    # latency and jitter. Uses Test-Connection properties that exist on both
+    # Windows PowerShell 5.1 (Win10) and newer builds (universal).
+    Write-ZLagToolLog 'Running the network latency test.'
+    $gateway = $null
+    try {
+        $gateway = (Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
+            Sort-Object -Property RouteMetric | Select-Object -First 1).NextHop
+    } catch { }
+    $targets = @()
+    if ($gateway -and $gateway -ne '0.0.0.0') { $targets += ,@('Router (gateway)', $gateway) }
+    $targets += ,@('Cloudflare DNS', '1.1.1.1')
+    $targets += ,@('Google DNS', '8.8.8.8')
+
+    $lines = @()
+    foreach ($target in $targets) {
+        $label = $target[0]
+        $targetHost = $target[1]
+        $times = @()
+        for ($i = 0; $i -lt 4; $i++) {
+            try {
+                $reply = (New-Object System.Net.NetworkInformation.Ping).Send($targetHost, 1500)
+                if ($reply.Status -eq 'Success') { $times += [int]$reply.RoundtripTime }
+            } catch { }
+        }
+        if ($times.Count -gt 0) {
+            $avg = [math]::Round(($times | Measure-Object -Average).Average, 1)
+            $max = ($times | Measure-Object -Maximum).Maximum
+            $jitter = $max - ($times | Measure-Object -Minimum).Minimum
+            $lines += ('{0} ({1}): avg {2} ms | max {3} ms | jitter {4} ms' -f $label, $targetHost, $avg, $max, $jitter)
+        } else {
+            $lines += ('{0} ({1}): NO RESPONSE' -f $label, $targetHost)
+        }
+    }
+
+    Show-ZLagResult -Title 'Z LAG - Ping / Latency Test' -Message ($lines -join [Environment]::NewLine)
+}
+
+function Invoke-ZLagSystemInfo {
+    # Compact gamer-relevant system summary - universal for Windows 10 and 11.
+    Write-ZLagToolLog 'Collecting the system summary.'
+    $lines = @()
+    try {
+        $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+        $build = 0
+        try { $build = [int](Get-ItemPropertyValue 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name CurrentBuildNumber -ErrorAction SilentlyContinue) } catch { }
+        $family = if ($build -ge 22000) { 'Windows 11' } else { 'Windows 10' }
+        $lines += ('OS: {0} (build {1})' -f $family, $build)
+        $totalGb = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
+        $freeGb = [math]::Round($os.FreePhysicalMemory / 1MB, 1)
+        $lines += ('RAM: {0} GB free of {1} GB' -f $freeGb, $totalGb)
+    } catch { }
+    try {
+        $cpu = Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object -First 1
+        $lines += ('CPU: {0} ({1}C/{2}T)' -f $cpu.Name.Trim(), $cpu.NumberOfCores, $cpu.NumberOfLogicalProcessors)
+    } catch { }
+    try {
+        Get-CimInstance Win32_VideoController -ErrorAction Stop | ForEach-Object {
+            $lines += ('GPU: {0} (driver {1})' -f $_.Name, $_.DriverVersion)
+        }
+    } catch { }
+    try {
+        $plan = (& powercfg.exe /getactivescheme 2>$null | Out-String)
+        if ($plan -match '\((.+)\)') { $lines += ('Power plan: ' + $Matches[1]) }
+    } catch { }
+    $lines += ('Processes running: ' + @(Get-Process -ErrorAction SilentlyContinue).Count)
+
+    Show-ZLagResult -Title 'Z LAG - System Info' -Message ($lines -join [Environment]::NewLine)
+}
+
+function Invoke-ZLagPowerMaxFps {
+    # Re-activates the Maximum FPS (Ultimate Performance) plan in one click if
+    # anything (driver installer, Windows update, OEM tool) switched it back.
+    if (-not (Test-ZLagAdministrator)) {
+        [void](Start-ZLagElevatedAction -RequestedAction PowerMaxFps)
+        return
+    }
+
+    $ultimate = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
+    $high = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
+    $schemes = (& powercfg.exe -list 2>$null | Out-String)
+    $activated = $null
+
+    # Prefer an existing Maximum FPS / Ultimate duplicate, then the template,
+    # then High Performance - identical logic on Windows 10 and Windows 11.
+    $guidPattern = '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'
+    foreach ($line in ($schemes -split "`r?`n")) {
+        if ($line -match ('Power Scheme GUID:\s+' + $guidPattern + '\s+\((Maximum FPS|Ultimate Performance)') ) {
+            $activated = $Matches[1]
+            break
+        }
+    }
+    if (-not $activated -and $schemes -match $ultimate) { $activated = $ultimate }
+    if (-not $activated) {
+        $dup = (& powercfg.exe -duplicatescheme $ultimate 2>$null | Out-String)
+        if ($dup -match $guidPattern) { $activated = $Matches[1] }
+    }
+    if (-not $activated -and $schemes -match $high) { $activated = $high }
+
+    if ($activated) {
+        & powercfg.exe -setactive $activated 2>$null | Out-Null
+        Show-ZLagResult -Title 'Z LAG - Max FPS Power Plan' -Message 'The Maximum FPS power plan is active again. Full performance restored.'
+    } else {
+        Show-ZLagResult -Title 'Z LAG - Max FPS Power Plan' -Message 'No performance power plan could be activated on this system.' -Kind Warning
+    }
+}
+
 switch ($Action) {
     'RamTrim' { Invoke-ZLagRamTrim }
     'TempClean' { Invoke-ZLagTempClean }
     'RecycleBin' { Invoke-ZLagRecycleBinClean }
     'FlushDns' { Invoke-ZLagFlushDns }
     'RestartExplorer' { Invoke-ZLagRestartExplorer }
+    'GameBoost' { Invoke-ZLagGameBoost }
+    'StandbyClear' { Invoke-ZLagStandbyClear }
+    'PingTest' { Invoke-ZLagPingTest }
+    'SystemInfo' { Invoke-ZLagSystemInfo }
+    'PowerMaxFps' { Invoke-ZLagPowerMaxFps }
     'SoundManager' {
         Write-ZLagToolLog 'Opening the classic Sound Manager.'
         Start-Process (Join-Path $env:SystemRoot 'System32\rundll32.exe') -ArgumentList 'shell32.dll,Control_RunDLL mmsys.cpl,,0' -ErrorAction SilentlyContinue

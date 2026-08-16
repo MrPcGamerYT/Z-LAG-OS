@@ -92,6 +92,10 @@ Set-ZLagUserValue 'HKCU:\System\GameConfigStore' 'GameDVR_HonorUserFSEBehaviorMo
 Set-ZLagUserValue 'HKCU:\System\GameConfigStore' 'GameDVR_DXGIHonorFSEWindowsCompatible' 1 'DWord'
 Set-ZLagUserValue 'HKCU:\System\GameConfigStore' 'GameDVR_Enabled'                  0 'DWord'
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' 'AppCaptureEnabled' 0 'DWord'
+# Game Mode ON (scheduler-level protection for the foreground game; no extra
+# processes). GameDVR/capture above stays OFF - only the scheduler policy is kept.
+Set-ZLagUserValue 'HKCU:\Software\Microsoft\GameBar' 'AutoGameModeEnabled' 1 'DWord'
+Set-ZLagUserValue 'HKCU:\Software\Microsoft\GameBar' 'AllowAutoGameMode'   1 'DWord'
 
 # --- Notifications ---
 Set-ZLagUserValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications' 'ToastEnabled' 0 'DWord'

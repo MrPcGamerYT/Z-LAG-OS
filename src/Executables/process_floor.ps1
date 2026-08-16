@@ -166,7 +166,9 @@ $Disable = @(
     "SensorDataService","SensrSvc","FrameServer","WPDBusEnum",
     # Media / misc bloat
     "WMPNetworkSvc","WalletService","NaturalAuthentication","WpcMonSvc",
-    "RpcLocator","RetailDemo","RemoteRegistry","PhoneSvc","Fax","TabletInputService",
+    # NOTE: TabletInputService is NOT disabled (text-input stack; stays
+    # demand-start so keyboard input in UWP/search surfaces keeps working).
+    "RpcLocator","RetailDemo","RemoteRegistry","PhoneSvc","Fax",
     "GraphicsPerfSvc","MixedRealityOpenXRSvc",
     # P2P / remote management (NOT core connectivity - safe to disable)
     "p2pimsvc","p2psvc","PNRPsvc","Wecsvc","WinRM","NetTcpPortSharing","lmhosts",

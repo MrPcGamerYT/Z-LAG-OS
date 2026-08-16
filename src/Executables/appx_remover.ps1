@@ -28,7 +28,24 @@ $KeepApps = @(
     'Microsoft.Windows.Search',
     'Microsoft.VCLibs',
     'Microsoft.UI.Xaml',
-    'Microsoft.NET.Native'
+    'Microsoft.NET.Native',
+
+    # APPX RUNTIME FRAMEWORKS (DO NOT REMOVE - removing these makes every
+    # packaged/sideloaded app crash at launch with class-activation errors)
+    'Microsoft.WindowsAppRuntime',      # Windows App SDK runtime (WinUI3 apps)
+    'Microsoft.WindowsAppSDK',
+    'Microsoft.DesktopAppInstaller',    # App Installer / winget
+    'Microsoft.SecHealthUI',            # Windows Security UI
+    'Microsoft.Windows.SecHealthUI',
+    'Microsoft.AAD.BrokerPlugin',       # sign-in broker (apps hang without it)
+    'Microsoft.AccountsControl',
+    'Microsoft.CredDialogHost',
+    'Microsoft.LockApp',
+    'Microsoft.Windows.CloudExperienceHost',
+    'MicrosoftWindows.Client.CBS',      # Win11 shell surface package
+    'MicrosoftWindows.Client.Core',
+    'Microsoft.Windows.CapturePicker',
+    'Microsoft.Windows.PinningConfirmationDialog'
     # NOTE: Microsoft.WindowsStore, Microsoft.WindowsCalculator, Microsoft.Windows.Photos, 
     # Microsoft.Xbox*, Microsoft.GamingApp, Microsoft.YourPhone, Microsoft.SkypeApp, 
     # Microsoft.Bing*, Microsoft.Zune*, Clipchamp, Disney, Spotify, Netflix, Teams, Copilot

@@ -106,7 +106,10 @@ $commandIds = @(
     'Z LAG TOOLBOX RAM TRIM', 'Z LAG TOOLBOX TEMP CLEAN',
     'Z LAG TOOLBOX RECYCLE BIN', 'Z LAG TOOLBOX FLUSH DNS',
     'Z LAG TOOLBOX RESTART EXPLORER', 'Z LAG TOOLBOX SOUND MANAGER',
-    'Z LAG TOOLBOX VOLUME MIXER'
+    'Z LAG TOOLBOX VOLUME MIXER',
+    'Z LAG TOOLBOX GAME BOOST', 'Z LAG TOOLBOX STANDBY CLEAR',
+    'Z LAG TOOLBOX PING TEST', 'Z LAG TOOLBOX MAX FPS POWER',
+    'Z LAG TOOLBOX SYSTEM INFO'
 )
 foreach ($commandId in $commandIds) {
     Remove-Item -LiteralPath (Join-Path $commandStore $commandId) -Recurse -Force -ErrorAction SilentlyContinue

@@ -5,7 +5,9 @@
 # after the first boot even when their first instances were disabled during the
 # playbook. This script locks the non-gaming service templates and every suffixed
 # per-user instance to Start=4, stops any instance that came back, and briefly
-# rechecks at boot, logon, and every 15 minutes. It never remains resident.
+# rechecks at boot and logon only. It NEVER runs mid-session: a periodic pass
+# while a game is running caused visible FPS stutter, so enforcement happens
+# exclusively before the user is in-game. It never remains resident.
 #
 # Core RPC (RpcSs/RpcEptMapper), networking, audio, shell/AppX, logon, security,
 # GPU and boot/system-start services are not in the target list and are guarded.
@@ -82,9 +84,12 @@ $targetServices = @(
     'XboxGipSvc',
 
     # Printing, imaging, sensors and optional consumer hardware helpers.
+    # NOTE: TabletInputService is intentionally NOT in this list - it is part
+    # of the text-input stack and must stay demand-start to keep keyboard
+    # input working in UWP/search surfaces.
     'Spooler', 'PrintNotify', 'PrintWorkflowUserSvc', 'StiSvc', 'WiaRpc',
     'WbioSrvc', 'SensorService', 'SensorDataService', 'SensrSvc', 'FrameServer',
-    'FrameServerMonitor', 'WPDBusEnum', 'TabletInputService', 'wisvc',
+    'FrameServerMonitor', 'WPDBusEnum', 'wisvc',
 
     # Sharing, discovery, remote management and other non-gaming extras.
     'LanmanServer', 'SharedAccess', 'SSDPSRV', 'upnphost', 'fdPHost', 'FDResPub',
@@ -265,10 +270,14 @@ $triggerBoot = New-ScheduledTaskTrigger -AtStartup
 $triggerLogon = New-ScheduledTaskTrigger -AtLogOn
 try { $triggerBoot.Delay = 'PT20S' } catch { }
 try { $triggerLogon.Delay = 'PT12S' } catch { }
-$triggerPeriodic = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(3) -RepetitionInterval (New-TimeSpan -Minutes 15) -RepetitionDuration (New-TimeSpan -Days 3650)
+# NO periodic trigger: the old 15-minute repetition woke a SYSTEM PowerShell
+# pass (plus dozens of sc.exe children) in the middle of gaming sessions and
+# caused recurring FPS stutter. Boot + logon enforcement is enough because the
+# floor also deletes service TriggerInfo, so services cannot resurrect
+# mid-session anyway.
 $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -RunLevel Highest
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 3)
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerBoot, $triggerLogon, $triggerPeriodic) -Principal $principal -Settings $settings -Force | Out-Null
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 3) -Priority 7
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerBoot, $triggerLogon) -Principal $principal -Settings $settings -Force | Out-Null
 
 Invoke-ZLagFloorEnforcement
 Write-ZLagFloorLog ('Persistent non-resident watchdog installed as scheduled task: ' + $taskName)

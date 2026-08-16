@@ -1,4 +1,29 @@
+# Z-LAG OS - accurate 1:1 mouse response (MarkC-style linear curves).
+# The curves MUST be 40 bytes (5 points x 8 bytes). Older builds wrote a
+# malformed 24-byte all-zero curve, which corrupts pointer math whenever
+# Enhanced Pointer Precision is toggled back on and causes erratic mouse
+# movement. These are the correct linear (no-acceleration) curve values.
 $path = "HKCU:\Control Panel\Mouse"
-$nullBytes = [byte[]]@(0)*24
-Set-ItemProperty -LiteralPath $path -Name "SmoothMouseXCurve" -Value $nullBytes -Type Binary -Force
-Set-ItemProperty -LiteralPath $path -Name "SmoothMouseYCurve" -Value $nullBytes -Type Binary -Force
+
+$xCurve = [byte[]](
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0xC0,0xCC,0x0C,0x00,0x00,0x00,0x00,0x00,
+    0x80,0x99,0x19,0x00,0x00,0x00,0x00,0x00,
+    0x40,0x66,0x26,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x33,0x33,0x00,0x00,0x00,0x00,0x00
+)
+$yCurve = [byte[]](
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x38,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x70,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0xA8,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0xE0,0x00,0x00,0x00,0x00,0x00
+)
+
+Set-ItemProperty -LiteralPath $path -Name "SmoothMouseXCurve" -Value $xCurve -Type Binary -Force
+Set-ItemProperty -LiteralPath $path -Name "SmoothMouseYCurve" -Value $yCurve -Type Binary -Force
+
+# Enhanced Pointer Precision stays OFF for raw 1:1 input.
+Set-ItemProperty -LiteralPath $path -Name "MouseSpeed"      -Value "0" -Type String -Force
+Set-ItemProperty -LiteralPath $path -Name "MouseThreshold1" -Value "0" -Type String -Force
+Set-ItemProperty -LiteralPath $path -Name "MouseThreshold2" -Value "0" -Type String -Force

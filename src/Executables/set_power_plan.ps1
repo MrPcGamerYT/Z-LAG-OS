@@ -29,16 +29,44 @@ if ($activeGuid) {
 Write-Output '[Z-LAG] Applying power scheme fine-tuning (AC + DC)...'
 foreach ($scope in @('setacvalueindex', 'setdcvalueindex')) {
     foreach ($setting in @(
-        @('SUB_PROCESSOR','PROCTHROTTLEMIN','100'),
+        # PROCTHROTTLEMIN stays LOW on purpose: locking the minimum processor
+        # state at 100% keeps the CPU at max clocks even at idle, heat-soaks
+        # the machine and causes thermal throttling (FPS drops) mid-game.
+        # 5% minimum + 100% maximum + aggressive boost gives the same peak
+        # clocks with far more thermal headroom for long gaming sessions.
+        @('SUB_PROCESSOR','PROCTHROTTLEMIN','5'),
         @('SUB_PROCESSOR','PROCTHROTTLEMAX','100'),
         @('SUB_PROCESSOR','PERFBOOSTMODE','2'),
         @('SUB_DISK','DISKIDLE','0'),
         @('SUB_VIDEO','VIDEOIDLE','0'),
-        @('SUB_SLEEP','STANDBYIDLE','0')
+        @('SUB_SLEEP','STANDBYIDLE','0'),
+        # Core parking OFF (100% min cores online): parked cores waking up
+        # mid-game is a classic cause of sudden frame-time spikes.
+        @('SUB_PROCESSOR','CPMINCORES','100'),
+        # USB selective suspend OFF: Windows suspending the USB hub that hosts
+        # the mouse/keyboard causes input freezes, stutter and missed clicks
+        # mid-game. This is the #1 fix for "mouse randomly hitches" reports.
+        @('2a737441-1930-4402-8d77-b2bebba308a3','48e6b7a6-50f5-4782-a5d4-53bb8f07e226','0'),
+        # USB 3 link power management OFF (no U1/U2 low-power transitions).
+        @('2a737441-1930-4402-8d77-b2bebba308a3','d4e98f31-5ffe-4ce1-be31-1b38b384c009','0'),
+        # PCI Express link state power management OFF: ASPM on the GPU link
+        # adds wake-up latency and frame-time jitter.
+        @('SUB_PCIEXPRESS','ASPM','0')
     )) {
         & powercfg.exe ('-' + $scope) SCHEME_CURRENT $setting[0] $setting[1] $setting[2] 2>$null | Out-Null
     }
 }
+
+# Belt-and-braces: also strip 'Allow the computer to turn off this device to
+# save power' from USB Root Hubs and HID devices via their power management
+# registry flags, so input devices can never be power-gated mid-game.
+try {
+    Get-CimInstance -ClassName MSPower_DeviceEnable -Namespace root\wmi -ErrorAction SilentlyContinue |
+        Where-Object { $_.InstanceName -match '^USB\\|^HID\\' } |
+        ForEach-Object {
+            try { Set-CimInstance -InputObject $_ -Property @{ Enable = $false } -ErrorAction SilentlyContinue } catch { }
+        }
+} catch { }
 & powercfg.exe -setactive SCHEME_CURRENT 2>$null | Out-Null
 & powercfg.exe -hibernate off 2>$null | Out-Null
 

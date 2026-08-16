@@ -164,12 +164,20 @@ function New-ZLagToolCommand {
     Set-ZLagRegistryValue -Path (Join-Path $entryRoot 'command') -Name '' -Value $command -Type String
 }
 
-# SubCommands preserves this exact order. RAM and Temp are intentionally first.
+# SubCommands preserves this exact order. GAME BOOST is intentionally first -
+# it is the one-click "make my PC game-ready right now" action - followed by
+# the memory/cleanup tools, network tools, and the classic sound tools.
+# Every action works identically on Windows 10 and Windows 11.
 $toolEntries = @(
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX GAME BOOST'; Label = 'GAME BOOST (One-Click)'; Action = 'GameBoost'; Icon = '%SystemRoot%\System32\imageres.dll,-101' },
     [pscustomobject]@{ Id = 'Z LAG TOOLBOX RAM TRIM'; Label = 'RAM Trim / Clean'; Action = 'RamTrim'; Icon = '%SystemRoot%\System32\taskmgr.exe' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX STANDBY CLEAR'; Label = 'Clear Standby Memory'; Action = 'StandbyClear'; Icon = '%SystemRoot%\System32\taskmgr.exe' },
     [pscustomobject]@{ Id = 'Z LAG TOOLBOX TEMP CLEAN'; Label = 'Temp Clean'; Action = 'TempClean'; Icon = '%SystemRoot%\System32\cleanmgr.exe' },
     [pscustomobject]@{ Id = 'Z LAG TOOLBOX RECYCLE BIN'; Label = 'Recycle Bin Clean'; Action = 'RecycleBin'; Icon = '%SystemRoot%\System32\imageres.dll,-55' },
     [pscustomobject]@{ Id = 'Z LAG TOOLBOX FLUSH DNS'; Label = 'Flush DNS Cache'; Action = 'FlushDns'; Icon = '%SystemRoot%\System32\ipconfig.exe' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX PING TEST'; Label = 'Ping / Latency Test'; Action = 'PingTest'; Icon = '%SystemRoot%\System32\netshell.dll,-1' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX MAX FPS POWER'; Label = 'Activate Max FPS Power Plan'; Action = 'PowerMaxFps'; Icon = '%SystemRoot%\System32\powercpl.dll,-1' },
+    [pscustomobject]@{ Id = 'Z LAG TOOLBOX SYSTEM INFO'; Label = 'System Info (Gamer View)'; Action = 'SystemInfo'; Icon = '%SystemRoot%\System32\imageres.dll,-27' },
     [pscustomobject]@{ Id = 'Z LAG TOOLBOX RESTART EXPLORER'; Label = 'Restart Explorer'; Action = 'RestartExplorer'; Icon = '%SystemRoot%\explorer.exe' },
     [pscustomobject]@{ Id = 'Z LAG TOOLBOX SOUND MANAGER'; Label = 'Sound Manager (Classic)'; Action = 'SoundManager'; Icon = '%SystemRoot%\System32\mmsys.cpl' },
     [pscustomobject]@{ Id = 'Z LAG TOOLBOX VOLUME MIXER'; Label = 'Volume Mixer (Classic)'; Action = 'VolumeMixer'; Icon = '%SystemRoot%\System32\sndvol.exe' }

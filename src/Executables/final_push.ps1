@@ -108,10 +108,14 @@ $ServicesToKill = @(
     "DiagTrack", "dmwappushservice", "WerSvc", "PcaSvc", "SysMain", "WSearch",
     "WbioSrvc", "MapsBroker", "Fax", "XblAuthManager", "XblGameSave", "XboxNetApiSvc",
     "XboxGipSvc", "RetailDemo", "RemoteRegistry", "UsoSvc", "BDESVC",
-    "TrkWks", "TabletInputService", "StiSvc", "wisvc", "SensorDataService", 
+    # NOTE: TabletInputService stays demand-start (handled by the services
+    # task) - hard-disabling it broke keyboard input in UWP/search surfaces.
+    "TrkWks", "StiSvc", "wisvc", "SensorDataService", 
     "SensorService", "SensrSvc", "BcastDVRUserService", "OneSyncSvc", "UserDataSvc", 
     "UnistoreSvc", "PimIndexMaintenanceSvc", "MessagingService", "wuauserv", 
-    "WaaSMedicSvc", "FontCache", "FontCache3.0.0.0", "smphost",
+    # NOTE: FontCache / FontCache3.0.0.0 are NOT killed - without the font
+    # cache, every UI text draw re-renders glyphs and the whole shell stutters.
+    "WaaSMedicSvc", "smphost",
     "WebManagementService", "SDRSVC", "WpcMonSvc", "Spooler", "PrintNotify",
     "DPS", "WdiServiceHost", "WdiSystemHost",
     # Extra bloated telemetry/logging modules safely cut down here.
@@ -173,7 +177,10 @@ foreach ($Gpu in $GpuControllers) {
     $MsiPath = "HKLM:\SYSTEM\CurrentControlSet\Enum\$DevicePNP\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties"
     if (-not (Test-Path $MsiPath)) { New-Item -Path $MsiPath -Force | Out-Null }
     Set-ItemProperty -Path $MsiPath -Name "MSISupported" -Value 1 -Type DWord -Force
-    Set-ItemProperty -Path $MsiPath -Name "MessageNumberLimit" -Value 1 -Type DWord -Force
+    # DO NOT force MessageNumberLimit=1: starving a modern GPU down to a single
+    # interrupt message serializes interrupt handling and causes frame-time
+    # spikes/stutter under load. Let the GPU driver pick its own message count.
+    Remove-ItemProperty -Path $MsiPath -Name "MessageNumberLimit" -ErrorAction SilentlyContinue
 }
 
 
