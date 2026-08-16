@@ -30,6 +30,24 @@ if (-not $isAdmin) {
     exit 1
 }
 
+function Set-ZLagRuntimeAccess {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) { return $false }
+
+    $children = Join-Path $Path '*'
+    & attrib.exe -r -h -s $Path /s /d 2>$null | Out-Null
+    & attrib.exe -r -h -s $children /s /d 2>$null | Out-Null
+    & icacls.exe $Path /inheritance:e /t /c /q 2>$null | Out-Null
+    $inheritExit = $LASTEXITCODE
+    & icacls.exe $Path /reset /t /c /q 2>$null | Out-Null
+    $resetExit = $LASTEXITCODE
+    & icacls.exe $Path /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+    $grantExit = $LASTEXITCODE
+    & attrib.exe -r -h -s $Path /s /d 2>$null | Out-Null
+    & attrib.exe -r -h -s $children /s /d 2>$null | Out-Null
+    return ($inheritExit -eq 0 -and $resetExit -eq 0 -and $grantExit -eq 0)
+}
+
 function Set-ZLagRegistryValue {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -107,7 +125,7 @@ foreach ($path in @(
 Set-ZLagRegistryValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer' -Name 'HideSCAVolume' -Value 0 -Type DWord
 
 # ------------------------------------------------------------------------------
-# 3. Install the action script in a stable, read-only location.
+# 3. Install the action script in a stable, visible read/execute location.
 # ------------------------------------------------------------------------------
 $toolSource = Join-Path $PSScriptRoot 'zlag_context_tools.ps1'
 $toolDestination = Join-Path $installDir 'zlag_context_tools.ps1'
@@ -115,16 +133,16 @@ if (-not (Test-Path -LiteralPath $toolSource -PathType Leaf)) {
     Write-ZLagLog ('ERROR: context action script is missing: ' + $toolSource)
     exit 2
 }
-& attrib.exe -h -s $installDir 2>$null
-& takeown.exe /f $installDir /a /r /d y 2>$null | Out-Null
-$currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-$currentGrant = '*' + $currentSid + ':(OI)(CI)F'
-& icacls.exe $installDir /inheritance:e /grant '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' $currentGrant /t /c /q 2>$null | Out-Null
+if (-not (Set-ZLagRuntimeAccess -Path $installDir)) {
+    Write-ZLagLog ('ERROR: Could not normalize runtime folder access: ' + $installDir)
+    exit 3
+}
 Copy-Item -LiteralPath $toolSource -Destination $toolDestination -Force -ErrorAction Stop
 Remove-Item -LiteralPath (Join-Path $logDir 'zlag_context_tools.ps1') -Force -ErrorAction SilentlyContinue
-& icacls.exe $installDir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
-& icacls.exe $installDir /setintegritylevel '(OI)(CI)M' /t /c /q 2>$null | Out-Null
-& attrib.exe +h +s $installDir 2>$null
+if (-not (Set-ZLagRuntimeAccess -Path $installDir)) {
+    Write-ZLagLog ('ERROR: Could not apply normal runtime folder access: ' + $installDir)
+    exit 3
+}
 
 $powerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 function New-ZLagToolCommand {

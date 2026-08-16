@@ -18,6 +18,32 @@ $ErrorActionPreference = "Continue"
 
 Write-Output "[Z-LAG] Repairing AppX runtime (auto-start + boot watchdog)..."
 
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator
+)
+if (-not $isAdmin) {
+    Write-Output "[Z-LAG] ERROR: Administrator or SYSTEM privileges are required."
+    exit 1
+}
+
+function Set-ZLagRuntimeAccess {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) { return $false }
+
+    $children = Join-Path $Path '*'
+    & attrib.exe -r -h -s $Path /s /d 2>$null | Out-Null
+    & attrib.exe -r -h -s $children /s /d 2>$null | Out-Null
+    & icacls.exe $Path /inheritance:e /t /c /q 2>$null | Out-Null
+    $inheritExit = $LASTEXITCODE
+    & icacls.exe $Path /reset /t /c /q 2>$null | Out-Null
+    $resetExit = $LASTEXITCODE
+    & icacls.exe $Path /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
+    $grantExit = $LASTEXITCODE
+    & attrib.exe -r -h -s $Path /s /d 2>$null | Out-Null
+    & attrib.exe -r -h -s $children /s /d 2>$null | Out-Null
+    return ($inheritExit -eq 0 -and $resetExit -eq 0 -and $grantExit -eq 0)
+}
+
 $storeRemoved = $false
 $marker = Get-ItemProperty -Path "HKLM:\SOFTWARE\Z-LAG-OS" -Name "StoreRemoved" -ErrorAction SilentlyContinue
 $storePolicy = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "RemoveWindowsStore" -ErrorAction SilentlyContinue).RemoveWindowsStore
@@ -122,11 +148,10 @@ $dataDir = Join-Path $env:ProgramData "Z-LAG-OS"
 $installDir = Join-Path $env:SystemRoot "Z-LAG-OS"
 if (-not (Test-Path $dataDir)) { New-Item -Path $dataDir -ItemType Directory -Force | Out-Null }
 if (-not (Test-Path $installDir)) { New-Item -Path $installDir -ItemType Directory -Force | Out-Null }
-& attrib.exe -h -s $installDir 2>$null
-& takeown.exe /f $installDir /a /r /d y 2>$null | Out-Null
-$currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-$currentGrant = '*' + $currentSid + ':(OI)(CI)F'
-& icacls.exe $installDir /inheritance:e /grant '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' $currentGrant /t /c /q 2>$null | Out-Null
+if (-not (Set-ZLagRuntimeAccess -Path $installDir)) {
+    Write-Output ("[Z-LAG] ERROR: Could not normalize runtime folder access: " + $installDir)
+    exit 2
+}
 
 # The watchdog honours the StoreRemoved marker: it never re-enables Microsoft
 # account services on a machine where the user chose to remove them.
@@ -162,15 +187,23 @@ if not %errorlevel%==0 (
 "@
 Set-Content -Path $starter -Value $starterContent -Encoding ASCII
 
-# Persist a protected Windows-folder copy next to the watchdog.
+# Persist a visible, normally accessible Windows-folder copy next to the watchdog.
+$repairDestination = Join-Path $installDir "repair_appx_runtime.ps1"
 try {
-    Copy-Item -Path $PSCommandPath -Destination (Join-Path $installDir "repair_appx_runtime.ps1") -Force
-} catch {}
+    if (-not [IO.Path]::GetFullPath($PSCommandPath).Equals([IO.Path]::GetFullPath($repairDestination), [StringComparison]::OrdinalIgnoreCase)) {
+        Copy-Item -LiteralPath $PSCommandPath -Destination $repairDestination -Force -ErrorAction Stop
+    }
+} catch {
+    Write-Output ("[Z-LAG] ERROR: Could not copy the AppX repair payload: " + $_.Exception.Message)
+    exit 2
+}
 foreach ($oldFile in @("start_appx_runtime.cmd", "repair_appx_runtime.ps1")) {
     Remove-Item -LiteralPath (Join-Path $dataDir $oldFile) -Force -ErrorAction SilentlyContinue
 }
-& icacls.exe $installDir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:(OI)(CI)F' '*S-1-5-32-545:(OI)(CI)RX' '*S-1-5-11:(OI)(CI)RX' '*S-1-5-4:(OI)(CI)RX' /t /c /q 2>$null | Out-Null
-& attrib.exe +h +s $installDir 2>$null
+if (-not (Set-ZLagRuntimeAccess -Path $installDir)) {
+    Write-Output ("[Z-LAG] ERROR: Could not apply normal runtime folder access: " + $installDir)
+    exit 2
+}
 
 $taskName = "ZLAG-StartAppXRuntime"
 Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue

@@ -48,15 +48,18 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ### v5.14 - publish-quality reliability and Windows runtime storage
 
+- A first-run core reset removes stale Z-LAG tasks, startup values, registry
+  state and runtime folders before current payloads are installed.
 - Persistent Welcome, context-tool, process-floor and AppX watchdog files are
-  stored together under hidden, ACL-protected `C:\Windows\Z-LAG-OS`, while
-  ProgramData is retained for logs, backups and diagnostics only.
+  stored visibly under `C:\Windows\Z-LAG-OS` with normal file attributes,
+  inherited ACLs and standard-user read/execute access. ProgramData remains for
+  logs, backups and diagnostics.
 - The Welcome panel now uses an interactive Task Scheduler logon trigger instead
   of Registry Run/Startup folders, so it is absent from Task Manager Startup apps.
   The task remains visible in Task Scheduler, and its temporary `wscript.exe` /
   `powershell.exe` hosts remain observable through normal Windows administration.
 - Every PowerShell file now passes syntax parsing; all JSON/XML/YAML data and the
-  exact 01–37 task-to-executable graph pass repository validation.
+  exact 01–38 task-to-executable graph pass repository validation.
 - Restore-point, power-plan, AppX/Store, Toolbox, AppX watchdog, user-default
   registry, wallpaper/default-hive, Start Menu, ReTrim and TEMP cleanup paths
   handle expected missing/disabled resources without noisy first-run failures.
@@ -98,10 +101,11 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   BranchCache/P2P, diagnostics, enterprise, printing, sensor and media services,
   and removes their trigger-start metadata. Core RPC, networking, audio, logon,
   security and AppX launch services remain hard-protected. Final counts still vary with hardware and third-party drivers.
-- **Windows-folder runtime storage**: persistent Welcome, context-tool,
-  service-floor and AppX watchdog files now live together under hidden
-  `C:\Windows\Z-LAG-OS`. ProgramData remains for logs/backups only. The folder
-  grants interactive users read/execute while SYSTEM, Administrators and
+- **Visible Windows-folder runtime storage**: persistent Welcome, context-tool,
+  service-floor and AppX watchdog files live together under
+  `C:\Windows\Z-LAG-OS`. A first-run reset deletes stale protected copies. The
+  recreated folder has normal visible attributes and inherited permissions;
+  standard users receive read/execute access while SYSTEM, Administrators and
   TrustedInstaller retain write access.
 - **Bluetooth Keep fixed at the source**: Bluetooth radio, CDP/Ncb and Device
   Association dependencies are removed from every global disable list and added
@@ -130,8 +134,8 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   explicitly through `cmd.exe`, default-user registry writes use the correct
   provider, and Start Menu/ReTrim/TEMP cleanup handles missing resources quietly.
 - **Task filenames now match execution order**: the task directory contains only
-  the 37 active tasks, numbered consecutively from `01_powerPlan.yml` through
-  `37_deepClean.yml` exactly as referenced by `main.yml`.
+  the 38 active tasks, numbered consecutively from `01_resetZlagCore.yml` through
+  `38_deepClean.yml` exactly as referenced by `main.yml`.
 
 ## 🆕 What's New in v5.11
 
@@ -185,7 +189,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 - **Universal Windows 10 + Windows 11**: version-aware taskbar and power plan
   scripts, correct Ultimate Performance GUID with High Performance fallback, and
   tolerant app/service removal so the same playbook works perfectly on both OSes.
-- **Windows 11 extra floor**: a `builds: >=22000`-gated pass (`32_win11ProcessFloor.yml`
+- **Windows 11 extra floor**: a `builds: >=22000`-gated pass (`33_win11ProcessFloor.yml`
   + `win11_process_floor.ps1`) disables Win11-only services and AI components so
   Windows 11 lands nearly the same idle process count as Windows 10.
 - **Idle Process + RAM Floor**: new `process_floor.ps1` engine consolidates every
@@ -201,7 +205,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
   on-demand features — file sharing, hotspot/ICS, network discovery, System
   Restore (VSS), notifications, clipboard history — are now **fully disabled**
   for the absolute lowest idle footprint.)*
-- **Fixed svchost threshold inconsistency** in `02_registry.yml` that was silently
+- **Fixed svchost threshold inconsistency** in `03_registry.yml` that was silently
   *increasing* the process count (now matches `final_push.ps1` = `380000000`).
 - **Microsoft services are now removed *totally* when you pick that option**:
   Store + Xbox + MS account/cloud apps and services are uninstalled and disabled,
@@ -315,7 +319,7 @@ build and applies the correct tweak, so the same `.apbx` works perfectly on both
 - **Power plan**: uses the real Ultimate Performance GUID and falls back to High
   Performance on editions where Ultimate is unavailable; tunes both AC and DC so
   laptops match desktops.
-- **Windows 11 extra process floor** (`32_win11ProcessFloor.yml`, gated
+- **Windows 11 extra process floor** (`33_win11ProcessFloor.yml`, gated
   `builds: >=22000`): disables Win11-only services (AI/Copilot/Recall runtime,
   data-usage, notifications, per-user bloat), removes Win11-only apps, kills
   AI/Widgets processes and locks Copilot/Recall/Chat/Suggestions via policy — so
@@ -364,6 +368,9 @@ A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinsta
 **Q: What appears during and after boot?**
 A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading and Explorer startup, the per-user `Z LAG Services - Welcome` scheduled task starts the five-second panel. It does not create a Registry Run/Startup-folder entry, so Task Manager Startup apps stays clean; `wscript.exe` and `powershell.exe` remain normally visible only while the panel runs.
 
+**Q: Why did older `C:\Windows\Z-LAG-OS` files show Access Denied or stay hidden?**
+A: Older builds removed ACL inheritance and applied hidden/system attributes. Task 01 now deletes that stale runtime before installation. Recreated files are visible with normal attributes, inherited permissions and standard-user read/execute access. Administrator rights are still intentionally required to modify scripts that later run as SYSTEM.
+
 **Q: Where are the cleanup and classic sound tools?**
 A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
 
@@ -395,7 +402,7 @@ Run the dependency-free repository validator before packaging:
 python3 tests/validate_repo.py
 ```
 
-It checks playbook/version metadata, JSON/XML files, the exact 01–37 task order,
+It checks playbook/version metadata, JSON/XML files, the exact 01–38 task order,
 all task-to-executable references, persistent runtime destinations, and the
 Welcome task's XML/interactive principal/no-Run-key contract. Release review also
 parses every PowerShell file and checks batch structure and Git whitespace.

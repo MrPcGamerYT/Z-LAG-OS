@@ -1,6 +1,6 @@
 # ==============================================================================
 # Z-LAG OS - Context menu actions
-# Installed to the hidden C:\Windows\Z-LAG-OS folder.
+# Installed visibly under C:\Windows\Z-LAG-OS with standard-user read/execute access.
 # ==============================================================================
 
 [CmdletBinding()]
