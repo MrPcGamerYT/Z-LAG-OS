@@ -1,0 +1,17 @@
+# Local build/release artifacts
+*.apbx
+*.7z
+*.zip
+*.sha256
+
+# Test and editor caches
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary local tooling
+.tmp/
+tmp/
