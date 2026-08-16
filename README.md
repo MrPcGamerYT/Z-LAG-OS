@@ -48,15 +48,18 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ### v5.14 - publish-quality reliability and Windows runtime storage
 
+- A first-run core reset removes stale Z-LAG tasks, startup values, registry
+  state and runtime folders before current payloads are installed.
 - Persistent Welcome, context-tool, process-floor and AppX watchdog files are
-  stored together under hidden, ACL-protected `C:\Windows\Z-LAG-OS`, while
-  ProgramData is retained for logs, backups and diagnostics only.
+  stored visibly under `C:\Windows\Z-LAG-OS` with normal file attributes,
+  inherited ACLs and standard-user read/execute access. ProgramData remains for
+  logs, backups and diagnostics.
 - The Welcome panel now uses an interactive Task Scheduler logon trigger instead
   of Registry Run/Startup folders, so it is absent from Task Manager Startup apps.
   The task remains visible in Task Scheduler, and its temporary `wscript.exe` /
   `powershell.exe` hosts remain observable through normal Windows administration.
 - Every PowerShell file now passes syntax parsing; all JSON/XML/YAML data and the
-  exact 01–37 task-to-executable graph pass repository validation.
+  exact 01–38 task-to-executable graph pass repository validation.
 - Restore-point, power-plan, AppX/Store, Toolbox, AppX watchdog, user-default
   registry, wallpaper/default-hive, Start Menu, ReTrim and TEMP cleanup paths
   handle expected missing/disabled resources without noisy first-run failures.
