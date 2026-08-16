@@ -3,7 +3,7 @@
 [![License: Use Only](https://img.shields.io/badge/License-Proprietary%20%2F%20Use--Only-red.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078d7.svg)](https://www.microsoft.com/windows)
 [![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://amelabs.net/)
-[![Version: 5.17](https://img.shields.io/badge/Version-5.17-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
+[![Version: 5.15](https://img.shields.io/badge/Version-5.15-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
 [![Build: Stable](https://img.shields.io/badge/Build-Stable-brightgreen.svg)]()
 
 > **Maximum FPS. Zero Lag. No Bloat.** A performance-driven AME Wizard playbook engineered for competitive gaming, Android emulators (BlueStacks / MSI App Player / LDPlayer), and low-end hardware.
@@ -19,7 +19,7 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ## 📚 Table of Contents
 - [Core Objectives](#-core-objectives)
-- [What's New in v5.17](#-whats-new-in-v517)
+- [What's New in v5.15](#-whats-new-in-v515)
 - [Optimization Matrix](#️-optimization-matrix)
 - [Optional Performance Profiles](#-optional-performance-profiles)
 - [Expected Performance Gains](#-expected-performance-gains)
@@ -44,9 +44,9 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ---
 
-## 🆕 What's New in v5.17
+## 🆕 What's New in v5.15
 
-### v5.17 - universal Win10/11 + expanded Z LAG TOOLBOX context menu
+### v5.15 - universal Win10/11 + expanded Z LAG TOOLBOX context menu
 
 **Universal Windows 10 / Windows 11:** every task is either shared (identical
 registry paths/services on both) or properly gated (`builds: ['>=22000']` for
@@ -74,115 +74,6 @@ run when clicked and exit immediately):**
 
 Existing tools kept: RAM Trim / Clean, Temp Clean, Recycle Bin Clean, Flush
 DNS Cache, Restart Explorer, Sound Manager (Classic), Volume Mixer (Classic).
-
-### v5.16 - true zero-lag pass: AppX crash-proofing, anti-flicker, raw input
-
-**AppX apps can no longer crash (client app stability):**
-- `appx_remover.ps1` now hard-protects the full AppX runtime framework set:
-  `Microsoft.WindowsAppRuntime` / `WindowsAppSDK` (WinUI3 apps),
-  `DesktopAppInstaller` (winget), `SecHealthUI`, `AAD.BrokerPlugin` +
-  `AccountsControl` (sign-in brokers - apps hang at login without them),
-  `LockApp`, `CloudExperienceHost`, `MicrosoftWindows.Client.CBS`/`Core`
-  (Win11 shell surfaces), `CapturePicker` and `PinningConfirmationDialog`.
-  These have ~zero idle footprint but removing them causes class-activation
-  crashes in every packaged app.
-- The Microsoft Store is no longer removed by the BASE app pass - that
-  silently broke the "Keep Microsoft Store" option and caused licensing
-  failures (= UWP apps crash on launch). Store removal now happens ONLY via
-  the store-disable option, which handles licensing services correctly.
-- `Microsoft.XboxIdentityProvider` stays in the base pass (zero background
-  processes, but Minecraft Launcher / Game Pass sign-in crashes without it).
-  The Xbox/Store removal options still remove it for users who choose that.
-
-**Anti-flicker + frame pacing (new ZLAG Gaming Core section):**
-- **MPO disabled** (`OverlayTestMode=5`): Multi-Plane Overlay is the #1
-  documented cause of screen flicker/stutter on NVIDIA and AMD GPUs. Both
-  vendors recommend this exact fix. No background cost.
-- **High-resolution timer enforced** (`GlobalTimerResolutionRequests=1`):
-  Windows 11 22H2+ coalesces/ignores game timer-resolution requests, causing
-  micro-stutter; this forces the kernel to honor them. Safe no-op on Win10.
-- **`SFIO Priority=High`** completes the MMCSS Games profile (GPU Priority 8 /
-  Priority 6 / High scheduling already set) so game disk I/O outranks
-  background I/O - no asset-streaming hitches.
-- **Machine-wide GameDVR policy ban** (`AllowGameDVR=0`) on top of the
-  existing per-user GameDVR kill - background capture can never re-enable.
-
-**Raw input (mouse/keyboard):**
-- Driver-level input queues (`MouseDataQueueSize` / `KeyboardDataQueueSize`)
-  set to 32 (default 100) - input events are flushed to the game sooner,
-  still deep enough for 8000 Hz mice to never drop packets.
-
-## 🆕 What's New in v5.15
-
-### v5.15 - stability & smoothness pass (mid-game FPS drops + input fixes)
-
-This release fixes the reported "FPS stuck/stutter mid-game" and mouse/keyboard
-issues **without adding any background processes or services** - it actually
-removes recurring background wakeups:
-
-- **Mid-game stutter fixed - watchdogs no longer run during gameplay.** The
-  service-floor watchdog lost its every-15-minutes repetition (boot + logon
-  only now; TriggerInfo removal already prevents services returning
-  mid-session), and the AppX runtime re-arm no longer repeats every 10 minutes
-  forever (boot/logon + one 3-minute post-boot recheck). Both tasks now run at
-  below-normal priority with hard execution time limits. Result: **zero
-  scheduled Z-LAG activity while you play.**
-- **Mouse fixed - correct SmoothMouse curves.** The old build wrote malformed
-  24-byte all-zero `SmoothMouseXCurve`/`SmoothMouseYCurve` values that corrupt
-  pointer math; v5.15 writes the proper 40-byte linear (MarkC-style) 1:1
-  curves and keeps Enhanced Pointer Precision off.
-- **Input freezes fixed - USB can never power-gate your mouse/keyboard.** The
-  power plan now forces USB selective suspend OFF, USB3 link power management
-  OFF and PCIe ASPM OFF (AC + DC), and strips "allow the computer to turn off
-  this device" from USB/HID devices.
-- **Keyboard fixed - `TabletInputService` is demand-start, not disabled.**
-  Hard-disabling the text-input stack broke keyboard input in UWP/search
-  surfaces; demand-start keeps 0 idle footprint while staying functional. All
-  four floor scripts were aligned so nothing re-disables it.
-- **FPS stability - no more thermal throttling.** Minimum processor state was
-  locked at 100%, which heat-soaks laptops/SFF PCs until the CPU throttles
-  mid-game. Now 5% min / 100% max / aggressive boost + core parking fully off:
-  same peak clocks, far more thermal headroom.
-- **Frame-time spikes - GPU MSI limit removed.** `MessageNumberLimit=1`
-  serialized GPU interrupts; the driver default message count is restored
-  (MSI mode itself stays enabled).
-- **Hitching fixed - memory compression stays ON.** Disabling it turned every
-  memory-pressure event into hard pagefile I/O (stutter on 8/16 GB systems).
-  Compression is now explicitly enabled; Superfetch/indexing stay off.
-- **Network stability - destructive tweaks removed.** `netsh int ip reset`
-  (which wiped the per-interface latency tweaks and could destabilize
-  adapters) is gone, and TCP checksum offload is no longer disabled (it pushed
-  per-packet work onto the CPU during firefights). Instead the NIC gets real
-  latency tuning: interrupt moderation off, energy-efficient Ethernet off, and
-  adapter power saving off.
-- **Smoothness - font cache preserved, Game Mode on.** `FontCache` is no
-  longer killed (UI text re-rendering caused shell stutter), `MouseHoverTime`
-  is consistent everywhere, and Game Mode (a pure scheduler policy, no extra
-  processes) now protects the foreground game's CPU/GPU time while GameDVR
-  capture stays fully disabled.
-
-### v5.14 - publish-quality reliability and Windows runtime storage
-
-- A first-run core reset removes stale Z-LAG tasks, startup values, registry
-  state and runtime folders before current payloads are installed.
-- Persistent Welcome, context-tool, process-floor and AppX watchdog files are
-  stored visibly under `C:\Windows\Z-LAG-OS` with normal file attributes,
-  inherited ACLs and standard-user read/execute access. ProgramData remains for
-  logs, backups and diagnostics.
-- The Welcome panel now uses an interactive Task Scheduler logon trigger instead
-  of Registry Run/Startup folders, so it is absent from Task Manager Startup apps.
-  The task remains visible in Task Scheduler, and its temporary `wscript.exe` /
-  `powershell.exe` hosts remain observable through normal Windows administration.
-- Every PowerShell file now passes syntax parsing; all JSON/XML/YAML data and the
-  exact 01–38 task-to-executable graph pass repository validation.
-- Restore-point, power-plan, AppX/Store, Toolbox, AppX watchdog, user-default
-  registry, wallpaper/default-hive, Start Menu, ReTrim and TEMP cleanup paths
-  handle expected missing/disabled resources without noisy first-run failures.
-- Toolbox installation runs in the actual elevated user profile with bounded
-  installer and executable-detection waits.
-- Protected Windows binaries no longer receive a permanent Everyone deny ACE;
-  notification behavior remains policy-driven and reversible.
-- Added `tests/validate_repo.py` and documented the release validation command.
 
 ---
 
@@ -406,4 +297,4 @@ is required for anything outside this limited use permission. All rights reserve
 **Star ⭐ this repo if you get an FPS boost!**
 
 ---
-*Z LAG OS v5.17 - Zero Lag, Max Performance. Built for gamers, by gamers.*
+*Z LAG OS v5.15 - Zero Lag, Max Performance. Built for gamers, by gamers.*
