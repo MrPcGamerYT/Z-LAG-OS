@@ -43,8 +43,10 @@ def validate_tasks() -> int:
     main = (SRC / "Configuration" / "main.yml").read_text(encoding="utf-8-sig")
     refs = re.findall(r"!task:\s*\{path:\s*'Tasks\\\\([^']+)'", main)
     files = {path.name for path in TASKS.glob("*.yml")}
-    if len(refs) != 37:
-        fail(f"expected 37 active task references, found {len(refs)}")
+    if len(refs) != 38:
+        fail(f"expected 38 active task references, found {len(refs)}")
+    if not refs or refs[0] != "01_resetZlagCore.yml":
+        fail("the previous-runtime reset must be the first task")
     if set(refs) != files:
         fail(f"task mismatch: missing={set(refs)-files}, unreferenced={files-set(refs)}")
     for index, name in enumerate(refs, 1):
@@ -78,6 +80,29 @@ def validate_runtime_layout() -> None:
         for name in names:
             if name not in content:
                 fail(f"{script} does not install/reference {name}")
+
+        required_access = (
+            "attrib.exe -r -h -s",
+            "icacls.exe $Path /inheritance:e",
+            "icacls.exe $Path /reset",
+            "*S-1-5-32-545:(OI)(CI)RX",
+            "*S-1-5-11:(OI)(CI)RX",
+        )
+        for value in required_access:
+            if value not in content:
+                fail(f"{script} does not normalize visible runtime access: missing {value!r}")
+        forbidden_access = ("attrib.exe +h", "attrib.exe +s", "/inheritance:r")
+        for value in forbidden_access:
+            if value.lower() in content.lower():
+                fail(f"{script} restores a restrictive/hidden runtime setting: {value!r}")
+
+    reset = (EXECUTABLES / "reset_zlag_core.ps1").read_text(encoding="utf-8-sig")
+    for value in ("Z LAG Services - Welcome", "ZLAG-EnforceServiceFloor", "ZLAG-StartAppXRuntime"):
+        if value not in reset:
+            fail(f"runtime reset does not remove task {value!r}")
+    for value in ("Join-Path $env:SystemRoot 'Z-LAG-OS'", "attrib.exe -r -h -s", "Remove-ZLagRuntimePath"):
+        if value not in reset:
+            fail(f"runtime reset is missing {value!r}")
 
 
 def validate_welcome_registration() -> None:
@@ -117,7 +142,7 @@ def main() -> int:
     validate_welcome_registration()
     print(
         f"PASS: Z LAG OS v{version}; {task_count} sequential tasks; "
-        f"{executable_count} executable references; XML/JSON/runtime/Welcome task valid"
+        f"{executable_count} executable references; reset/visible runtime/Welcome task valid"
     )
     return 0
 
