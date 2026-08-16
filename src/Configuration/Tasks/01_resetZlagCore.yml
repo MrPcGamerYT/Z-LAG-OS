@@ -1,0 +1,10 @@
+title: Reset previous Z LAG runtime
+description: Removes stale Z-LAG scheduled tasks, startup registrations, registry state and runtime folders before current files are recreated with visible normal attributes and standard read/execute access.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Resetting previous Z LAG runtime files and permissions..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\reset_zlag_core.ps1'
+  - !writeStatus: {status: "Previous Z LAG runtime removed; clean visible files can now be installed."}

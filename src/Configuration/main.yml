@@ -1,0 +1,147 @@
+title: Z LAG OS - Ultimate Optimization (Zero Lag Edition)
+
+actions:
+  # Reset stale files/ACLs first so every runtime payload is recreated cleanly.
+  - !status: {status: 'Resetting previous Z LAG runtime files and permissions'}
+  - !task: {path: 'Tasks\\01_resetZlagCore.yml'}
+
+  - !status: {status: 'Creating restore point & power plan'}
+  - !task: {path: 'Tasks\\02_powerPlan.yml'}
+
+  - !status: {status: 'Applying registry optimizations'}
+  - !task: {path: 'Tasks\\03_registry.yml'}
+
+  - !status: {status: 'Removing bloatware apps'}
+  - !task: {path: 'Tasks\\04_appx.yml'}
+
+  # ===== OPTIONAL MICROSOFT STORE & SERVICES REMOVAL =====
+  - !status: {status: 'Removing Microsoft Store & Microsoft Services...', option: 'store-disable'}
+  - !task: {path: 'Tasks\\05_RemoveStoreServices.yml', option: 'store-disable'}
+
+  # ===== Z-LAG TOOLBOX (official Store replacement + tweaks) =====
+  - !status: {status: 'Installing Z-LAG Toolbox...'}
+  - !task: {path: 'Tasks\\06_zlagtoolbox.yml'}
+
+  # ===== OPTIONAL DEFENDER REMOVAL =====
+  - !status: {status: 'Disabling Windows Defender...', option: 'defender-disable'}
+  - !task: {path: 'Tasks\\07_defenderAggressive.yml', option: 'defender-disable'}
+
+  # ===== OPTIONAL BLUETOOTH REMOVAL =====
+  - !status: {status: 'Disabling Bluetooth services...', option: 'bluetooth-disable'}
+  - !task: {path: 'Tasks\\08_RemoveBluetooth.yml', option: 'bluetooth-disable'}
+
+  # ===== OPTIONAL WI-FI REMOVAL =====
+  - !status: {status: 'Disabling Wi-Fi services...', option: 'wifi-disable'}
+  - !task: {path: 'Tasks\\09_RemoveWiFi.yml', option: 'wifi-disable'}
+
+  - !status: {status: 'Disabling resource-hogging services'}
+  - !task: {path: 'Tasks\\10_services.yml'}
+
+  - !status: {status: 'Disabling telemetry scheduled tasks'}
+  - !task: {path: 'Tasks\\11_scheduledTasks.yml'}
+
+  - !status: {status: 'Blocking Microsoft telemetry hosts'}
+  - !task: {path: 'Tasks\\12_telemetryHosts.yml'}
+
+  - !status: {status: 'Blocking Windows Update'}
+  - !task: {path: 'Tasks\\13_blockUpdates.yml'}
+
+  - !status: {status: 'Removing Windows built-in features'}
+  - !task: {path: 'Tasks\\14_removeFeatures.yml'}
+
+  - !status: {status: 'Disabling notifications'}
+  - !task: {path: 'Tasks\\15_notifications.yml'}
+
+  - !status: {status: 'Changing computer name'}
+  - !task: {path: 'Tasks\\16_computerName.yml'}
+
+  - !status: {status: 'Blocking Microsoft account sign-in'}
+  - !task: {path: 'Tasks\\17_removeMSAccount.yml'}
+
+  - !status: {status: 'Setting Z LAG wallpaper'}
+  - !task: {path: 'Tasks\\18_wallpaper.yml'}
+
+  - !status: {status: 'Enabling dark theme'}
+  - !task: {path: 'Tasks\\19_darkTheme.yml'}
+
+  - !status: {status: 'Removing Microsoft Edge and WebView2 (verified setup pass)'}
+  - !task: {path: 'Tasks\\20_edgeRemoval.yml'}
+
+  # FIX 1: Secure build check restriction enforced safely on BOTH lines
+  - !status: {status: 'Windows 11 specific optimizations', builds: ['>=22000']}
+  - !task: {path: 'Tasks\\21_win11specific.yml', builds: ['>=22000']}
+
+  - !status: {status: 'Applying modded OS tweaks'}
+  - !task: {path: 'Tasks\\22_moddedOSTweaks.yml'}
+
+  # ===== ADVANCED PERFORMANCE TWEAKS (BEYOND ATLAS) =====
+  - !status: {status: 'Applying advanced performance tweaks'}
+  - !task: {path: 'Tasks\\23_advancedPerf.yml'}
+  
+  - !status: {status: 'Setting CPU priority for popular games'}
+  - !task: {path: 'Tasks\\24_cpuPriority.yml'}
+
+  # Extreme network latency reduction (competitive gaming)
+  - !status: {status: 'Applying extreme network latency reduction'}
+  - !task: {path: 'Tasks\\25_networkLatency.yml'}
+
+  # ===== ZLAG GAMING CORE ENGINE (ULTRA LOW LATENCY) =====
+  - !status: {status: 'Activating ZLAG Gaming Core Engine'}
+  - !task: {path: 'Tasks\\26_gamingCore.yml'}
+
+  # ===== CLEAN START MENU (ONLY APP LIST - NO PINNED APPS) =====
+  - !status: {status: 'Cleaning Start Menu - removing pinned apps'}
+  - !task: {path: 'Tasks\\27_cleanStartMenu.yml'}
+
+  # ===== SMALL AUTO-HIDE TASKBAR =====
+  - !status: {status: 'Configuring small auto-hide taskbar'}
+  - !task: {path: 'Tasks\\28_smallTaskbar.yml'}
+
+  # Service purging is consolidated into the guarded process-floor pass below.
+
+  # ===== LIMIT PUSH - FEATURE STRIPPER =====
+  - !status: {status: 'Stripping unnecessary Windows features'}
+  - !task: {path: 'Tasks\\29_featureStripper.yml'}
+
+  # ===== LIMIT PUSH - TASK PURGER =====
+  - !status: {status: 'Purging telemetry scheduled tasks'}
+  - !task: {path: 'Tasks\\30_taskPurger.yml'}
+
+  # ===== CLEAN RIGHT-CLICK CONTEXT MENU =====
+  - !status: {status: 'Cleaning right-click context menu'}
+  - !task: {path: 'Tasks\\31_contextMenuCleaner.yml'}
+
+  # ===== PERSISTENT IDLE PROCESS + RAM FLOOR: survives trigger-start/logon =====
+  - !status: {status: 'Disabling expanded Windows 10/11 extras and locking the persistent process floor...'}
+  - !task: {path: 'Tasks\\32_processFloor.yml'}
+
+  # ===== WINDOWS 11 EXTRA FLOOR: bring Win11 idle count near Win10 levels =====
+  - !status: {status: 'Applying Windows 11 ULTRA extra process floor (AI components)...', builds: ['>=22000']}
+  - !task: {path: 'Tasks\\33_win11ProcessFloor.yml', builds: ['>=22000']}
+
+  # Restore the AppX launch stack after every purge (Store UI stays gone and
+  # Microsoft account services stay removed when selected). This step does NOT
+  # reinstall Edge or WebView2.
+  - !status: {status: 'Repairing AppX runtime for sideloaded apps...'}
+  - !task: {path: 'Tasks\\34_repairAppxRuntime.yml'}
+
+  # ===== USER-FACING SETTINGS: apply dark mode / taskbar / start menu / input
+  #      to the ACTIVE user (runas: currentUserElevated). =====
+  - !status: {status: 'Applying user-facing settings (dark mode / taskbar / start menu)...'}
+  - !task: {path: 'Tasks\\35_userSettings.yml'}
+
+  # ===== Z LAG TOOLBOX CONTEXT MENU: cleanup tools + native classic sound =====
+  - !status: {status: 'Creating clean Z LAG TOOLBOX context menu (RAM / temp / maintenance)...'}
+  - !task: {path: 'Tasks\\36_zlagContextMenu.yml'}
+
+  # ===== BOOT WELCOME: native status + interactive scheduled panel =====
+  # Scheduled Task avoids Task Manager's Startup apps list.
+  - !status: {status: 'Configuring native boot status and scheduled Z LAG Welcome panel...'}
+  - !task: {path: 'Tasks\\37_bootWelcome.yml'}
+
+  # ===== DEEP SYSTEM CLEAN: run ABSOLUTELY LAST so it can never delete any
+  #      script before it has executed (extra protection). =====
+  - !status: {status: 'Deep system clean and complete OneDrive removal'}
+  - !task: {path: 'Tasks\\38_deepClean.yml'}
+
+  - !status: {status: '✅ All optimizations applied. System will reboot automatically...'}

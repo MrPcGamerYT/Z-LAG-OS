@@ -1,0 +1,6 @@
+title: Removing Wi-Fi
+actions:
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\RemoveWiFi.ps1'
