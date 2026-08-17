@@ -303,6 +303,25 @@ def validate_start_menu_contract() -> None:
     if not re.search(r"set_empty_start_layout\.ps1'\s*\r?\n\s*runas:\s*currentUserElevated", task):
         fail("27_cleanStartMenu.yml: layout script must run as currentUserElevated")
 
+    # GamerzOS-parity pieces: tile-grid purge, policy keys, compact UI and the
+    # host package cache clear must stay wired in (user-reported regression).
+    if "start.tilegrid" not in layout or "DefaultAccount" not in layout:
+        fail("set_empty_start_layout.ps1: GamerzOS start.tilegrid purge missing")
+    if "start.tilegrid" not in cmd:
+        fail("startmenu.cmd: GamerzOS start.tilegrid purge missing")
+    for token in (
+        "NoStartMenuMFUprogramsList",
+        "ShowOrHideMostUsedApps",
+        "HideRecentlyAddedApps",
+        "HideRecommendedPersonalizedSites",
+        "ConfigureStartPins",
+        "Start_Layout",
+        "UseCompactMode",
+        "StartMenuExperienceHost*",
+    ):
+        if token not in task:
+            fail(f"27_cleanStartMenu.yml: GamerzOS-parity key missing: {token!r}")
+
 
 def validate_performance_regressions() -> None:
     """Guards for the specific FPS/input bug classes fixed in v5.15-v5.16."""
