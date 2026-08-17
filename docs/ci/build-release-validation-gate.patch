@@ -1,0 +1,32 @@
+diff --git a/.github/workflows/build-release.yml b/.github/workflows/build-release.yml
+index f4ead18..0312a66 100644
+--- a/.github/workflows/build-release.yml
++++ b/.github/workflows/build-release.yml
+@@ -22,6 +22,27 @@ jobs:
+       - name: Checkout repository
+         uses: actions/checkout@v4
+ 
++      # 1b. GATE: never package or release a playbook that fails validation.
++      - name: Repository validation suite
++        run: python3 tests/validate_repo.py
++
++      - name: PowerShell syntax parse (all scripts)
++        shell: pwsh
++        run: |
++          $failed = 0
++          Get-ChildItem -Path src/Executables -Filter *.ps1 | ForEach-Object {
++            $tokens = $null
++            $errors = $null
++            [void][System.Management.Automation.Language.Parser]::ParseFile(
++              $_.FullName, [ref]$tokens, [ref]$errors)
++            if ($errors.Count -gt 0) {
++              $failed++
++              Write-Host "::error file=$($_.Name)::$($errors[0].Message)"
++            }
++          }
++          if ($failed -gt 0) { exit 1 }
++          Write-Host "PASS: all PowerShell scripts parse cleanly"
++
+       # 2. Get version
+       - name: Determine version
+         id: get_version

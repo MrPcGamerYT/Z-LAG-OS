@@ -1,0 +1,59 @@
+name: Validate Playbook
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Structural + regression-guard validation. PyYAML enables the full
+      # YAML parse pass (the suite skips it gracefully when absent).
+      - name: Install validation dependencies
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Repository validation suite
+        run: python3 tests/validate_repo.py
+
+      # Real PowerShell syntax parse of every script using the AST parser.
+      # This catches anything the dependency-free balance check cannot.
+      - name: PowerShell syntax parse (all scripts)
+        shell: pwsh
+        run: |
+          $failed = 0
+          Get-ChildItem -Path src/Executables -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName, [ref]$tokens, [ref]$errors)
+            if ($errors.Count -gt 0) {
+              $failed++
+              Write-Host "::error file=$($_.Name)::$($errors[0].Message)"
+              $errors | ForEach-Object { Write-Host ("  " + $_.Extent.StartLineNumber + ": " + $_.Message) }
+            } else {
+              Write-Host "OK  $($_.Name)"
+            }
+          }
+          if ($failed -gt 0) {
+            Write-Host "FAIL: $failed script(s) with syntax errors"
+            exit 1
+          }
+          Write-Host "PASS: all PowerShell scripts parse cleanly"
+
+      # PSScriptAnalyzer: error-severity findings block the build.
+      - name: PSScriptAnalyzer (errors only)
+        shell: pwsh
+        run: |
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+          $findings = Invoke-ScriptAnalyzer -Path src/Executables -Recurse -Severity Error
+          if ($findings) {
+            $findings | Format-Table RuleName, ScriptName, Line, Message -AutoSize | Out-String | Write-Host
+            exit 1
+          }
+          Write-Host "PASS: no error-severity analyzer findings"
