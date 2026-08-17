@@ -3,6 +3,8 @@
 # Runs only when the user explicitly selects Bluetooth Disable.
 # ==============================================================================
 
+$ErrorActionPreference = 'Continue'
+
 Write-Output "[Z-LAG] Disabling Bluetooth services, pairing brokers and devices..."
 
 # Remove obsolete artifacts from the short-lived older implementation.

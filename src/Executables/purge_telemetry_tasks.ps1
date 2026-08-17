@@ -1,3 +1,5 @@
+$ErrorActionPreference = 'Continue'
+
 $taskPaths = @(
     "\Microsoft\Windows\Application Experience"
     "\Microsoft\Windows\Customer Experience Improvement Program"

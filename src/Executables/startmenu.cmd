@@ -5,6 +5,13 @@ set "SRC=%~dp0"
 set "DEFAULT_SHELL=%SystemDrive%\Users\Default\AppData\Local\Microsoft\Windows\Shell"
 set "DEFAULT_INSTALLER=%SystemDrive%\Users\Default\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState"
 
+rem CRITICAL: stop the Start Menu hosts BEFORE deleting their caches. The host
+rem keeps the pin list in memory and rewrites start2.bin when it exits, which
+rem silently undid every previous cleanup pass. It restarts automatically in
+rem the user's session, so this is safe.
+taskkill /f /im StartMenuExperienceHost.exe >nul 2>&1
+taskkill /f /im ShellExperienceHost.exe >nul 2>&1
+
 if exist "%SystemRoot%\StartMenuLayout.xml" del /f /q "%SystemRoot%\StartMenuLayout.xml" >nul 2>&1
 mkdir "%DEFAULT_SHELL%" >nul 2>&1
 for %%F in (LayoutModification.xml LayoutModification.json DefaultLayouts.xml) do (

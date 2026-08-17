@@ -28,10 +28,20 @@ Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" -
 $roots = $roots | Where-Object { $_ } | Select-Object -Unique
 
 # 3. Delete the Start Menu cache files in every profile.
+#    start.bin  = Windows 10 / early Win11 pinned-tile cache
+#    start2.bin = Windows 11 22H2+ pinned-tile cache (the one that matters now)
+#    The glob covers both plus any future startN.bin variant.
 $cleared = 0
 foreach ($r in $roots) {
     $base = Join-Path $r "AppData\Local\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy"
-    foreach ($rel in @("LocalState\start.bin", "Settings\settings.dat", "LocalState\StartMenuExperienceHost.settings")) {
+    $localState = Join-Path $base "LocalState"
+    if (Test-Path $localState) {
+        Get-ChildItem -Path (Join-Path $localState "start*.bin") -Force -ErrorAction SilentlyContinue | ForEach-Object {
+            Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
+            if (-not (Test-Path $_.FullName)) { $cleared++ }
+        }
+    }
+    foreach ($rel in @("Settings\settings.dat", "LocalState\StartMenuExperienceHost.settings")) {
         $p = Join-Path $base $rel
         if (Test-Path $p) {
             Remove-Item $p -Force -ErrorAction SilentlyContinue

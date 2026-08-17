@@ -60,7 +60,6 @@ actions:
           'Netflix',
           'Microsoft.XboxApp',
           'Microsoft.XboxGamingOverlay',
-          'Microsoft.XboxIdentityProvider',
           'Microsoft.XboxSpeechToTextOverlay',
           'Microsoft.Xbox.TCUI',
           'Microsoft.XboxGameCallableUI',
@@ -68,11 +67,17 @@ actions:
           'Microsoft.YourPhone',
           'MicrosoftWindows.CrossDevice',
           'Microsoft.WindowsCalculator',
-          'Microsoft.Windows.Photos',
-          'Microsoft.WindowsStore',
-          'Microsoft.ScreenSketch',
-          'Microsoft.StorePurchaseApp'
+          'Microsoft.ScreenSketch'
         )
+        # NOTE: Microsoft.WindowsStore / StorePurchaseApp are NOT in this base
+        # list anymore. Removing the Store here broke the "Keep Microsoft
+        # Store" option (store-keep) and caused licensing/update failures =
+        # AppX app crashes. The store-disable option still removes them fully
+        # via RemoveStoreServices.ps1. Microsoft.Windows.Photos is also only
+        # removed via its dedicated option below, not unconditionally.
+        # Microsoft.XboxIdentityProvider is kept in the base pass too: it has
+        # ZERO background processes but Minecraft Launcher / Game Pass sign-in
+        # CRASHES without it. The xbox/store options still remove it.
 
   - !writeStatus: {status: "Removing Photos", option: "remove-appx-photos"}
   - !powerShell:

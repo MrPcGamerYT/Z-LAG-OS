@@ -1,7 +1,11 @@
 title: Advanced Performance Tweaks (Beyond Atlas)
 actions:
   - !powerShell: {command: 'Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force'}
-  - !powerShell: {command: 'if (Get-Command Disable-MMAgent -ErrorAction SilentlyContinue) { try { Disable-MMAgent -MemoryCompression -ErrorAction SilentlyContinue } catch {} }; exit 0'}
+  # Memory compression stays ENABLED on purpose. Disabling it forces every
+  # memory-pressure event into hard pagefile I/O, which is exactly the kind of
+  # mid-game hitch/stutter this playbook must avoid. Compression costs a tiny
+  # bit of CPU but prevents disk-bound frame drops on 8/16 GB systems.
+  - !powerShell: {command: 'if (Get-Command Enable-MMAgent -ErrorAction SilentlyContinue) { try { Enable-MMAgent -MemoryCompression -ErrorAction SilentlyContinue } catch {} }; exit 0'}
   - !cmd: {command: 'fsutil behavior set disablelastaccess 1'}
   - !cmd: {command: 'fsutil behavior set disable8dot3 1'}
   - !powerShell: {command: 'Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object { Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue }'}

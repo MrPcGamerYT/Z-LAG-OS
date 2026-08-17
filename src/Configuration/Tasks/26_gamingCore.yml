@@ -63,15 +63,88 @@ actions:
       type: REG_DWORD
       data: 1
 
+  # Game Mode ON: tells the scheduler to protect the game's CPU/GPU time from
+  # background work (no extra processes - it is a pure scheduler policy).
+  # This directly targets "FPS drops mid-game" without adding any footprint.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\GameBar'
+      value: 'AutoGameModeEnabled'
+      type: REG_DWORD
+      data: 1
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\GameBar'
+      value: 'AllowAutoGameMode'
+      type: REG_DWORD
+      data: 1
+
+  # =========================
+  # ANTI-FLICKER + FRAME PACING (REAL FIXES)
+  # =========================
+
+  # Disable Multi-Plane Overlay (MPO). MPO is the #1 cause of screen
+  # flickering / stuttering on NVIDIA and AMD GPUs (both vendors document
+  # this exact registry fix). Disabling it forces classic DWM composition =
+  # no flicker, smoother frame delivery. Zero background cost.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows\Dwm'
+      value: 'OverlayTestMode'
+      type: REG_DWORD
+      data: 5
+
+  # Windows 11 22H2+ throttles timer resolution for background processes and
+  # can ignore an app's requested resolution. This forces the kernel to honor
+  # global high-resolution timer requests from games = stable frame pacing,
+  # no micro-stutter from timer coalescing. No-op on Windows 10 (safe).
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel'
+      value: 'GlobalTimerResolutionRequests'
+      type: REG_DWORD
+      data: 1
+
+  # MMCSS storage I/O priority for games (completes the Games task profile:
+  # GPU Priority 8 + Priority 6 + High scheduling already set above).
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
+      value: 'SFIO Priority'
+      type: REG_SZ
+      data: 'High'
+
+  # Machine-wide GameDVR ban (policy level - user level is set elsewhere).
+  # Guarantees no background capture ever eats frames.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR'
+      value: 'AllowGameDVR'
+      type: REG_DWORD
+      data: 0
+
   # =========================
   # INPUT LATENCY REDUCTION
   # =========================
 
+  # Driver-level input buffers: default queue size is 100 packets; 32 keeps
+  # the buffer small so mouse/keyboard events are flushed to the game sooner
+  # (a classic competitive-input tweak; still large enough to never drop
+  # events even at 8000 Hz polling).
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters'
+      value: 'MouseDataQueueSize'
+      type: REG_DWORD
+      data: 32
+
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters'
+      value: 'KeyboardDataQueueSize'
+      type: REG_DWORD
+      data: 32
+
+  # '1' (not '0') - matches the registry/user-settings tasks; a 0ms hover time
+  # makes the shell fire hover events continuously while the pointer moves.
   - !registryValue:
       path: 'HKCU\Control Panel\Mouse'
       value: 'MouseHoverTime'
       type: REG_SZ
-      data: '0'
+      data: '1'
 
   - !registryValue:
       path: 'HKCU\Control Panel\Keyboard'

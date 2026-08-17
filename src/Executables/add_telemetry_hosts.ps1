@@ -1,6 +1,8 @@
 param(
     [string]$HostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
 )
+$ErrorActionPreference = 'Continue'
+
 $entries = @(
     "0.0.0.0 vortex.data.microsoft.com",
     "0.0.0.0 vortex-win.data.microsoft.com",

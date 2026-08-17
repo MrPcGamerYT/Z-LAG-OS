@@ -3,6 +3,8 @@
 # Pointers tab in Control Panel > Mouse stays visible
 # ============================================================
 
+$ErrorActionPreference = 'Continue'
+
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SourceFolder = Join-Path $ScriptDir "ElegantDark"
 $DestinationFolder = "$env:SystemRoot\Cursors\ElegantDark"

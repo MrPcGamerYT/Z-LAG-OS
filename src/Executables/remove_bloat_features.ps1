@@ -1,6 +1,8 @@
 # Remove-OptionalApps.ps1
 # Removes selected Optional Features from Windows
 
+$ErrorActionPreference = 'Continue'
+
 Write-Host "Removing Optional Features..." -ForegroundColor Cyan
 
 $patterns = @(

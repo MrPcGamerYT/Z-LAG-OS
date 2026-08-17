@@ -50,7 +50,10 @@ actions:
   - !service: {name: 'PhoneSvc', operation: change, startup: 4}
   - !service: {name: 'Spooler', operation: change, startup: 4}
   - !service: {name: 'TrkWks', operation: change, startup: 4}
-  - !service: {name: 'TabletInputService', operation: change, startup: 4}
+  # TabletInputService/TextInputHost is part of the text-input stack. Fully
+  # disabling it broke keyboard input in UWP/search surfaces for some users, so
+  # it is demand-start (0 footprint at idle, still available when needed).
+  - !service: {name: 'TabletInputService', operation: change, startup: 3}
   - !service: {name: 'StiSvc', operation: change, startup: 4}
   - !service: {name: 'wisvc', operation: change, startup: 4}
   - !service: {name: 'SensorDataService', operation: change, startup: 4}

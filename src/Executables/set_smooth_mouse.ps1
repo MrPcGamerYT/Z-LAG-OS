@@ -3,6 +3,8 @@
 # malformed 24-byte all-zero curve, which corrupts pointer math whenever
 # Enhanced Pointer Precision is toggled back on and causes erratic mouse
 # movement. These are the correct linear (no-acceleration) curve values.
+$ErrorActionPreference = 'Continue'
+
 $path = "HKCU:\Control Panel\Mouse"
 
 $xCurve = [byte[]](

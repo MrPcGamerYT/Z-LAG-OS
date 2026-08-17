@@ -2,6 +2,8 @@
 # Z-LAG OS - Safe Wi-Fi / WLAN Adapter Disabler
 # ==============================================================================
 
+$ErrorActionPreference = 'Continue'
+
 Write-Output "[Z-LAG] Disabling Wi-Fi adapters and services for zero network latency overhead..."
 
 # 1. Disable Wi-Fi Network Adapters

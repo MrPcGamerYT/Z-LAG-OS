@@ -2,12 +2,32 @@ title: Clean Start Menu (Only App List - No Pinned Apps or Groups)
 actions:
   - !writeStatus: {status: "Cleaning Start Menu - removing all pinned apps and groups..."}
   
-  # ===== System‑wide start menu reset =====
-  # Runs the batch script that:
-  #   - Copies layout files to Default user profile and all existing users
-  #   - Deletes start.bin cache and CloudStore tilegrid entries
-  #   - Resets start menu for every user on the system
+  # ===== System-wide start menu reset =====
+  # startmenu.cmd (TrustedInstaller):
+  #   - Stops StartMenuExperienceHost FIRST so it cannot rewrite start2.bin
+  #     from memory after we delete it (this was why cleaning "did not work")
+  #   - Copies empty layout files to the Default profile and all existing users
+  #   - Deletes start.bin / start2.bin caches for every loaded user hive
   - !cmd: {command: 'startmenu.cmd', exeDir: true}
+
+  # All-profile cache sweep (TrustedInstaller): also covers profiles whose
+  # hives are NOT loaded (other local accounts), start.bin AND start2.bin.
+  # Previously this only ran when the user selected store-disable.
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\clear_start_menu_cache.ps1'
+
+  # CloudStore / StartPage2 tile-grid purge + empty Import-StartLayout, run AS
+  # THE REAL USER (HKCU under TrustedInstaller is the SYSTEM hive, so running
+  # this elevated-as-user is the only way it actually reaches the user's Start
+  # Menu). This script existed but was never wired into any task - that was
+  # the main reason the Start Menu cleaner stopped working.
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\set_empty_start_layout.ps1'
+      runas: currentUserElevated
   
   # ===== DISABLE RECENT APPS / FREQUENT APPS =====
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_TrackProgs', type: REG_DWORD, data: 0}

@@ -5,6 +5,8 @@
 # Run Context: Elevated Administrator PowerShell Session
 # ==============================================================================
 
+$ErrorActionPreference = 'Continue'
+
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Warning "Critical Error: Script requires elevated Administrative privileges!"
     Exit
@@ -187,16 +189,32 @@ foreach ($Gpu in $GpuControllers) {
 # ------------------------------------------------------------------------------
 # 7. UNTHROTTLED POWER SCHEME STRATEGY (universal Win10 + Win11)
 # ------------------------------------------------------------------------------
-$UltimateProfileGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61"   # Ultimate Performance
-$HighPerfGuid        = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"   # High Performance (fallback)
-
-& powercfg -duplicatescheme $UltimateProfileGuid 2>$null
-$schemes = & powercfg -list 2>$null
-if ($schemes -match $UltimateProfileGuid) {
-    & powercfg -setactive $UltimateProfileGuid 2>$null
-} elseif ($schemes -match $HighPerfGuid) {
-    & powercfg -setactive $HighPerfGuid 2>$null
+# set_power_plan.ps1 already created, tuned and ACTIVATED the "Maximum FPS"
+# plan and recorded its GUID. Re-activate that exact plan here (in case an
+# installer switched plans mid-playbook) instead of duplicating a new copy
+# on every run - the old duplicate-and-activate-template logic created
+# duplicate plans and could activate the WRONG (untuned) scheme.
+$MaxFpsGuid = $null
+try {
+    $MaxFpsGuid = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Z-LAG-OS" -Name "MaxFpsPlanGuid" -ErrorAction SilentlyContinue).MaxFpsPlanGuid
+} catch { }
+$GuidRegex = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+$SchemeList = (& powercfg /list 2>$null | Out-String)
+if (-not ($MaxFpsGuid -and $SchemeList -match [regex]::Escape($MaxFpsGuid))) {
+    # Marker missing/stale: find any plan literally named "Maximum FPS".
+    $MaxFpsGuid = $null
+    foreach ($line in ($SchemeList -split "`r?`n")) {
+        if ($line -match ('(' + $GuidRegex + ')\s+\(Maximum FPS\)')) { $MaxFpsGuid = $Matches[1]; break }
+    }
 }
+if ($MaxFpsGuid) {
+    & powercfg -setactive $MaxFpsGuid 2>$null
+} else {
+    # Fallback for standalone runs: High Performance (never duplicate here).
+    $HighPerfGuid = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
+    if ($SchemeList -match $HighPerfGuid) { & powercfg -setactive $HighPerfGuid 2>$null }
+}
+
 
 $PowerControlPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling"
 if (-not (Test-Path $PowerControlPath)) { New-Item -Path $PowerControlPath -Force | Out-Null }

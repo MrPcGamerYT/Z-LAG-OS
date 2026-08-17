@@ -54,7 +54,9 @@ actions:
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Lsa', value: 'DisableVSM', type: REG_DWORD, data: 1}
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Power', value: 'CoreParkingDisabled', type: REG_DWORD, data: 1}
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Processor', value: 'CpuCoreParkingDisabled', type: REG_DWORD, data: 1}
-  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'DisableCompression', type: REG_DWORD, data: 1}
+  # Memory compression stays ON (DisableCompression=0): without it, memory
+  # pressure turns into hard pagefile I/O and causes mid-game hitches.
+  - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management', value: 'DisableCompression', type: REG_DWORD, data: 0}
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers', value: 'HwSchPriority', type: REG_DWORD, data: 1}
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers', value: 'GpuPreference', type: REG_DWORD, data: 2}
   - !registryValue: {path: 'HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters', value: 'GlobalTCPNoDelay', type: REG_DWORD, data: 1}

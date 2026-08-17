@@ -10,6 +10,8 @@
 
 #Requires -RunAsAdministrator
 
+$ErrorActionPreference = 'Continue'
+
 Write-Host "=========================================================================" -ForegroundColor Cyan
 Write-Host "[INIT] ACTIVATING SUPREME UNIVERSAL FORCE ENGINE (ALL WINDOWS BUILD MATRIX)" -ForegroundColor Cyan
 Write-Host "=========================================================================" -ForegroundColor Cyan

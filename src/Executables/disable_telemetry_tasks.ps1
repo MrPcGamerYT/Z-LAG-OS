@@ -1,3 +1,5 @@
+$ErrorActionPreference = 'Continue'
+
 $tasks = @(
     @{Name="Microsoft Compatibility Appraiser"; Path="\Microsoft\Windows\Application Experience"},
     @{Name="ProgramDataUpdater"; Path="\Microsoft\Windows\Application Experience"},

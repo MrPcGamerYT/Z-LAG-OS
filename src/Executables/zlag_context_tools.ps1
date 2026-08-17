@@ -345,28 +345,45 @@ function Invoke-ZLagPowerMaxFps {
 
     $ultimate = 'e9a42b02-d5df-448d-aa00-03f14749eb61'
     $high = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
-    $schemes = (& powercfg.exe -list 2>$null | Out-String)
+    $schemes = (& powercfg.exe /list 2>$null | Out-String)
     $activated = $null
-
-    # Prefer an existing Maximum FPS / Ultimate duplicate, then the template,
-    # then High Performance - identical logic on Windows 10 and Windows 11.
     $guidPattern = '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'
-    foreach ($line in ($schemes -split "`r?`n")) {
-        if ($line -match ('Power Scheme GUID:\s+' + $guidPattern + '\s+\((Maximum FPS|Ultimate Performance)') ) {
-            $activated = $Matches[1]
-            break
+
+    # 1. The playbook records the tuned plan's GUID - always prefer it so the
+    #    EXACT tuned plan comes back (not a stock template).
+    try {
+        $marker = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Z-LAG-OS' -Name 'MaxFpsPlanGuid' -ErrorAction SilentlyContinue).MaxFpsPlanGuid
+        if ($marker -and $schemes -match [regex]::Escape($marker)) { $activated = $marker }
+    } catch { }
+
+    # 2. Otherwise match by name, locale-safe (no "Power Scheme GUID:" text
+    #    dependency - non-English Windows prints a translated prefix).
+    if (-not $activated) {
+        foreach ($line in ($schemes -split "`r?`n")) {
+            if ($line -match ($guidPattern + '\s+\((Maximum FPS|Ultimate Performance)')) {
+                $activated = $Matches[1]
+                break
+            }
         }
     }
+
+    # 3. Then the Ultimate template, a fresh duplicate, or High Performance.
     if (-not $activated -and $schemes -match $ultimate) { $activated = $ultimate }
     if (-not $activated) {
-        $dup = (& powercfg.exe -duplicatescheme $ultimate 2>$null | Out-String)
+        $dup = (& powercfg.exe /duplicatescheme $ultimate 2>$null | Out-String)
         if ($dup -match $guidPattern) { $activated = $Matches[1] }
     }
     if (-not $activated -and $schemes -match $high) { $activated = $high }
 
     if ($activated) {
-        & powercfg.exe -setactive $activated 2>$null | Out-Null
-        Show-ZLagResult -Title 'Z LAG - Max FPS Power Plan' -Message 'The Maximum FPS power plan is active again. Full performance restored.'
+        & powercfg.exe /setactive $activated 2>$null | Out-Null
+        # VERIFY the switch actually happened before telling the user it did.
+        $check = (& powercfg.exe /getactivescheme 2>$null | Out-String)
+        if ($check -match [regex]::Escape($activated)) {
+            Show-ZLagResult -Title 'Z LAG - Max FPS Power Plan' -Message 'The Maximum FPS power plan is active again. Full performance restored.'
+        } else {
+            Show-ZLagResult -Title 'Z LAG - Max FPS Power Plan' -Message 'Windows did not accept the power plan switch. Try again or reboot.' -Kind Warning
+        }
     } else {
         Show-ZLagResult -Title 'Z LAG - Max FPS Power Plan' -Message 'No performance power plan could be activated on this system.' -Kind Warning
     }
