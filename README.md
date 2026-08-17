@@ -1,30 +1,34 @@
-# Z LAG OS - Zero Lag Gaming Operating System
+# Z LAG OS — Zero Lag Gaming Operating System
 
 [![License: Use Only](https://img.shields.io/badge/License-Proprietary%20%2F%20Use--Only-red.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078d7.svg)](https://www.microsoft.com/windows)
-[![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://amelabs.net/)
-[![Version: 5.15](https://img.shields.io/badge/Version-5.15-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
+[![Framework: AME Wizard](https://img.shields.io/badge/Framework-AME%20Wizard-orange.svg)](https://ameliorated.io/)
+[![Version: 5.16](https://img.shields.io/badge/Version-5.16-success.svg)](https://github.com/MrPcGamerYT/Z-LAG-OS/releases)
 [![Build: Stable](https://img.shields.io/badge/Build-Stable-brightgreen.svg)]()
 
-> **Maximum FPS. Zero Lag. No Bloat.** A performance-driven AME Wizard playbook engineered for competitive gaming, Android emulators (BlueStacks / MSI App Player / LDPlayer), and low-end hardware.
+> **Maximum FPS. Zero Lag. No Bloat.** A performance-first AME Wizard playbook engineered for competitive gaming, Android emulators (BlueStacks / MSI App Player / LDPlayer), and low-end hardware — universal for **Windows 10 and Windows 11**.
 
 ![Z-LAG Wallpaper](src/Executables/Z_LAG_Wallpaper/Desktop.png)
 
 ---
 
 ### ⚠️ CRITICAL DISCLAIMER
-This playbook applies **aggressive system-wide modifications**: disables telemetry, strips built-in apps, blocks updates, removes OneDrive (including local sync folders), Edge/WebView2, Cortana/Widgets, purges services, and modifies kernel power & scheduler policies. It is designed for **performance-critical gaming environments only**. Create a restore point and use on a **Local Offline Account**.
+This playbook applies **aggressive system-wide modifications**: it disables telemetry, strips built-in apps, blocks updates, removes OneDrive (including local sync folders), Edge/WebView2, Cortana/Widgets, purges services, and modifies kernel power & scheduler policies. It is designed for **performance-critical gaming environments only**. Create a restore point and use a **Local Offline Account**.
 
 ---
 
 ## 📚 Table of Contents
-- [Core Objectives](#-core-objectives)
-- [What's New in v5.15](#-whats-new-in-v515)
-- [Optimization Matrix](#️-optimization-matrix)
-- [Optional Performance Profiles](#-optional-performance-profiles)
+- [Why Z LAG OS](#-why-z-lag-os)
+- [Feature Highlights](#-feature-highlights)
+- [Installation](#-installation)
+- [Setup Options](#-setup-options)
+- [Z LAG TOOLBOX Context Menu](#-z-lag-toolbox-context-menu)
+- [Clean & Compact Start Menu](#-clean--compact-start-menu)
+- [Maximum FPS Power Plan](#-maximum-fps-power-plan)
 - [Expected Performance Gains](#-expected-performance-gains)
 - [What Is Removed vs Preserved](#-what-is-removed-vs-preserved)
 - [Compatibility](#-compatibility)
+- [Changelog](#-changelog)
 - [FAQ](#-faq)
 - [Validation](#-validation)
 - [Contributing](#-contributing)
@@ -32,275 +36,318 @@ This playbook applies **aggressive system-wide modifications**: disables telemet
 
 ---
 
-## 🎯 Core Objectives
+## 🎯 Why Z LAG OS
 
-| Goal | How We Achieve It |
+Most "gaming optimizers" flip a few registry switches and call it a day. Z LAG OS is a complete, engineered pipeline of **38 sequential tasks** that rebuilds Windows around one goal: **every CPU cycle, every millisecond of latency, and every megabyte of RAM goes to your game.**
+
+| Goal | How it is achieved |
 | :--- | :--- |
-| **Latency Minimization** | MMCSS system responsiveness tuning, GPU priority boosts, scheduler & I/O lock optimizations, a dedicated high-resolution timer service |
-| **Debloat & Privacy** | Removes 60+ built-in apps, blocks 40+ telemetry hosts, disables diagnostics/telemetry tasks and tracking services |
-| **RAM Efficiency** | Svchost consolidation, disables Superfetch/Search indexing, turns off visual effects, turns off prefetch, aggressively trims working sets (target idle RAM ~1.2–1.8 GB, ~40–55 background processes) |
-| **Gaming & Emulator Boost** | High CPU priority for emulator processes, forces Hardware-Accelerated GPU Scheduling, bypasses fullscreen optimizations, honors GameDVR fullscreen-exclusive mode |
-| **Network Latency** | Disables Nagle's algorithm, maximizes network throttling index, normal autotuning, DNS flush for reduced jitter and competitive ping |
+| **Latency Minimization** | MMCSS gaming profile (GPU Priority 8 / High scheduling / High SFIO), hardware GPU scheduling, dynamic tick disabled, high-resolution timer enforced, MSI mode on the GPU |
+| **Stable FPS (no mid-game drops)** | Zero scheduled activity during gameplay, thermal-headroom power tuning (no heat-soak throttling), core parking off, Multi-Plane Overlay disabled (no flicker/stutter), memory compression kept ON (no pagefile hitches) |
+| **Raw Input** | Correct 40-byte linear mouse curves (true 1:1, zero acceleration), driver-level input queues tuned, USB selective suspend and USB3/PCIe link power management forced OFF so input devices can never sleep mid-game |
+| **Heavy Debloat** | 60 + built-in apps removed, 100 + services disabled or demand-only, telemetry blocked at host + task + service level, Edge/WebView2/OneDrive fully removed |
+| **RAM Efficiency** | Svchost consolidation, Superfetch/Search indexing off, visual effects off, working-set trims — target idle: **~1.2–1.9 GB RAM, ~40–55 processes** |
+| **Network Latency** | Nagle disabled globally + per interface, ACK frequency tuned, interrupt moderation off, energy-efficient Ethernet off, NIC power saving off — with zero destructive stack resets |
+| **AppX Stability** | The complete packaged-app runtime framework set is hard-protected, so heavy debloat never causes UWP/sideloaded app crashes |
 
 ---
 
-## 🆕 What's New in v5.15
+## ✨ Feature Highlights
 
-### v5.15 - Maximum FPS plan actually ACTIVATES + universal Start Menu cleaner
-
-**Power plan fixed - created AND set (with proof):**
-- The old flow could create/tune the "Maximum FPS" plan but leave Balanced
-  active: tuning went to `SCHEME_CURRENT` (whatever was active at that
-  moment, not necessarily the new plan) and the switch was never verified.
-- `set_power_plan.ps1` fully rewritten: reuse-or-create ONCE (stale duplicate
-  "Maximum FPS" copies from older runs are deleted), tune **by explicit GUID**
-  (AC + DC), **activate AFTER tuning**, then **verify** with
-  `/getactivescheme` (+1 retry). The final GUID is recorded in
-  `HKLM\SOFTWARE\Z-LAG-OS\MaxFpsPlanGuid`.
-- `final_push.ps1` no longer runs its own duplicate-and-activate pass (which
-  created duplicate plans on every run and could re-activate a stock,
-  untuned template over the tuned one) - it now re-activates the recorded
-  GUID only.
-- The context-menu "Activate Max FPS Power Plan" tool prefers the recorded
-  GUID, matches plan names locale-safely, and verifies the switch before
-  reporting success.
-
-**Start Menu cleaner - truly universal Win10/Win11:**
-- `set_empty_start_layout.ps1` rewritten with an explicit build-22000 gate:
-  - **Windows 10:** `Import-StartLayout` empty-tile layout (the supported
-    Win10 mechanism; deprecated on Win11 so now correctly gated), legacy
-    TileDataLayer database cleanup for very old builds, `start*.bin` purge.
-  - **Windows 11:** empty `{"pinnedList":[]}` LayoutModification.json in the
-    user's Shell folder + `start*.bin` (incl. `start2.bin`) purge so the host
-    rebuilds a pin-free grid; Recommended section hidden via policy + Iris.
-  - **Both:** StartMenuExperienceHost stopped BEFORE cache deletion (it
-    rewrites its cache from memory on exit), CloudStore/StartPage2/TileStore
-    tile databases purged.
-- New regression guards in `tests/validate_repo.py` lock both contracts:
-  plan-by-GUID tuning + activation verification + no scheme duplication in
-  final_push, and the universal Win10/11 + host-stop + `start*.bin` cleaner
-  requirements, so neither fix can silently regress.
+- 🚀 **True zero-lag design** — no Z-LAG process, service, or scheduled task ever runs while you play. Maintenance happens at boot/logon only.
+- 🖥️ **Clean compact Start Menu** — no pinned tiles, no Recommended section, no "Most used"/"Recently added" lists. Pure app list, on both Windows 10 and 11.
+- 🖱️ **Z LAG TOOLBOX right-click menu** — 12 built-in tools including one-click GAME BOOST, standby-memory clear, ping/jitter test, and instant Max FPS power plan re-activation.
+- ⚡ **Maximum FPS power plan** — created once, tuned by GUID, activated and **verified**; the exact plan GUID is recorded so it can always be restored in one click.
+- 🎨 **Custom native experience** — Z LAG Welcome panel at logon (Task Scheduler based — invisible to Startup apps), ElegantDark cursor set, dark theme, custom wallpaper, small auto-hide taskbar, classic context menu on Windows 11.
+- 🛡️ **Crash-proof debloat** — Store/identity removals are option-gated and licensing-aware; the shell's own AppX runtime is never touched.
+- 🔁 **Self-healing runtime** — a non-resident watchdog re-locks the service floor at boot/logon, and the AppX launch stack re-arms itself after every purge.
+- 🧪 **Production validation** — every release passes a structural + regression test suite covering task wiring, script syntax balance, and every historical bug class.
 
 ---
 
-## 🛠️ Optimization Matrix
+## 📦 Installation
 
-| Category | What Gets Tuned | Benefit |
-| :--- | :--- | :--- |
-| **Kernel & CPU** | Ultimate Performance power plan, core parking disabled, power throttling off | Eliminates downclocking and frequency-scaling lag |
-| **Process Management** | Svchost consolidation plus a non-resident boot/logon/15-minute service-floor enforcer | Prevents trigger-start and per-user services from causing idle process creep |
-| **Graphics Pipeline** | Forces HAGS, MSI mode on GPU, disables fullscreen optimizations | Stabilizes 1% lows, reduces frame-time variance |
-| **Input & Timer** | Disabled dynamic tick, high-resolution timer, instant key/mouse response | Lower DPC latency, snappier input |
-| **Networking** | Global + per-interface TCP no-delay, offload tuning, DNS flush | Reduced jitter, competitive ping |
-| **Privacy & Telemetry** | Telemetry blocked at host + task level, update hosts blocked | Zero background upload |
-| **UI/UX** | Transparency & animations off, forced dark theme, clean Start layout, first-position Z LAG TOOLBOX submenu, classic sound tools, native loading status and Welcome-only panel | Less RAM usage, clean labels and visible boot progress |
+1. Download the latest `Z_LAG_OS.apbx` from [Releases](https://github.com/MrPcGamerYT/Z-LAG-OS/releases).
+2. Download [AME Wizard](https://ameliorated.io/) (latest beta, 0.7+).
+3. **Create a restore point** (the playbook also creates one as its first real action).
+4. Drag the `.apbx` into AME Wizard and follow the setup pages.
+5. Pick your options (browser, Defender, Bluetooth, Wi-Fi, Store — see below).
+6. Let it run (~30–60 min). The system reboots automatically when finished.
+
+> 💡 Best results: apply on a **fresh Windows install** with a **local account**.
 
 ---
 
-## ⚙️ Optional Performance Profiles
+## ⚙️ Setup Options
 
-During AME Wizard setup you get radio pages so you control how aggressive the optimization is:
+You stay in control of how aggressive the optimization is:
 
 | Page | Default | Max Performance Option | Effect |
 | :--- | :--- | :--- | :--- |
-| **Browser** | Chrome | Brave / OperaGX / None | Choose a pre-installed browser; affects privacy posture |
-| **Defender** | Keep (Recommended) | Disable | Frees ~150–300 MB RAM and removes scanning stutter. Advanced users only |
-| **Bluetooth** | Keep | Disable | Removes Bluetooth drivers/services. Only if you use wired peripherals |
-| **Wi-Fi** | Keep | Disable | Stops WLAN services. Only if you are on Ethernet |
-| **MS Store & Services** | Keep (Recommended) | Remove | **Totally removes** Store + Xbox + MS account/cloud apps & services, saving 300–500 MB. Only the Windows shell's own AppX runtime is kept so apps still launch |
+| **Browser** | Chrome | Brave / OperaGX / None | Pre-installed browser choice |
+| **Defender** | Keep (Recommended) | Disable | Frees ~150–300 MB RAM, removes scanning stutter. Advanced users only |
+| **Bluetooth** | Keep | Disable | Removes the Bluetooth stack. Only for wired-peripheral setups |
+| **Wi-Fi** | Keep | Disable | Stops WLAN services. Ethernet desktops only |
+| **MS Store & Services** | Keep (Recommended) | Remove | Fully removes Store + Xbox + MS account/cloud apps & services (~300–500 MB saved). The Windows shell's own AppX runtime is kept so apps still launch |
 
-**Z-LAG Toolbox** is always installed from [GitHub Releases](https://github.com/MrPcGamerYT/Z-LAG-TOOLBOX/releases) as the official app/driver/tweak hub. Alt App Installer is not used. It installs Win32 (EXE/MSI) apps, so even with Microsoft services removed, downloaded apps launch instead of crashing.
+**Z-LAG Toolbox** is always installed from [GitHub Releases](https://github.com/MrPcGamerYT/Z-LAG-TOOLBOX/releases) as the official app/driver/tweak hub. It installs Win32 (EXE/MSI) apps, so even with Microsoft services removed, downloaded apps launch instead of crashing.
+
+---
+
+## 🧰 Z LAG TOOLBOX Context Menu
+
+Right-click the desktop or any folder background → **Z LAG TOOLBOX** (always first position). Every tool runs only when clicked and exits immediately — **zero background processes**.
+
+| Tool | What it does |
+| :--- | :--- |
+| **GAME BOOST (One-Click)** | Kills respawned bloat processes (Edge, Widgets, Teams, OneDrive, GameBar…), trims all working sets, flushes DNS — click, then launch your game |
+| **RAM Trim / Clean** | Releases working-set RAM from all user-session processes |
+| **Clear Standby Memory** | Purges the standby page list natively — prevents mid-match allocation hitches after long sessions |
+| **Temp Clean** | Cleans user + Windows temp folders, reports space reclaimed |
+| **Recycle Bin Clean** | Empties the recycle bin |
+| **Flush DNS Cache** | Resets the DNS resolver for a clean connection |
+| **Ping / Latency Test** | Pings router + Cloudflare + Google; shows avg / max / **jitter** per hop |
+| **Activate Max FPS Power Plan** | One-click re-activation of the tuned plan (verified before reporting success) |
+| **System Info (Gamer View)** | OS build, free/total RAM, CPU cores/threads, GPU + driver, active power plan, live process count |
+| **Restart Explorer** | Fixes shell glitches instantly |
+| **Sound Manager (Classic)** | Opens the classic mmsys.cpl sound panel |
+| **Volume Mixer (Classic)** | Opens the classic per-app volume mixer |
+
+---
+
+## 🧹 Clean & Compact Start Menu
+
+A completely clean, compact Start Menu on **both** Windows versions — no pinned item section at all:
+
+**Windows 10**
+- Empty tile layout applied via `Import-StartLayout` + per-user layout XML
+- The real pinned-tile grid (`start.tilegrid` CloudStore keys) is purged for **every user**, so pins never come back
+- Full-screen/tablet Start forced off — small, compact desktop Start
+- Legacy tile database cleaned on old builds
+
+**Windows 11**
+- Empty `{"pinnedList":[]}` layout per user **and** machine-wide (`ConfigureStartPins`) — new accounts start pin-free too
+- `start*.bin` pin caches (including `start2.bin` on 22H2+) deleted for every profile
+- Compact "More pins" layout + Recommended section hidden
+- Compact File Explorer mode (dense rows, like Windows 10)
+
+**Both**
+- "Most used", "Recently added", ads/stubs and website recommendations removed at HKLM policy level (survives resets, applies to all users)
+- The Start Menu host is stopped **before** cache deletion (so it can't rewrite pins from memory) and its package cache is cleared — the clean menu appears immediately
+
+---
+
+## ⚡ Maximum FPS Power Plan
+
+The playbook builds a dedicated **"Maximum FPS"** plan and guarantees it is really active:
+
+1. Created **once** from Ultimate Performance (High Performance fallback) — never duplicated on re-runs; stale copies are auto-removed
+2. Tuned **by explicit GUID** on AC + DC: min CPU 5% / max 100% / aggressive boost (full speed under load, thermal headroom at idle — no heat-soak throttling), core parking off, disk/display/sleep timeouts off
+3. **USB selective suspend OFF, USB3 link power OFF, PCIe ASPM OFF** — mouse, keyboard, and GPU link never power-gate mid-game
+4. Activated **after** tuning and **verified** via `powercfg /getactivescheme` (with retry) — the log prints `VERIFIED: Maximum FPS plan is ACTIVE`
+5. The plan GUID is recorded in the registry so the right-click tool and later playbook stages always re-activate the **exact tuned plan**, never a stock template
 
 ---
 
 ## 📊 Expected Performance Gains
 
-*Note: varies by hardware. Tested on i5-11400F + GTX 1660 + 16GB.*
+*Note: varies by hardware. Tested on i5-11400F + GTX 1660 + 16 GB.*
 
 | Metric | Stock Windows 11 | After Z LAG OS | Delta |
 | :--- | :--- | :--- | :--- |
-| **Idle RAM after boot** | 3.8–4.5 GB | 1.2–1.9 GB | -60% |
-| **Processes** | 180–220 | ~40–55 (target as low as possible) | -70%+ |
-| **Boot Time (SATA SSD)** | 22s | 12–14s | ~-40% |
-| **DPC Latency (LatencyMon)** | 300–600µs spikes | 40–90µs avg | -80% |
-| **FPS 1% lows (Valorant 1080p Low)** | 110 FPS | 165 FPS | +50% 1% low stability |
-| **BlueStacks 5 startup** | 18s | 9s | 2x faster |
-| **Disk Idle I/O** | 5–10 MB/s telemetry | <0.5 MB/s | ~-95% |
-
-Optimization achieves: less background CPU, more CPU cycles to game threads via high MMCSS priority, and core parking disabled to prevent downclock spikes.
+| **Idle RAM after boot** | 3.8–4.5 GB | 1.2–1.9 GB | −60% |
+| **Processes** | 180–220 | ~40–55 | −70%+ |
+| **Boot time (SATA SSD)** | 22 s | 12–14 s | ~−40% |
+| **DPC latency (LatencyMon)** | 300–600 µs spikes | 40–90 µs avg | −80% |
+| **FPS 1% lows (Valorant 1080p Low)** | 110 FPS | 165 FPS | +50% 1%-low stability |
+| **BlueStacks 5 startup** | 18 s | 9 s | 2× faster |
+| **Disk idle I/O** | 5–10 MB/s telemetry | <0.5 MB/s | ~−95% |
 
 ---
 
 ## 🧹 What Is Removed vs Preserved
 
 ### Removed / Disabled
-- Built-in apps: People, Maps, Alarms, Camera, 3D Viewer, Sticky Notes, Mail, Calendar, Feedback, GetStarted, PowerAutomate, Clipchamp, Office Hub, Xbox layers (optional), YourPhone, and more
-- Services: DiagTrack, dmwappush, WerSvc, SysMain, WSearch, VSS/SwPrv, RpcLocator, SNMPTRAP, vds, WMPNetworkSvc, ssh-agent, MSDTC, Windows Backup, MapsBroker, Xbox networking, RemoteRegistry, and many per-user service instances
-- ULTRA (v5.11): System Restore/VSS, notifications, network discovery, file sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history are now fully disabled for gaming (see the v5.11 notes before applying)
-- Optional removals: Defender, Bluetooth stack, Wi-Fi stack, Store + MS identity/gaming services (all gated behind options)
-- Telemetry: CEIP tasks, appraiser, 43 hosts-file entries, update-host blocking
-- Features: OneDrive client/setup/sync integration and local sync folders, Widgets, Edge, WebView2 Runtime, Transparency, Animations, Search highlights, News/Feeds, Cortana hotkey
+- **Apps**: People, Maps, Alarms, Camera, 3D Viewer, Sticky Notes, Mail/Calendar, Feedback Hub, Get Started, Power Automate, Clipchamp, Office Hub, Teams, Skype, Copilot, Widgets, Bing apps, Solitaire, YourPhone/CrossDevice, Xbox layers (optional), and more
+- **Services**: DiagTrack, dmwappush, WerSvc, SysMain, WSearch, VSS/SwPrv, RpcLocator, SNMPTRAP, vds, WMPNetworkSvc, MSDTC, Windows Backup, MapsBroker, Xbox networking, RemoteRegistry, dozens of per-user service instances, and the full ULTRA floor (System Restore/VSS, notifications, network discovery, file sharing, hotspot/ICS, WebDAV, iSCSI, clipboard history)
+- **Telemetry**: CEIP tasks, compatibility appraiser, 43 hosts-file entries, update-host blocking
+- **Components**: OneDrive (client + sync folders), Edge, WebView2 Runtime, Cortana, News/Feeds, Search highlights, transparency, animations
+- **Optional**: Defender, Bluetooth stack, Wi-Fi stack, Store + MS identity/gaming services
 
 ### Preserved (for stability)
-- **WebView2 is not preserved in v5.12** - it is deliberately removed; apps that require it must supply or reinstall their own runtime
-- **NVIDIA / AMD / Intel GPU driver packages** - never removed
-- **Critical System apps**: desktop backbone and security-health UI
-- **VC++ Runtimes 2015+** - installed fresh (x86 + x64 + ARM64 where applicable)
-- **DirectX Jun2010** redist - installed for legacy games
-- **.NET Framework** - left intact
-- **Win32 core**: SFC, DISM, core audio, networking core (TCP/IP, DHCP, DNS cache kept)
-- **Windows shell AppX runtime** (AppXSvc, StateRepository, LicenseManager, ClipSVC) - kept even with "Remove MS Services" so the Start Menu/Search and Toolbox-installed apps keep launching
-- **WLAN / Bluetooth hardware** - kept by default; only removed if you opt in
-- **Windows core / boot** - boot & system-critical services (Start ≤ 1) are never touched, so the OS boots cleanly on both Windows 10 and 11 even with ULTRA applied
+- **GPU drivers & panels** — NVIDIA / AMD / Intel are never touched
+- **AppX runtime frameworks** — VCLibs, UI.Xaml, .NET Native, WindowsAppRuntime/SDK, App Installer, sign-in brokers, shell surface packages: near-zero footprint, but removing them crashes every packaged app
+- **Windows shell AppX services** — AppXSvc, StateRepository, LicenseManager, ClipSVC stay alive even with "Remove MS Services" so the Start Menu, Search, and Toolbox-installed apps keep launching
+- **Text-input stack** — demand-start (0 idle footprint), never hard-disabled, so keyboard input always works
+- **Font cache** — kept (killing it causes shell-wide text-rendering stutter)
+- **Memory compression** — kept ON (prevents pagefile hitching on 8/16 GB systems)
+- **Networking core** — TCP/IP, DHCP, DNS cache, firewall; Wi-Fi/Bluetooth kept unless you opt out
+- **Boot-critical services** — anything with Start ≤ 1 is never touched; the OS always boots cleanly
+- **VC++ Runtimes 2015+, DirectX Jun2010, .NET Framework** — installed/kept for game compatibility
 
 ---
 
-## 💻 Compatibility (Universal Windows 10 + Windows 11)
+## 💻 Compatibility
 
-The playbook is **version-universal**: every OS-sensitive step detects the running
-build and applies the correct tweak, so the same `.apbx` works perfectly on both.
+**Universal Windows 10 + Windows 11** — every OS-sensitive step detects the running build and applies the correct tweak. One `.apbx` for both.
 
-- **Windows 10**: 1809, 1903, 1909, 20H1, 20H2, 21H1, 21H2, 22H2
-- **Windows 11**: 21H2 (22000), 22H2 (22621), 23H2 (22631), 24H2 (26100+)
-- Architecture: x64 dominant, x86 limited, ARM64 (Surface) supported
-- Languages: All display languages
-- Framework: AME Wizard latest beta (0.7+)
+- **Windows 10**: 1809 → 22H2
+- **Windows 11**: 21H2 (22000) → 24H2 (26100+)
+- **Architecture**: x64 primary, ARM64 supported
+- **Languages**: all display languages (power/scheme parsing is locale-safe)
+- **Framework**: AME Wizard latest beta (0.7+)
 
-**Version-aware highlights**
-- **Taskbar** (`set_small_taskbar.ps1`): Win10 gets small icons + auto-hide + hidden
-  search/task view/badges; Win11 gets left-aligned + small taskbar + hidden
-  search/Copilot/task view/badges + auto-hide. No more Win10-only registry values
-  being written onto Windows 11.
-- **Power plan**: uses the real Ultimate Performance GUID and falls back to High
-  Performance on editions where Ultimate is unavailable; tunes both AC and DC so
-  laptops match desktops.
-- **Windows 11 extra process floor** (`32_win11ProcessFloor.yml`, gated
-  `builds: >=22000`): disables Win11-only services (AI/Copilot/Recall runtime,
-  data-usage, notifications, per-user bloat), removes Win11-only apps, kills
-  AI/Widgets processes and locks Copilot/Recall/Chat/Suggestions via policy — so
-  Windows 11's idle count lands close to Windows 10's.
-- **AppX / bloat removal**: all package/service removals are tolerant
-  (`-ErrorAction SilentlyContinue`), so packages that only exist on one OS are
-  simply skipped on the other.
-- **Start menu, Edge/WebView2 removal, OneDrive removal, wallpaper, classic sound, boot Welcome and AppX repair**: all build-safe.
+Win11-only passes (AI/Copilot/Recall floor, Win11 shell tweaks) are gated behind `builds: ['>=22000']` and never run on Windows 10 — and vice versa for Win10-only mechanisms.
+
+---
+
+## 📜 Changelog
+
+<details>
+<summary><b>v5.26 — Clean compact Start Menu, universal Win10/11</b></summary>
+
+- Windows 10 pinned section fully removed: the real pin grid (`start.tilegrid` CloudStore keys) is now purged for every user — pins can no longer come back
+- Machine-wide HKLM policies: no "Most used", no "Recently added", no ads/stubs, no website recommendations — applies to all users and survives resets
+- Windows 11: device-wide empty pin list, compact "More pins" Start layout, compact File Explorer
+- Windows 10: full-screen/tablet Start forced off, collapsed tray
+- Start Menu host stopped before cache deletion + package cache cleared, so the clean menu appears immediately
+</details>
+
+<details>
+<summary><b>v5.15 — Maximum FPS plan verified-active + universal Start Menu engine</b></summary>
+
+- Power plan flow rewritten: reuse-or-create once, tune by explicit GUID (AC+DC), activate AFTER tuning, verify via `/getactivescheme` with retry, record GUID for the context-menu tool
+- Removed the legacy duplicate-and-activate pass that created duplicate plans and could re-activate an untuned stock template
+- Start Menu engine split per OS: `Import-StartLayout` (Win10) vs `pinnedList` JSON (Win11), with `start*.bin` purge and host-stop on both
+</details>
+
+<details>
+<summary><b>v5.14 — Start Menu cleaner fixed + production hardening</b></summary>
+
+- Fixed three root causes of the broken cleaner: an orphaned layout script that never ran, `start2.bin` (Win11 22H2+) never being deleted, and the host rewriting caches from memory
+- Regression test suite extended to cover every historical bug class; all 37 scripts declare an explicit error policy; CI validation staged in `docs/ci/`
+</details>
+
+<details>
+<summary><b>v5.13 — Universal Win10/11 + expanded TOOLBOX (12 tools)</b></summary>
+
+- Added GAME BOOST, Clear Standby Memory, Ping/Latency Test, Activate Max FPS Power Plan, System Info (Gamer View)
+- All tools use APIs available on both PowerShell 5.1 (Win10) and Windows 11
+</details>
+
+<details>
+<summary><b>v5.12 — AppX crash-proofing, anti-flicker, raw input</b></summary>
+
+- Full AppX runtime framework set hard-protected (no more packaged-app crashes)
+- Store no longer removed by the base pass (option-gated with licensing handled)
+- Multi-Plane Overlay disabled (the documented NVIDIA/AMD flicker/stutter fix)
+- High-resolution timer enforced on Win11 22H2+; MMCSS `SFIO Priority=High`; machine-wide GameDVR ban
+- Driver-level mouse/keyboard queue tuning for faster input delivery
+</details>
+
+<details>
+<summary><b>v5.11 — Mid-game FPS drops + input issues fixed</b></summary>
+
+- Watchdog tasks no longer repeat during gameplay (boot/logon only) — zero scheduled activity while playing
+- Correct 40-byte linear mouse curves (previous builds wrote corrupt values)
+- USB selective suspend / USB3 LPM / PCIe ASPM forced off; input devices never power-gate
+- Thermal-headroom power tuning (min CPU 5%, boost aggressive) — no more heat-soak throttling
+- GPU MSI message limit removed; memory compression kept ON; destructive network resets removed; font cache preserved; Game Mode enabled
+</details>
+
+<details>
+<summary><b>v5.10 and earlier</b></summary>
+
+- First-run core reset, visible runtime storage under `C:\Windows\Z-LAG-OS`, Task Scheduler based Welcome panel, self-healing AppX runtime, ULTRA process/RAM floor, Edge/WebView2/OneDrive removal engines, telemetry host blocking, and the full 38-task pipeline
+</details>
 
 ---
 
 ## ❓ FAQ
 
 **Q: Is this a custom Windows ISO?**
-A: No. It's a playbook (`.apbx`) that transforms a clean official Windows install via AME Wizard. No piracy.
+A: No. It's a playbook (`.apbx`) that transforms a clean official Windows install via AME Wizard. Nothing is redistributed or pirated.
 
-**Q: Where did Alt App Installer go?**
-A: Removed in v5.6. The playbook installs [Z-LAG Toolbox](https://github.com/MrPcGamerYT/Z-LAG-TOOLBOX/releases) instead.
+**Q: How many background processes after install?**
+A: Target is **~40–55** at idle (depends on GPU driver and whether Defender/Store are kept). Check anytime: right-click desktop → Z LAG TOOLBOX → System Info (Gamer View).
 
-**Q: Removed the Store and now Xbox Game Bar is gone?**
-A: Expected. Use Z-LAG Toolbox to install apps, or keep the Store if you need Xbox services.
+**Q: Will my UWP / packaged apps crash after the debloat?**
+A: No. The complete AppX runtime framework set (VCLibs, UI.Xaml, WindowsAppRuntime, sign-in brokers, shell surfaces) is hard-protected, and shell AppX services stay alive even with "Remove MS Services" selected.
 
-**Q: Why do apps installed by Z-LAG Toolbox never crash silently?**
-A: The toolbox installer (1) downloads the latest release with retries, (2) verifies the file's SHA-256 digest, (3) smoke-tests the installed binary, and (4) pre-flights the packaged-app launch stack (LicenseManager, ClipSVC, AppXSvc, StateRepository) before it installs anything. Every result — success or failure — is written to `C:\ProgramData\Z-LAG-OS\toolbox_install.log` and registry markers, so nothing can fail silently. Since it installs Win32 apps, they run even with Microsoft services removed.
+**Q: How do I know the Maximum FPS power plan is really active?**
+A: Settings → Power shows "**Maximum FPS**" selected, and the install log prints `VERIFIED: Maximum FPS plan is ACTIVE`. If any driver installer switches plans later: right-click desktop → Z LAG TOOLBOX → **Activate Max FPS Power Plan**.
 
-**Q: I removed the Store and still get "The service has not been started"?**
-A: This is fixed in v5.10. The playbook keeps the *Windows shell's own* AppX runtime (License Manager, ClipSVC, AppXSvc, StateRepository) alive — those are part of Windows, not the Store — and the self-healing watchdog re-arms them on boot/logon. Microsoft account services (`wlidsvc`, `TokenBroker`) are left **demand-only** when you removed Microsoft services, so they add zero idle processes but can still answer if an app asks. To fix it manually, run `repair_appx_runtime.ps1` as Admin:
+**Q: The Start Menu still shows some pins right after install?**
+A: The menu is rebuilt immediately at apply time and finalized on the automatic reboot. After reboot: pure app list, no pinned section, no Recommended.
 
-```
-sc.exe config LicenseManager start= auto
-sc.exe config ClipSVC start= auto
-sc.exe config AppXSvc start= demand
-sc.exe config StateRepository start= demand
-net start LicenseManager
-net start ClipSVC
-```
+**Q: I removed the Store and an app says "The service has not been started"?**
+A: The shell's own AppX runtime (LicenseManager, ClipSVC, AppXSvc, StateRepository) is kept and self-heals at boot/logon. If it ever happens, run `repair_appx_runtime.ps1` as Admin and reboot.
 
-Reboot and open the app. You still have no Microsoft Store.
+**Q: An app says WebView2 is missing?**
+A: Expected — WebView2 is intentionally removed. Reinstall Microsoft's Evergreen WebView2 Runtime if a specific app needs it.
 
-**Q: I chose "Remove Microsoft Store & All MS Services" — is *everything* Microsoft gone?**
-A: All Microsoft *apps* (Store, Xbox, YourPhone, Bing, Office Hub, etc.) are uninstalled and deprovisioned, and all Microsoft *account/cloud/identity/telemetry* services are disabled so they cannot run. Four tiny services (`AppXSvc`, `StateRepository`, `LicenseManager`, `ClipSVC`) are kept on purpose: they are the Windows desktop shell's own runtime (Start Menu/Search/app launching), not Store bloat — removing them is what used to make apps crash with "The service has not been started".
+**Q: Bluetooth Keep is selected but pairing fails?**
+A: Pairing dependencies (CDPSvc, CDPUserSvc, NcbService, Device Association) are globally protected in Keep mode. If the adapter itself shows Code 10/43, that's an OEM driver/BIOS issue.
 
-**Q: An app says WebView2 is missing after applying v5.12. Is that expected?**
-A: Yes. v5.12 intentionally removes the WebView2 protection and runtime. Reinstall Microsoft's Evergreen WebView2 Runtime if that app does not ship its own fixed runtime.
-
-**Q: What appears during and after boot?**
-A: During secure Windows loading, native `VerboseStatus` text appears below Welcome/Please wait. After loading and Explorer startup, the per-user `Z LAG Services - Welcome` scheduled task starts the five-second panel. It does not create a Registry Run/Startup-folder entry, so Task Manager Startup apps stays clean; `wscript.exe` and `powershell.exe` remain normally visible only while the panel runs.
-
-**Q: Where are the cleanup and classic sound tools?**
-A: Right-click the desktop or a folder background and open **Z LAG TOOLBOX**. RAM Trim/Clean and Temp Clean are the first two options; classic Sound Manager and Volume Mixer are at the bottom. The old visible Start Menu folder, standalone Sound submenu and shortcut hotkey are intentionally removed.
-
-**Q: Bluetooth Keep is selected but Add Device says "Couldn't connect"?**
-A: The root cause was the global floor disabling `CDPSvc`, `CDPUserSvc` and `NcbService` even though radio services were protected. Those pairing dependencies and Device Association services are now globally protected and are never disabled in Keep mode. If Device Manager has no Bluetooth adapter or shows Code 10/43 afterward, that remaining problem is the OEM driver, BIOS or hardware.
-
-**Q: Why did the process count rise again after the first boot?**
-A: Windows can create suffixed per-user service instances at logon and trigger-start demand services later. `ZLAG-EnforceServiceFloor` now runs briefly as SYSTEM at boot, logon and every 15 minutes to stop those instances and restore `Start=4`. It is a scheduled recheck, not a resident background process. Hardware utilities and third-party drivers can still change the final count.
+**Q: Why did the process count rise again after first boot?**
+A: Windows re-creates per-user service instances at logon. The non-resident `ZLAG-EnforceServiceFloor` task re-locks the floor at boot/logon (never during gameplay), so the count settles back down.
 
 **Q: Will Windows Update break this?**
-A: The hosts file blocks updates and the update service is disabled. If you later want updates, restore the hosts file first.
+A: Updates are blocked (hosts + services). To update later, restore the hosts file and re-enable the update services first.
 
 **Q: Is disabling Defender safe?**
-A: Only if you understand the risks. Keep it enabled for daily use; disable only for tournament PCs behind a hardware firewall.
-
-**Q: Can I use Wi-Fi removal on a laptop?**
-A: No. Only pick Wi-Fi disable if you are on a desktop plugged in via Ethernet. Laptops should keep Wi-Fi.
+A: Only for advanced users (tournament PCs behind a hardware firewall). Keep it enabled for daily-driver machines.
 
 **Q: FPS not improved?**
-A: Make sure HPET is off, the Ultimate Performance power plan is active, Game Mode is off if using the MMCSS tweak, and your GPU driver is a clean install.
+A: Verify the Maximum FPS plan is active, your GPU driver is a clean install, and no OEM utility re-enabled power saving. Then use GAME BOOST before launching.
 
 ---
 
 ## ✅ Validation
 
-Run the dependency-free repository validator before packaging:
+Run the full repository validation suite before packaging:
 
 ```bash
 python3 tests/validate_repo.py
 ```
 
-It checks playbook/version metadata, JSON/XML files, the exact 01–37 task order,
-all task-to-executable references, persistent runtime destinations, and the
-Welcome task's XML/interactive principal/no-Run-key contract. Release review also
-parses every PowerShell file and checks batch structure and Git whitespace.
+It verifies: playbook/version metadata, JSON/XML/YAML data files, the exact 01–38 task order, all task-to-executable references, runtime layout contracts, the Welcome task XML, PowerShell brace/paren balance for all 37 scripts, explicit error-policy in every script, and **regression guards** for every historical bug class (power-plan activation, Start Menu contract, AppX keep-list, watchdog scheduling, input curves, network safety, context-menu wiring).
+
+CI workflow files (PowerShell AST parse + PSScriptAnalyzer gate on every push) are staged in [`docs/ci/`](docs/ci/README.md).
 
 ---
 
 ## 🛠️ Contributing
 
-1. Fork repository
-2. Create branch: `git checkout -b feature/MyTweak`
-3. Commit: `git commit -m 'Add registry tweak: TCPNoDelay optimization'`
-4. Push: `git push origin feature/MyTweak`
-5. Open a Pull Request with registry paths + benchmark before/after
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/MyTweak`
+3. Commit: `git commit -m 'Add registry tweak: XYZ'`
+4. Run `python3 tests/validate_repo.py` — it must pass
+5. Open a Pull Request with registry paths + before/after benchmarks
 
 Please test on a VM (VMware Workstation with nested virtualization) before opening a PR.
 
 ---
 
-## 📝 License
+## 📝 License & Credits
 
 **Proprietary — Use Only. No Modification or Reuse.** See [LICENSE](LICENSE).
 
-This project is **copyrighted** and is **not** open source or free software. The
-license grants permission to use, run, install, and deploy an **unmodified** copy
-for personal, educational, or commercial operation.
-
 - ✅ You may use the unmodified Software for its intended purpose.
-- ❌ You may not modify, adapt, patch, translate, or create derivative works.
-- ❌ You may not reuse or extract its code, scripts, configurations, or assets in another project.
-- ❌ You may not redistribute, sell, sublicense, lend, or publish the Software.
-- ✅ Only technical installation/runtime copies and one backup copy are allowed.
+- ❌ You may not modify, adapt, or create derivative works.
+- ❌ You may not reuse its code, scripts, configurations, or assets in another project.
+- ❌ You may not redistribute, sell, sublicense, or republish the Software.
 
-Written permission from the copyright owner (**MR.PC GAMER / Z-LAG Community**)
-is required for anything outside this limited use permission. All rights reserved.
+Written permission from the copyright owner (**MR.PC GAMER / Z-LAG Community**) is required for anything outside this limited use permission. All rights reserved.
 
----
+### Credits
+- **AME Wizard Team** — framework
+- **[Z-LAG Toolbox](https://github.com/MrPcGamerYT/Z-LAG-TOOLBOX)** — official app/driver/tweak hub
+- **AtlasOS & RevisionOS** — inspiration for advanced registry tweaks, adapted and extended
+- **MR.PC GAMER (MrPcGamerYT)** — maintainer, Z LAG Community
+- **ElegantDark cursor set** — open-source cursor designers
 
-## 🙏 Credits
-
-- AME Wizard Team - Framework
-- [Z-LAG Toolbox](https://github.com/MrPcGamerYT/Z-LAG-TOOLBOX) - Official app/driver/tweak hub
-- AtlasOS & RevisionOS - Inspiration for advanced reg tweaks, adapted beyond
-- MR.PC GAMER (MrPcGamerYT) - Maintainer, Z LAG Community
-- ElegantDark cursor set - open source cursor designers
-
-**Star ⭐ this repo if you get an FPS boost!**
+**⭐ Star this repo if you got an FPS boost!**
 
 ---
-*Z LAG OS v5.15 - Zero Lag, Max Performance. Built for gamers, by gamers.*
+*Z LAG OS v5.16 — Zero Lag, Max Performance. Built for gamers, by gamers.*
