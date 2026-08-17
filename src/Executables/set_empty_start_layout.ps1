@@ -41,6 +41,20 @@ foreach ($path in @(
     Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# GamerzOS-style tile grid purge: the actual Win10 pinned-tile grid lives in
+# start.tilegrid keys under CloudStore\Store\Cache\DefaultAccount. Deleting
+# only DefaultCache leaves the pinned section intact - this is why the pinned
+# items kept coming back on Windows 10.
+$cloudAccount = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount'
+if (Test-Path $cloudAccount) {
+    Get-ChildItem -Path $cloudAccount -Recurse -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match 'start\.tilegrid' } |
+        ForEach-Object { Remove-Item -Path $_.PSPath -Recurse -Force -ErrorAction SilentlyContinue }
+}
+
+# Remove Start advertisements/stubs config (Win10 22H2 / Win11 23H2+).
+Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Start' -Name 'Config' -Force -ErrorAction SilentlyContinue
+
 # --- 3. Per-user layout template + pin cache. ---------------------------------
 $shellDir = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Shell'
 New-Item -Path $shellDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null

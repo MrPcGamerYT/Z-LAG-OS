@@ -36,6 +36,12 @@ for /f "tokens=1" %%H in ('reg query HKU 2^>nul ^| findstr /r /c:"HKEY_USERS\\S-
             )
         )
     )
+    rem GamerzOS-style: delete the real Win10 pinned-tile grid (start.tilegrid
+    rem keys under CloudStore DefaultAccount) so the pinned section is fully
+    rem cleared for every user, not just the cache copy.
+    for /f "delims=" %%K in ('reg query "%%H\SOFTWARE\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount" /s /k /f "start.tilegrid" 2^>nul ^| findstr /i "start.tilegrid"') do (
+        reg delete "%%K" /f >nul 2>&1
+    )
     reg delete "%%H\Software\Microsoft\Windows\CurrentVersion\Start" /v Config /f >nul 2>&1
 )
 

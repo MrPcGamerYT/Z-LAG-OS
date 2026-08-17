@@ -28,12 +28,40 @@ actions:
       exeDir: true
       command: '.\set_empty_start_layout.ps1'
       runas: currentUserElevated
+
+  # GamerzOS parity: kill + clear the Start Menu host package cache so the
+  # rebuilt menu regenerates from the now-empty layout immediately.
+  - !taskKill: {name: 'StartMenuExperienceHost', ignoreErrors: true}
+  - !appx: {operation: clearCache, name: 'Microsoft.Windows.StartMenuExperienceHost*'}
   
   # ===== DISABLE RECENT APPS / FREQUENT APPS =====
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_TrackProgs', type: REG_DWORD, data: 0}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_TrackDocs', type: REG_DWORD, data: 0}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowRecentApps', type: REG_DWORD, data: 0}
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowAddedApps', type: REG_DWORD, data: 0}
+
+  # ===== GAMERZOS-STYLE MACHINE-WIDE POLICIES (all users, survives resets) ===
+  # Remove frequent programs list from the Start Menu
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'NoStartMenuMFUprogramsList', type: REG_DWORD, data: 1}
+  # Hide "Most used" list (2 = force hide for every account)
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer', value: 'ShowOrHideMostUsedApps', type: REG_DWORD, data: 2}
+  # Remove "Recently added" list
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer', value: 'HideRecentlyAddedApps', type: REG_DWORD, data: 1}
+  # Remove personalized website recommendations from Recommended (Win11)
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer', value: 'HideRecommendedPersonalizedSites', type: REG_DWORD, data: 1}
+  # Win11: empty machine-wide pin list so NEW accounts also start pin-free
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Start', value: 'ConfigureStartPins', type: REG_SZ, data: '{"pinnedList":[]}'}
+
+  # ===== COMPACT UI (GamerzOS parity) =====
+  # Win11 22000+: "More pins" compact Start layout - the pinned area shrinks
+  # and Recommended is minimized (with pins cleared the menu is app-list only).
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_Layout', type: REG_DWORD, data: 1, builds: ['>=22000']}
+  # Win11: File Explorer compact mode (dense row spacing like Win10)
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'UseCompactMode', type: REG_DWORD, data: 1, builds: ['>=22000']}
+  # Win10 <22000: compact Start = no full-screen Start, small UI mode
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ImmersiveShell', value: 'TabletMode', type: REG_DWORD, data: 0, builds: ['<22000']}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ImmersiveShell', value: 'SignInMode', type: REG_DWORD, data: 1, builds: ['<22000']}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'EnableAutoTray', type: REG_DWORD, data: 1, builds: ['<22000']}
   
   # ===== DISABLE SUGGESTIONS AND ADS =====
   - !registryValue: {path: 'HKCU\Software\Policies\Microsoft\Windows\Explorer', value: 'ShowRecommendedSection', type: REG_DWORD, data: 0}
