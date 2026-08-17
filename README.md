@@ -204,7 +204,7 @@ Win11-only passes (AI/Copilot/Recall floor, Win11 shell tweaks) are gated behind
 ## 📜 Changelog
 
 <details>
-<summary><b>v5.26 — Clean compact Start Menu, universal Win10/11</b></summary>
+<summary><b>v5.16 — Clean compact Start Menu, universal Win10/11</b></summary>
 
 - Windows 10 pinned section fully removed: the real pin grid (`start.tilegrid` CloudStore keys) is now purged for every user — pins can no longer come back
 - Machine-wide HKLM policies: no "Most used", no "Recently added", no ads/stubs, no website recommendations — applies to all users and survives resets
