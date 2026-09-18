@@ -6,14 +6,8 @@ actions:
   # ---- Enable classic right-click menu on Windows 11 ----
   - !registryValue: {path: 'HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32', value: '', type: REG_SZ, data: ''}
 
-  # ========== REMOVE "SET AS DESKTOP BACKGROUND" (image files) ==========
-  - !registryValue: {path: 'HKCR\*\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\jpegfile\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\pngfile\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\giffile\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\setdesktopwallpaper', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\setasbackground', operation: delete}
-  - !registryValue: {path: 'HKCR\*\shell\setaswallpaper', operation: delete}
+  # ========== KEEP "SET AS DESKTOP BACKGROUND" ==========
+  # Intentionally NOT removed — users must be able to change the wallpaper.
 
   # ========== REMOVE "ROTATE LEFT / ROTATE RIGHT" (image files) ==========
   - !registryValue: {path: 'HKCR\SystemFileAssociations\image\shell\rotateleft', operation: delete}
