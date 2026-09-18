@@ -15,9 +15,8 @@ actions:
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{A302545D-DEFF-464b-ABE8-61C8648D939B}\PropertyBag', value: 'ThisPCPolicy', type: REG_SZ, data: 'Hide'}
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{A990AE9F-A03B-4e80-94BC-9912D7504104}\PropertyBag', value: 'ThisPCPolicy', type: REG_SZ, data: 'Hide'}
 
-  # Section 4: Lock Screen
-  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization', value: 'NoLockScreen', type: REG_DWORD, data: '1'}
-  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization', value: 'NoChangingLockScreen', type: REG_DWORD, data: '1'}
+  # Section 4: Lock Screen (keep lock screen usable; do NOT lock wallpaper/lock-screen personalization)
+  # NoLockScreen / NoChangingLockScreen intentionally omitted so users can change wallpaper & lock screen.
   - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\System', value: 'DisableLockScreenAppNotifications', type: REG_DWORD, data: '1'}
 
   # Section 5: Zero Animation & Instant Interface Tweaks
