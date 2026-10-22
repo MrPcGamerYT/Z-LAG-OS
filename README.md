@@ -255,7 +255,7 @@ Windows 10/11 VM and real-hardware testing. See `docs/windows-compatibility.md`.
 ## 📜 Changelog
 
 <details>
-<summary><b>v5.18 — NVIDIA App fixed + Defender option isolation (keep path fully functional)</b></summary>
+<summary><b>v5.10 — NVIDIA App fixed + Defender option isolation (keep path fully functional)</b></summary>
 
 **NVIDIA App "not working" — root causes fixed:**
 - The new NVIDIA App is a WinUI3 MSIX package. The global UWP background ban (`LetAppsRunInBackground=2` policy + `GlobalUserDisabled=1`) killed its background container, breaking the in-game overlay. Background access is now banned **per-app** (`protect_gpu_apps.ps1`): every non-GPU package stays background-banned (same footprint), while NVIDIA / AMD / Intel packages and the Windows Security app keep access — for every user profile
@@ -282,7 +282,7 @@ Windows 10/11 VM and real-hardware testing. See `docs/windows-compatibility.md`.
 </details>
 
 <details>
-<summary><b>v5.16 — Clean compact Start Menu, universal Win10/11</b></summary>
+<summary><b>v5.19 — Clean compact Start Menu, universal Win10/11</b></summary>
 
 - Windows 10 pinned section fully removed: the real pin grid (`start.tilegrid` CloudStore keys) is now purged for every user — pins can no longer come back
 - Machine-wide HKLM policies: no "Most used", no "Recently added", no ads/stubs, no website recommendations — applies to all users and survives resets
@@ -292,7 +292,7 @@ Windows 10/11 VM and real-hardware testing. See `docs/windows-compatibility.md`.
 </details>
 
 <details>
-<summary><b>v5.15 — Maximum FPS plan verified-active + universal Start Menu engine</b></summary>
+<summary><b>v5.17 — Maximum FPS plan verified-active + universal Start Menu engine</b></summary>
 
 - Power plan flow rewritten: reuse-or-create once, tune by explicit GUID (AC+DC), activate AFTER tuning, verify via `/getactivescheme` with retry, record GUID for the context-menu tool
 - Removed the legacy duplicate-and-activate pass that created duplicate plans and could re-activate an untuned stock template
@@ -300,21 +300,21 @@ Windows 10/11 VM and real-hardware testing. See `docs/windows-compatibility.md`.
 </details>
 
 <details>
-<summary><b>v5.14 — Start Menu cleaner fixed + production hardening</b></summary>
+<summary><b>v5.16 — Start Menu cleaner fixed + production hardening</b></summary>
 
 - Fixed three root causes of the broken cleaner: an orphaned layout script that never ran, `start2.bin` (Win11 22H2+) never being deleted, and the host rewriting caches from memory
 - Regression test suite extended to cover every historical bug class; all 37 scripts declare an explicit error policy; CI validation staged in `docs/ci/`
 </details>
 
 <details>
-<summary><b>v5.13 — Universal Win10/11 + expanded TOOLBOX (12 tools)</b></summary>
+<summary><b>v5.15 — Universal Win10/11 + expanded TOOLBOX (12 tools)</b></summary>
 
 - Added GAME BOOST, Clear Standby Memory, Ping/Latency Test, Activate Max FPS Power Plan, System Info (Gamer View)
 - All tools use APIs available on both PowerShell 5.1 (Win10) and Windows 11
 </details>
 
 <details>
-<summary><b>v5.12 — AppX crash-proofing, anti-flicker, raw input</b></summary>
+<summary><b>v5.14 — AppX crash-proofing, anti-flicker, raw input</b></summary>
 
 - Full AppX runtime framework set hard-protected (no more packaged-app crashes)
 - Store no longer removed by the base pass (option-gated with licensing handled)
@@ -324,7 +324,7 @@ Windows 10/11 VM and real-hardware testing. See `docs/windows-compatibility.md`.
 </details>
 
 <details>
-<summary><b>v5.11 — Mid-game FPS drops + input issues fixed</b></summary>
+<summary><b>v5.13 — Mid-game FPS drops + input issues fixed</b></summary>
 
 - Watchdog tasks no longer repeat during gameplay (boot/logon only) — zero scheduled activity while playing
 - Correct 40-byte linear mouse curves (previous builds wrote corrupt values)
@@ -334,7 +334,7 @@ Windows 10/11 VM and real-hardware testing. See `docs/windows-compatibility.md`.
 </details>
 
 <details>
-<summary><b>v5.10 and earlier</b></summary>
+<summary><b>v5.12 and earlier</b></summary>
 
 - First-run core reset, visible runtime storage under `C:\Windows\Z-LAG-OS`, Task Scheduler based Welcome panel, self-healing AppX runtime, ULTRA process/RAM floor, Edge/WebView2/OneDrive removal engines, telemetry host blocking, and the full 38-task pipeline
 </details>
