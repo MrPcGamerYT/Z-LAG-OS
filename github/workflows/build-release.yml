@@ -1,0 +1,97 @@
+name: Package and Release Z LAG OS.apbx
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 5.19); manual builds stamp package metadata automatically'
+        required: true
+      publish:
+        description: 'Publish a release after validation (disable to test packaging without creating tags/releases)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse every PowerShell payload without executing it
+        shell: powershell
+        run: |
+          ./tests/validate_powershell.ps1
+          ./tests/test_toolbox_download.ps1
+          ./tests/test_hosts_file.ps1
+          ./tests/test_windows_compatibility.ps1
+          ./tests/test_kernel_profile.ps1
+
+  package-and-release:
+    needs: validate-windows
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Treat event inputs as data, never interpolate them into shell programs.
+      # Pin source first; manual runs stamp package metadata, never move existing tags.
+      - name: Validate release tag and source version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          python .github/scripts/release_context.py
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Stage release metadata and provenance
+        run: python .github/scripts/stage_release.py
+
+      - name: Validate repository before packaging
+        run: |
+          python -m pip install PyYAML
+          python tests/validate_repo.py
+          python -m unittest discover -s tests
+
+      - name: Install 7zip
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Build and verify package
+        run: |
+          bash .github/scripts/build-release.sh
+
+      - name: Retain verified build for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: Z-LAG-OS-${{ env.RELEASE_TAG }}
+          path: |
+            Z_LAG_OS.apbx
+            Z_LAG_OS.apbx.sha256
+            release-provenance.json
+
+      - name: Publish without deleting existing releases, tags or assets
+        if: github.event_name == 'push' || inputs.publish == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # An existing release fails safely instead of destroying a published build.
+          verify_args=()
+          if [[ "$RELEASE_TAG_EXISTS" == true ]]; then verify_args+=(--verify-tag); fi
+          gh release create "$RELEASE_TAG" Z_LAG_OS.apbx Z_LAG_OS.apbx.sha256 release-provenance.json \
+            --target "$RELEASE_COMMIT" "${verify_args[@]}" --title "Release $RELEASE_TAG" \
+            --notes "Z LAG OS Release $RELEASE_TAG. Verify the attached SHA-256 before installing."
