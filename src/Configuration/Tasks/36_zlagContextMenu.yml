@@ -1,0 +1,10 @@
+title: Z LAG TOOLBOX Context Menu and Classic Sound
+description: Removes old internal-looking context names and the visible Classic Sound shortcuts, keeps the native classic audio backend, and adds one clean top-positioned Z LAG TOOLBOX submenu with RAM Trim/Clean, Temp Clean and other maintenance tools.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Removing old dotted context names and creating Z LAG TOOLBOX..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\configure_zlag_context_menu.ps1'
+  - !writeStatus: {status: "Z LAG TOOLBOX configured with clean spaced labels (RAM and Temp first)."}

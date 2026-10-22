@@ -1,0 +1,29 @@
+title: Aggressive Windows Defender removal
+description: ONLY runs when the user selects defender-disable. Owns every Defender-specific action (disable policies, services, scheduled scans, security-center alert suppression) and sets the DefenderRemoved marker so the rest of the playbook (final_push, process floor, toolbox Game Boost, defender_guard) can tell the removal path from the keep path. When defender-keep is selected, NOTHING in this task runs.
+actions:
+  # Marker FIRST: every other script gates on this value.
+  - !registryValue: {path: 'HKLM\SOFTWARE\Z-LAG-OS', value: 'DefenderRemoved', type: REG_DWORD, data: '1'}
+
+  # Disable policies (Pro/Enterprise editions honour these; service state below
+  # is the mechanism that works on every edition).
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender', value: 'DisableAntiSpyware', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender', value: 'DisableAntiVirus', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection', value: 'DisableRealtimeMonitoring', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection', value: 'DisableBehaviorMonitoring', type: REG_DWORD, data: '1'}
+
+  # Stop + disable the Defender engine, network inspection and security UI services.
+  - !powerShell: {command: 'Stop-Service WinDefend -Force -ErrorAction SilentlyContinue; Set-Service WinDefend -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service WdNisSvc -Force -ErrorAction SilentlyContinue; Set-Service WdNisSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service SecurityHealthService -Force -ErrorAction SilentlyContinue; Set-Service SecurityHealthService -StartupType Disabled -ErrorAction SilentlyContinue'}
+  # Windows Security Center: with no AV left on the machine there is nothing to
+  # surface - disable it here (the keep path keeps wscsvc alive instead).
+  - !powerShell: {command: 'Stop-Service wscsvc -Force -ErrorAction SilentlyContinue; Set-Service wscsvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+
+  # No scheduled Defender scans may run while Defender is off.
+  - !powerShell: {command: 'Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $_.TaskPath -like "\Microsoft\Windows\Windows Defender\*" } | Disable-ScheduledTask -ErrorAction SilentlyContinue; exit 0'}
+
+  # Defender Security Center notification suppression lives HERE (option-gated),
+  # never in the generic notifications task - so defender-keep users still get
+  # security alerts.
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications', value: 'DisableNotifications', type: REG_DWORD, data: '1'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications', value: 'DisableEnhancedNotifications', type: REG_DWORD, data: '1'}

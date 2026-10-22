@@ -1,0 +1,7 @@
+title: Scheduled Task Purge (Kill Hidden Processes)
+actions:
+  - !writeStatus: {status: "Purging telemetry scheduled tasks"}
+  - !powerShell:
+      exeDir: true
+      command: '.\purge_telemetry_tasks.ps1'
+  - !writeStatus: {status: "All telemetry tasks disabled"}

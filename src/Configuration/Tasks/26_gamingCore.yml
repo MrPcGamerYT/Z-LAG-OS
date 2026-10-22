@@ -1,0 +1,175 @@
+title: ZLAG Gaming Core Engine
+description: Ultra low latency + max FPS stable system-level gaming optimizations
+actions:
+
+  - !writeStatus: {status: "Activating ZLAG Gaming Engine"}
+
+  # =========================
+  # KERNEL BASELINE: one reversible owner, without boot-clock overrides.
+  # =========================
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\set_kernel_profile.ps1'
+
+  # Diagnostic only: timer requests are process-scoped, not permanent tuning.
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\set_timer_resolution.ps1'
+
+  # =========================
+  # MULTIMEDIA SCHEDULER (REAL GAMING PRIORITY SYSTEM)
+  # =========================
+
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile'
+      value: 'NetworkThrottlingIndex'
+      type: REG_DWORD
+      data: 4294967295
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
+      value: 'GPU Priority'
+      type: REG_DWORD
+      data: 8
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
+      value: 'Priority'
+      type: REG_DWORD
+      data: 2
+
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
+      value: 'Scheduling Category'
+      type: REG_SZ
+      data: 'High'
+
+  # =========================
+  # FULLSCREEN + GAME MODE LATENCY FIX
+  # =========================
+
+  - !registryValue:
+      path: 'HKCU\System\GameConfigStore'
+      value: 'GameDVR_DXGIHonorFSEWindowsCompatible'
+      type: REG_DWORD
+      data: 1
+
+  - !registryValue:
+      path: 'HKCU\System\GameConfigStore'
+      value: 'GameDVR_HonorUserFSEBehaviorMode'
+      type: REG_DWORD
+      data: 1
+
+  # Game Mode ON: tells the scheduler to protect the game's CPU/GPU time from
+  # background work (no extra processes - it is a pure scheduler policy).
+  # This directly targets "FPS drops mid-game" without adding any footprint.
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\GameBar'
+      value: 'AutoGameModeEnabled'
+      type: REG_DWORD
+      data: 1
+
+  - !registryValue:
+      path: 'HKCU\Software\Microsoft\GameBar'
+      value: 'AllowAutoGameMode'
+      type: REG_DWORD
+      data: 1
+
+  # GameDVR / background capture engine fully OFF (user store). Together with
+  # the machine policy AllowGameDVR=0 below, the capture subsystem can never
+  # spawn or pre-load - zero GPU/CPU cost while games hold the frame budget.
+  - !registryValue:
+      path: 'HKCU\System\GameConfigStore'
+      value: 'GameDVR_Enabled'
+      type: REG_DWORD
+      data: 0
+
+  # =========================
+  # ANTI-FLICKER + FRAME PACING (REAL FIXES)
+  # =========================
+
+  # Disable Multi-Plane Overlay (MPO). MPO is the #1 cause of screen
+  # flickering / stuttering on NVIDIA and AMD GPUs (both vendors document
+  # this exact registry fix). Disabling it forces classic DWM composition =
+  # no flicker, smoother frame delivery. Zero background cost.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Microsoft\Windows\Dwm'
+      value: 'OverlayTestMode'
+      type: REG_DWORD
+      data: 5
+
+  # Preserve Windows' timer-request/coalescing policy. No undocumented global
+  # override and no unsupported SFIO Priority performance claims.
+
+  # Machine-wide GameDVR ban (policy level - user level is set elsewhere).
+  # Guarantees no background capture ever eats frames.
+  - !registryValue:
+      path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR'
+      value: 'AllowGameDVR'
+      type: REG_DWORD
+      data: 0
+
+  # =========================
+  # INPUT LATENCY REDUCTION
+  # =========================
+
+  # Keep native driver input queue capacity. Smaller queues do not force
+  # earlier delivery and can drop events under high polling/CPU load.
+
+  # '1' (not '0') - matches the registry/user-settings tasks; a 0ms hover time
+  # makes the shell fire hover events continuously while the pointer moves.
+  - !registryValue:
+      path: 'HKCU\Control Panel\Mouse'
+      value: 'MouseHoverTime'
+      type: REG_SZ
+      data: '1'
+
+  - !registryValue:
+      path: 'HKCU\Control Panel\Keyboard'
+      value: 'KeyboardDelay'
+      type: REG_SZ
+      data: '0'
+
+  # =========================
+  # POWER OPTIMIZATION (REAL IMPACT)
+  # =========================
+
+  - !registryValue:
+      path: 'HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling'
+      value: 'PowerThrottlingOff'
+      type: REG_DWORD
+      data: 1
+
+  # =========================
+  # GPU SCHEDULING (HAGS) - GPU-AWARE DECISION
+  # =========================
+  # The old hardcoded HwSchMode=1 (HAGS OFF) was a regression for most modern
+  # gaming GPUs: Windows 11 ships with HAGS ON by default, and on modern GPUs
+  # it moves GPU work scheduling off the CPU (better 1% frame times). It is
+  # only forced OFF on legacy GPUs (GTX 10/16, RX 5000, Intel UHD/Iris) where
+  # it causes micro-stutters. set_gpu_scheduling.ps1 detects the installed
+  # adapter(s) and the OS build and applies the right value.
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\set_gpu_scheduling.ps1'
+
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\final_push.ps1'
+
+  # =========================
+  # FINAL SYSTEM STABILIZATION
+  # =========================
+
+  - !writeStatus: {status: "ZLAG Gaming Core Engine Applied Successfully"}
+  # Restart Explorer in the user's session to apply tweaks
+  - !powerShell:
+      command: |
+        Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
+        Start-Process explorer
+      runas: currentUserElevated

@@ -1,0 +1,18 @@
+title: Completely block Windows Update
+actions:
+  - !powerShell: {command: 'Stop-Service wuauserv -Force -ErrorAction SilentlyContinue; Set-Service wuauserv -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service UsoSvc -Force -ErrorAction SilentlyContinue; Set-Service UsoSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !powerShell: {command: 'Stop-Service WaaSMedicSvc -Force -ErrorAction SilentlyContinue; Set-Service WaaSMedicSvc -StartupType Disabled -ErrorAction SilentlyContinue'}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU', value: 'NoAutoUpdate', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU', value: 'AUOptions', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate', value: 'DisableWindowsUpdateAccess', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate', value: 'DoNotConnectToWindowsUpdateInternetLocations', type: REG_DWORD, data: 1}
+  - !powerShell:
+      exeDir: true
+      wait: true
+      command: '.\add_update_hosts.ps1'
+  # Clear only the update download cache + data store - NOT the whole
+  # SoftwareDistribution tree. Wiping the entire folder (older builds) also
+  # destroyed update/session history that Defender and the update stack rely
+  # on, which made kept Defender take a long time to re-establish itself.
+  - !powerShell: {command: 'Remove-Item -Recurse -Force "C:\Windows\SoftwareDistribution\Downloads" -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force "C:\Windows\SoftwareDistribution\DataStore" -ErrorAction SilentlyContinue'}

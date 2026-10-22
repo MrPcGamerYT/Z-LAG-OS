@@ -1,0 +1,20 @@
+title: Repairing AppX runtime + enforcing the Defender keep/removal contract
+description: Restores LicenseManager, ClipSVC, AppXSvc, StateRepository and sideload policy so Z-LAG Toolbox installed apps launch without crashing. Then runs the Defender guard, which re-establishes services, signatures, scheduled scans, notifications and the Windows Security Center service when the user KEPT Defender, and exits without touching anything when defender-disable was selected.
+actions:
+  - !writeStatus: {status: "Repairing AppX runtime for sideloaded apps..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\repair_appx_runtime.ps1'
+  - !writeStatus: {status: "AppX runtime healthy. Sideloaded apps will not crash on launch."}
+
+  # ===== DEFENDER GUARD (fixes: "kept Defender is still broken") =====
+  # Runs LAST among the repair paths so it has the final say over every
+  # hosts/service/notification pass that ran before it. No-op when the
+  # defender-disable option was selected (DefenderRemoved marker set).
+  - !writeStatus: {status: "Verifying Windows Defender health (no-op if Defender removal was selected)..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\defender_guard.ps1'
+  - !writeStatus: {status: "Defender state locked to the selected option (keep = fully functional)."}

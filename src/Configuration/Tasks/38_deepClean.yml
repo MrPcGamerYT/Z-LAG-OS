@@ -1,0 +1,36 @@
+title: Deep system clean (temp files and OneDrive client removal)
+description: Runs the idempotent all-user OneDrive remover, then clears recyclable system caches. The OneDrive client, provisioning, shell integration, startup entries, installers and caches are removed. Local synced documents and event logs are preserved.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Removing OneDrive completely for all users..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\remove_onedrive.ps1'
+  - !writeStatus: {status: "OneDrive removal pass finished; local synced documents preserved."}
+
+  - !taskKill: {name: 'Cortana', ignoreErrors: true}
+  - !taskKill: {name: 'SearchUI', ignoreErrors: true}
+  - !taskKill: {name: 'GameBar', ignoreErrors: true}
+  - !taskKill: {name: 'XboxApp', ignoreErrors: true}
+  - !taskKill: {name: 'YourPhone', ignoreErrors: true}
+
+  # Preserve the Recycle Bin (recoverable user data); run component cleanup only.
+  - !cmd: {command: 'dism /online /cleanup-image /startcomponentcleanup /quiet'}
+
+  # Preserve event logs: needed to diagnose app crashes and failed optimizations.
+
+  # UI performance tweaks.
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'DragFullWindows', type: REG_SZ, data: '0'}
+  - !registryValue: {path: 'HKCU\Control Panel\Desktop', value: 'FontSmoothing', type: REG_SZ, data: '2'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'ShowSyncProviderNotifications', type: REG_DWORD, data: '0'}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', value: 'EnableTransparency', type: REG_DWORD, data: '0'}
+
+  # Only old loose temp files: never recursively delete directories that may
+  # hold AME payloads, installers or other applications' live working files.
+  - !powerShell:
+      command: |
+        $cutoff = (Get-Date).AddDays(-7)
+        Get-ChildItem -LiteralPath $env:TEMP -File -Force -ErrorAction SilentlyContinue |
+          Where-Object { $_.LastWriteTime -lt $cutoff -and -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) } |
+          Remove-Item -Force -ErrorAction SilentlyContinue

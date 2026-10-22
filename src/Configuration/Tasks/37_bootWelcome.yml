@@ -1,0 +1,10 @@
+title: Native boot status and Task Scheduler Welcome panel
+description: Keeps loading text on the secure Windows Welcome screen, then runs the proven VBS/PowerShell panel through an interactive logon task. No Registry Run or Startup-folder entry is created, so it does not appear in Task Manager Startup apps.
+privilege: TrustedInstaller
+actions:
+  - !writeStatus: {status: "Configuring secure-screen status and scheduled Welcome panel..."}
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\configure_boot_welcome.ps1'
+  - !writeStatus: {status: "Interactive Z LAG Welcome task configured."}

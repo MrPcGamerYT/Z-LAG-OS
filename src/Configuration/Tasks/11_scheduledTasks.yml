@@ -1,0 +1,5 @@
+title: Disable telemetry and compatibility scheduled tasks
+actions:
+  - !powerShell:
+      exeDir: true
+      command: '.\disable_telemetry_tasks.ps1'

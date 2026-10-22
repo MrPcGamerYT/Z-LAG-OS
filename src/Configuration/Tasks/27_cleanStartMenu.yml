@@ -1,0 +1,100 @@
+title: Clean Start Menu (Only App List - No Pinned Apps or Groups)
+actions:
+  - !writeStatus: {status: "Cleaning Start Menu - removing all pinned apps and groups..."}
+  
+  # ===== System-wide start menu reset =====
+  # startmenu.cmd (TrustedInstaller):
+  #   - Stops StartMenuExperienceHost FIRST so it cannot rewrite start2.bin
+  #     from memory after we delete it (this was why cleaning "did not work")
+  #   - Copies empty layout files to the Default profile and all existing users
+  #   - Deletes start.bin / start2.bin caches for every loaded user hive
+  - !cmd: {command: 'startmenu.cmd', exeDir: true}
+
+  # All-profile cache sweep (TrustedInstaller): also covers profiles whose
+  # hives are NOT loaded (other local accounts), start.bin AND start2.bin.
+  # Previously this only ran when the user selected store-disable.
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\clear_start_menu_cache.ps1'
+
+  # CloudStore / StartPage2 tile-grid purge + empty Import-StartLayout, run AS
+  # THE REAL USER (HKCU under TrustedInstaller is the SYSTEM hive, so running
+  # this elevated-as-user is the only way it actually reaches the user's Start
+  # Menu). This script existed but was never wired into any task - that was
+  # the main reason the Start Menu cleaner stopped working.
+  - !powerShell:
+      wait: true
+      exeDir: true
+      command: '.\set_empty_start_layout.ps1'
+      runas: currentUserElevated
+
+  # GamerzOS parity: kill + clear the Start Menu host package cache so the
+  # rebuilt menu regenerates from the now-empty layout immediately.
+  - !taskKill: {name: 'StartMenuExperienceHost', ignoreErrors: true}
+  - !appx: {operation: clearCache, name: 'Microsoft.Windows.StartMenuExperienceHost*'}
+  
+  # ===== DISABLE RECENT APPS / FREQUENT APPS =====
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_TrackProgs', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_TrackDocs', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowRecentApps', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowAddedApps', type: REG_DWORD, data: 0}
+
+  # ===== GAMERZOS-STYLE MACHINE-WIDE POLICIES (all users, survives resets) ===
+  # Remove frequent programs list from the Start Menu
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'NoStartMenuMFUprogramsList', type: REG_DWORD, data: 1}
+  # Hide "Most used" list (2 = force hide for every account)
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer', value: 'ShowOrHideMostUsedApps', type: REG_DWORD, data: 2}
+  # Remove "Recently added" list
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer', value: 'HideRecentlyAddedApps', type: REG_DWORD, data: 1}
+  # Remove personalized website recommendations from Recommended (Win11)
+  - !registryValue: {path: 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer', value: 'HideRecommendedPersonalizedSites', type: REG_DWORD, data: 1}
+  # Win11: empty machine-wide pin list so NEW accounts also start pin-free
+  - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\PolicyManager\current\device\Start', value: 'ConfigureStartPins', type: REG_SZ, data: '{"pinnedList":[]}'}
+
+  # ===== COMPACT UI (GamerzOS parity) =====
+  # Win11 22000+: "More pins" compact Start layout - the pinned area shrinks
+  # and Recommended is minimized (with pins cleared the menu is app-list only).
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_Layout', type: REG_DWORD, data: 1, builds: ['>=22000']}
+  # Win11: File Explorer compact mode (dense row spacing like Win10)
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'UseCompactMode', type: REG_DWORD, data: 1, builds: ['>=22000']}
+  # Win10 <22000: compact Start = no full-screen Start, small UI mode
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ImmersiveShell', value: 'TabletMode', type: REG_DWORD, data: 0, builds: ['<22000']}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ImmersiveShell', value: 'SignInMode', type: REG_DWORD, data: 1, builds: ['<22000']}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'EnableAutoTray', type: REG_DWORD, data: 1, builds: ['<22000']}
+  
+  # ===== DISABLE SUGGESTIONS AND ADS =====
+  - !registryValue: {path: 'HKCU\Software\Policies\Microsoft\Windows\Explorer', value: 'ShowRecommendedSection', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_IrisRecommendations', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SubscribedContent-314559Enabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SubscribedContent-338387Enabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SubscribedContent-338388Enabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SubscribedContent-338389Enabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SubscribedContent-338393Enabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SoftLandingEnabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'PreInstalledAppsEnabled', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'OemPreInstalledAppsEnabled', type: REG_DWORD, data: 0}
+  
+  # ===== FORCE SHOW ALL APPS BY DEFAULT =====
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'NoStartMenuMorePrograms', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'ShowStartMenuAllApps', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowAllApps', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowSettings', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowDownloads', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowUser', type: REG_DWORD, data: 0}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowPowerButton', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', value: 'Start_ShowSearch', type: REG_DWORD, data: 0}
+  
+  # ===== DISABLE PINNED APP AREA COMPLETELY =====
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'NoPinnedAppsInStartMenu', type: REG_DWORD, data: 1}
+  - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer', value: 'ClearRecentPrograms', type: REG_DWORD, data: 1}
+  
+  # ===== CLEAR START MENU LAYOUT CACHE (additional safety) =====
+  # Run in the user's session so $env:LOCALAPPDATA points at the real profile.
+  - !powerShell: {command: 'try { Remove-Item -Path "$env:LOCALAPPDATA\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\LocalState\StartMenuExperienceHost.settings" -Force -ErrorAction SilentlyContinue } catch {}; exit 0', runas: currentUserElevated}
+  - !powerShell: {command: 'try { Remove-Item -Path "$env:LOCALAPPDATA\Packages\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\Settings\settings.dat" -Force -ErrorAction SilentlyContinue } catch {}; exit 0', runas: currentUserElevated}
+
+  # ===== RESTART EXPLORER (user session) =====
+  - !powerShell: {command: 'Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue; Start-Process explorer', runas: currentUserElevated}
+  
+  - !writeStatus: {status: "Start Menu cleaned! Only app list visible, no pinned groups."}

@@ -1,0 +1,12 @@
+title: Removing Bloat Features
+actions:
+  - !writeStatus: {status: "Removing unnecessary Windows features (Windows 10/11 compatible)..."}
+
+  # Call the external PowerShell script to remove all bloat features
+  - !powerShell:
+      command: .\remove_bloat_features.ps1
+      exeDir: true
+      wait: true
+      runas: currentUserElevated
+
+  - !writeStatus: {status: "✅ Unnecessary features removed successfully (Windows 10/11 compatible)."}
