@@ -428,4 +428,4 @@ Written permission from the copyright owner (**MR.PC GAMER / Z-LAG Community**) 
 **⭐ Star this repo if you got an FPS boost!**
 
 ---
-*Z LAG OS v5.18 — Zero Lag, Max Performance. Built for gamers, by gamers.*
+*Z LAG OS v5.20 — Zero Lag, Max Performance. Built for gamers, by gamers.*
