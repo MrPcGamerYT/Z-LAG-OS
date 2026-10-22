@@ -1,0 +1,61 @@
+name: Validate playbook
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  windows-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse all Windows PowerShell payloads without executing them
+        shell: powershell
+        run: |
+          ./tests/validate_powershell.ps1
+          ./tests/test_toolbox_download.ps1
+          ./tests/test_hosts_file.ps1
+          ./tests/test_windows_compatibility.ps1
+          ./tests/test_kernel_profile.ps1
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install PyYAML
+      - run: python tests/validate_repo.py
+      - run: python -m unittest discover -s tests
+
+  release-smoke:
+    name: Test manual version staging and real packaging (no publication)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce manual 5.19 release validation
+        env:
+          EVENT_NAME: workflow_dispatch
+          INPUT_VERSION: '5.19'
+        run: python .github/scripts/release_context.py
+      - name: Stamp package metadata and provenance
+        run: python .github/scripts/stage_release.py
+      - name: Validate staged source
+        run: |
+          python -m pip install PyYAML
+          python tests/validate_repo.py
+          python -m unittest discover -s tests
+      - name: Install archive tooling
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+      - name: Build and integrity-test real archive without creating any tag/release
+        run: bash .github/scripts/build-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-smoke-${{ github.sha }}
+          path: |
+            Z_LAG_OS.apbx
+            Z_LAG_OS.apbx.sha256
+            release-provenance.json
